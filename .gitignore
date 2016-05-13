@@ -1,0 +1,11 @@
+# Backup files and system temporaries
+*~
+.*.swp
+*.swo
+
+# compiled files
+*.pyc
+*.o
+
+# our build directory
+build
