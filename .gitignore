@@ -9,3 +9,9 @@
 
 # our build directory
 build
+
+# gtags files:
+GPATH
+GRTAGS
+GTAGS
+
