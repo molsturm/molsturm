@@ -30,8 +30,8 @@ void run_rhf_sturmian_debug(double Z, double k_exp, size_t n_alpha,
   typedef SmallMatrix<scalar_type> stored_matrix_type;
 
   // Types of the integrals we use:
-  const gint::OrbitalType otype = gint::REAL_ATOMIC;
-  const std::string basis_type("Sturmians");
+  const gint::OrbitalType otype = gint::COMPLEX_ATOMIC;
+  const std::string basis_type("atomic/cs_dummy");
 
   // The lookup class type to get the actual integrals
   typedef gint::IntegralLookup<stored_matrix_type, otype> int_lookup_type;
@@ -42,16 +42,24 @@ void run_rhf_sturmian_debug(double Z, double k_exp, size_t n_alpha,
   //
   // Integral terms
   //
-  // Generate integral lookup object
-  int_lookup_type integrals(basis_type);
-
+  // Set up parameter map for integral calculation
+  linalgwrap::ParameterMap integral_parameters;
+  integral_parameters.update_copy("Z_charge",Z);
+  integral_parameters.update_copy("k_exponent",k_exp);
+  integral_parameters.update_copy("n_max", 3);
+  integral_parameters.update_copy("l_max", 2);
+  
+  //
+  // Generate integral lookup object  
+  int_lookup_type integrals(basis_type, integral_parameters);
+ 
   // Get the integral as actual objects.
-  int_term_type S_bb = integrals("overlap");
-  int_term_type T_bb = integrals("kinetic");
+  int_term_type S_bb  = integrals("overlap");
+  int_term_type T_bb  = integrals("kinetic");
   int_term_type V0_bb = integrals("nuclear_attraction");
-  int_term_type J_bb = integrals("coulomb");
-  int_term_type K_bb = integrals("exchange");
-
+  int_term_type J_bb  = integrals("coulomb");
+  int_term_type K_bb  = integrals("exchange");
+  
   // Combine 1e terms:
   std::vector<int_term_type> terms_1e{std::move(T_bb), std::move(V0_bb)};
 
@@ -61,7 +69,7 @@ void run_rhf_sturmian_debug(double Z, double k_exp, size_t n_alpha,
   std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
   auto debugout = linalgwrap::io::make_formatted_stream_writer<
         linalgwrap::io::Mathematica, scalar_type>(mathematicafile, 1e-5);
-
+  
   //
   // Problem setup
   //
@@ -74,11 +82,11 @@ void run_rhf_sturmian_debug(double Z, double k_exp, size_t n_alpha,
   // The term container for the fock operator matrix
   IntegralTermContainer<stored_matrix_type> integral_container(
         std::move(terms_1e), std::move(J_bb), std::move(K_bb));
-
+  
   RestrictedClosedIntegralOperator<stored_matrix_type> m_fock(
         integral_container, guess_bf, n_alpha, n_beta);
-
   IopPlainScfSolver<decltype(m_fock)> solver(debugout);
+
   solver.solve(m_fock, static_cast<stored_matrix_type>(S_bb));
 }
 
