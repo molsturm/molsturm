@@ -29,7 +29,7 @@ public:
   static auto pulay_error(const matrix_type& overlap_bb,
                           const matrix_type& coefficients_bf,
                           const operator_type& fock_bb)
-        -> decltype(fock_bb + fock_bb) {
+        -> matrix_type {
     using namespace linalgwrap;
 
     static_assert(
@@ -38,7 +38,7 @@ public:
           "Currently this implementation only works for the "
           "RestrictedClosedIntegralOperator.");
     const size_type n_alpha = fock_bb.n_alpha();
-    const size_type n_beta = fock_bb.n_beta();
+    const size_type n_beta  = fock_bb.n_beta();
 
     // Occupied coefficients
     assert_size(n_alpha, n_beta);
@@ -49,8 +49,8 @@ public:
 
     // Return error expression, not evaluated
     // == S * P * F - F * P * S
-    return view::view(overlap_bb) * pa_bb * fock_bb -
-           fock_bb * pa_bb * view::view(overlap_bb);
+    return static_cast<matrix_type>(view::view(overlap_bb) * pa_bb * fock_bb -
+				    fock_bb * pa_bb * view::view(overlap_bb));
   }
 };
 
