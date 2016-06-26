@@ -191,7 +191,7 @@ RestrictedClosedIntegralOperator<StoredMatrix>::
 
 #ifdef DEBUG
   // Operator size:
-  size_type op_size = integral_terms.coulomb_term.n_rows();
+  size_type op_size = m_coul.n_rows();
 #endif
 
   // Check that number of terms and number of coefficients agrees:
