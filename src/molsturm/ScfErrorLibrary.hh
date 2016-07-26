@@ -28,8 +28,8 @@ public:
    */
   static auto pulay_error(const matrix_type& overlap_bb,
                           const matrix_type& coefficients_bf,
-                          const operator_type& fock_bb)
-        -> decltype(fock_bb + fock_bb) {
+                          const operator_type& fock_bb) -> matrix_type {
+    // decltype(fock_bb + fock_bb) {
     using namespace linalgwrap;
 
     static_assert(
@@ -47,10 +47,17 @@ public:
     // Density:
     auto pa_bb = ca_bo * view::transpose(ca_bo);
 
+    // TODO This would be nice, but does not work
     // Return error expression, not evaluated
     // == S * P * F - F * P * S
-    return view::view(overlap_bb) * pa_bb * fock_bb -
-           fock_bb * pa_bb * view::view(overlap_bb);
+    // return view::view(overlap_bb) * pa_bb * fock_bb -
+    //       fock_bb * pa_bb * view::view(overlap_bb);
+
+    // TODO Unfortunately we need to evaluate it, since we use the views, which
+    // point to references as temporaries.
+    //     Think of a clever way to get around this.
+    return overlap_bb * static_cast<matrix_type>(pa_bb * fock_bb) -
+           fock_bb * (pa_bb * overlap_bb);
   }
 };
 

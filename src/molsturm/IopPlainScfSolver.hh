@@ -29,11 +29,15 @@ struct IopPlainScfSolverState : public gscf::PlainScfState<ScfTraits> {
   // Previous orbital coefficients (evals of the problem matrix)
   std::shared_ptr<vector_type> last_step_eval_ptr;
 
+  // Current Frobenius norm of the Pulay SCF error
+  scalar_type pulay_error_norm;
+
   IopPlainScfSolverState(probmat_type probmat, const matrix_type& overlap_mat)
         : base_type{std::move(probmat), overlap_mat},
           last_step_tot_energy{linalgwrap::Constants<scalar_type>::invalid},
           last_step_1e_energy{linalgwrap::Constants<scalar_type>::invalid},
-          last_step_eval_ptr{nullptr} {}
+          last_step_eval_ptr{nullptr},
+          pulay_error_norm{linalgwrap::Constants<scalar_type>::invalid} {}
 };
 
 template <typename ScfState>
@@ -50,12 +54,11 @@ struct IopPlainScfSolverControl : public gscf::PlainScfControl<ScfState> {
         IsIntegralOperator<probmat_type>::value,
         "IopPlainScfSolver only works sensibly with a proper IntegralOperator");
 
-  /** \brief Maximal l1 norm of the pulay error matrix for an scf step
-   *
+  /** \brief Maximal frobenius norm of the pulay error matrix for an scf step
    *
    * The error is estimated using the Pulay SCF error
    * in the atom centered basis */
-  scalar_type max_l1_pulay_error;
+  scalar_type max_pulay_error_norm;
 
   // Maximal total energy change between two cycles.
   scalar_type max_tot_energy_change;
@@ -65,7 +68,7 @@ struct IopPlainScfSolverControl : public gscf::PlainScfControl<ScfState> {
 
   IopPlainScfSolverControl()
         : base_type{},
-          max_l1_pulay_error{5e-7},
+          max_pulay_error_norm{5e-7},
           max_tot_energy_change{1e-8},
           max_1e_energy_change{1e-5} {}
 
@@ -75,18 +78,11 @@ struct IopPlainScfSolverControl : public gscf::PlainScfControl<ScfState> {
     // If no previous eval_ptr, then we are not converged:
     if (!state.last_step_eval_ptr) return false;
 
-    // Extract references to relevant quantities:
-    const probmat_type& fock_bb = *state.problem_matrix_ptr();
-    const matrix_type& coeff_bf = *state.eigenvectors_ptr();
-    const matrix_type& overlap_bb = state.overlap_matrix();
-
     // Check the SCF error
-    typedef ScfErrorLibrary<probmat_type> errorlib;
-    scalar_type l1_pulay_error =
-          errorlib::pulay_error(overlap_bb, coeff_bf, fock_bb).norm_l1();
-    if (l1_pulay_error > max_l1_pulay_error) return false;
+    if (state.pulay_error_norm > max_pulay_error_norm) return false;
 
     // Total energy change
+    const probmat_type& fock_bb = *state.problem_matrix_ptr();
     scalar_type tot_energy =
           fock_bb.energy_1e_terms() + fock_bb.energy_2e_terms();
     scalar_type tot_energy_diff =
@@ -118,6 +114,10 @@ public:
         base_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::scf_state_type scf_state_type;
+  typedef typename base_type::probmat_type probmat_type;
+  typedef typename base_type::size_type size_type;
+  typedef typename base_type::matrix_type matrix_type;
+  typedef typename base_type::vector_type vector_type;
 
   IopPlainScfSolver(linalgwrap::io::DataWriter_i<scalar_type>& writer)
         : m_writer(writer) {}
@@ -131,13 +131,14 @@ protected:
           s.problem_matrix_ptr()->energy_2e_terms() + s.last_step_1e_energy;
 
     if (s.n_iter_count() == 1) {
-      std::cout
-            << " scf_iter        e1e         e2e       etot        scf_error";
+      std::cout << " " << std::setw(5) << std::right << "iter" << std::setw(14)
+                << "e1e" << std::setw(14) << "e2e" << std::setw(14) << "etot"
+                << std::setw(14) << "scf_error" << std::endl;
     }
   }
 
   void on_update_eigenpairs(scf_state_type& s) const override {
-    std::cout << "       New orbital eigenvalues: " << std::endl;
+    std::cout << "New orbital eigenvalues: " << std::endl;
 
     assert_dbg(m_writer, linalgwrap::ExcIO());
     m_writer.write("evals" + std::to_string(s.n_iter_count()),
@@ -147,51 +148,81 @@ protected:
 
     // Print orbital evals:
     std::ostream_iterator<scalar_type> out_it(std::cout, " ");
-    std::cout << "        ";
     std::copy(s.eigenvalues_ptr()->begin(), s.eigenvalues_ptr()->end(), out_it);
     std::cout << std::endl;
   }
 
   void on_update_problem_matrix(scf_state_type& s) const override {
-    auto& problem_matrix = *s.problem_matrix_ptr();
+    const probmat_type& fock_bb = *s.problem_matrix_ptr();
+    const matrix_type& coeff_bf = *s.eigenvectors_ptr();
+    const matrix_type& overlap_bb = s.overlap_matrix();
     auto n_iter = s.n_iter_count();
     std::string itstr = std::to_string(n_iter);
 
-    for (auto kv : problem_matrix.terms_alpha()) {
-      m_writer.write(kv.first + "a" + itstr, kv.second);
+    // Write current findings:
+    for (auto kv : fock_bb.terms_alpha()) {
+      // Normalise the label: The id of the term may contain funny symbols
+      std::string lala = m_writer.normalise_label(kv.first + "a" + itstr);
+      m_writer.write(lala, kv.second);
     }
-    for (auto kv : problem_matrix.terms_beta()) {
-      m_writer.write(kv.first + "b" + itstr, kv.second);
+    for (auto kv : fock_bb.terms_beta()) {
+      // Normalise the label: The id of the term may contain funny symbols
+      std::string lalb = m_writer.normalise_label(kv.first + "b" + itstr);
+      m_writer.write(lalb, kv.second);
     }
-    m_writer.write("fock" + itstr, problem_matrix);
+    m_writer.write("fock" + itstr, fock_bb);
 
-    // Calculate error
-    scalar_type error = 0.0;
+    // Compute the SCF Pulay error
+    typedef ScfErrorLibrary<probmat_type> errorlib;
+    s.pulay_error_norm =
+          errorlib::pulay_error(overlap_bb, coeff_bf, fock_bb).norm_frobenius();
 
     // scf_iter        e1e         e2e       etot        scf_error
-    std::cout << n_iter << "  " << problem_matrix.energy_1e_terms() << "  "
-              << problem_matrix.energy_2e_terms() << "    "
-              << problem_matrix.energy_total() << "    " << error << std::endl;
+    std::cout << " " << std::setw(4) << std::right << n_iter << std::setw(14)
+              << fock_bb.energy_1e_terms() << std::setw(14)
+              << fock_bb.energy_2e_terms() << std::setw(14)
+              << fock_bb.energy_total() << std::setw(14) << s.pulay_error_norm
+              << std::endl;
   }
 
   void on_converged(scf_state_type& s) const override {
     auto& problem_matrix = *s.problem_matrix_ptr();
     auto n_iter = s.n_iter_count();
 
-    std::cout << std::endl
-              << "Converged after " << n_iter << " iterations." << std::endl
+    // Indention unit:
+    const std::string ind = "   ";
+
+    std::cout << "Converged after " << n_iter << " iterations." << std::endl
               << std::endl
-              << "   HF energies:" << std::endl;
+              << ind << "Hartree-Fock energies:" << std::endl;
+
+    size_t longestfirst = 0;
     for (auto kv : problem_matrix.energies()) {
-      std::cout << "     " << kv.first << " = " << kv.second << std::endl;
+      longestfirst = std::max(kv.first.size(), longestfirst);
     }
-    std::cout << "     E_1e     = " << problem_matrix.energy_1e_terms()
+
+    // Store original precision:
+    // TODO use the tool i wrote for linalgwrap here!
+    std::streamsize prec = std::cout.precision();
+
+    for (auto kv : problem_matrix.energies()) {
+      std::cout << ind << ind << std::left << std::setw(longestfirst)
+                << kv.first << " = " << kv.second << std::endl;
+    }
+
+    std::cout << ind << ind << std::left << std::setw(longestfirst) << "E_1e"
+              << " = " << std::setprecision(10)
+              << problem_matrix.energy_1e_terms() << std::endl
+              << ind << ind << std::left << std::setw(longestfirst) << "E_2e"
+              << " = " << std::setprecision(10)
+              << problem_matrix.energy_2e_terms() << std::endl
               << std::endl
-              << "     E_2e     = " << problem_matrix.energy_2e_terms()
               << std::endl
-              << std::endl
-              << "     E_total  = " << problem_matrix.energy_total()
+              << ind << ind << std::left << std::setw(longestfirst) << "E_total"
+              << " = " << std::setprecision(14) << problem_matrix.energy_total()
               << std::endl;
+
+    std::cout.precision(prec);
   }
 
 private:
