@@ -19,20 +19,20 @@ set(PackageModuleLocation share/cmake)
 option(MOLSTURM_ENABLE_TESTS "Build molsturm tests" ON)
 option(MOLSTURM_ENABLE_EXAMPLES "Build molsturm examples" ON)
 
-option(MOLSTURM_WITH_SYSTEM_LINALGWRAP 
+option(MOLSTURM_WITH_SYSTEM_LINALGWRAP
 	"Compile and install the linalgwrap library
 from the git submodule (OFF) or use system-provided version (ON)" OFF)
-option(MOLSTURM_WITH_SYSTEM_COMMON
-	"Compile and install the common library from the git 
+option(MOLSTURM_WITH_SYSTEM_KRIMS
+	"Compile and install the krims library from the git
 submodule (OFF) or use system-provided (ON)" OFF)
 option(MOLSTURM_WITH_SYSTEM_GINT
-	"Compile and install the gint library from the git 
+	"Compile and install the gint library from the git
 submodule (OFF) or use system-provided (ON)" OFF)
 option(MOLSTURM_WITH_SYSTEM_GSCF
-	"Compile and install the gscf library from the git 
+	"Compile and install the gscf library from the git
 submodule (OFF) or use system-provided (ON)" OFF)
 option(MOLSTURM_WITH_SYSTEM_STURMINT
-	"Compile and install the sturmint library from the git 
+	"Compile and install the sturmint library from the git
 submodule (OFF) or use system-provided (ON)" OFF)
 
 ##########################################################################
