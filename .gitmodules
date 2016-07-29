@@ -13,3 +13,6 @@
 [submodule "modules/gint"]
 	path = modules/gint
 	url = ssh://gitte@ccsvn.iwr.uni-heidelberg.de:42022/gint.git
+[submodule "modules/krims"]
+	path = modules/krims
+	url = ssh://git@github.com/linalgwrap/krims
