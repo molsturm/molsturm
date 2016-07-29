@@ -76,12 +76,12 @@ endmacro(add_required_submodule_library)
 ###################
 
 #
-# common
+# krims
 #
-if(MOLSTURM_WITH_SYSTEM_COMMON)
-	add_required_upstream_library(common 0.0.0)
+if(MOLSTURM_WITH_SYSTEM_KRIMS)
+	add_required_upstream_library(krims 0.0.0)
 else()
-	add_required_submodule_library(common 0.0.0)
+	add_required_submodule_library(krims 0.0.0)
 endif()
 
 #

@@ -1,7 +1,7 @@
-# common
-if (NOT MOLSTURM_WITH_SYSTEM_COMMON)
-	# We need to build common lib from subdirectory
-	add_subdirectory(common)
+# krims
+if (NOT MOLSTURM_WITH_SYSTEM_KRIMS)
+	# We need to build krims lib from subdirectory
+	add_subdirectory(krims)
 endif()
 
 # linalgwrap
