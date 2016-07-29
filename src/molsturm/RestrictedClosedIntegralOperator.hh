@@ -291,10 +291,11 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_state_and_energies(
 
   const std::string occ_coeff_key("coefficients_occupied");
 
+  // Maybe pass occupation number / occupation matrix and
+  // full coefficients (as pointer) instead?
   ParameterMap occa_map;
-  occa_map.update(
-        occ_coeff_key,
-        make_subscription(ca_bo, "ParameterMap in RestrictedOperator"));
+  occa_map.update_copy(occ_coeff_key,
+                       std::move(static_cast<stored_matrix_type>(ca_bo)));
 
   //
   // Update 1e part, J and K == Update the operator.

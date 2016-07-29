@@ -20,14 +20,21 @@ using namespace linalgwrap;
  * \param n_alpha Number of alpha electrons
  * \param n_beta  Number of beta electrons
  */
-void run_rhf_sturmian_debug(double Z, double k_exp, size_t n_alpha,
-                            size_t n_beta) {
+void run_rhf_sturmian_debug(double k_exp, size_t n_max, size_t l_max, double Z,
+                            size_t n_alpha, size_t n_beta) {
   //
   // Types and settings
   //
   // Types of scalar and matrix
   typedef double scalar_type;
   typedef SmallMatrix<scalar_type> stored_matrix_type;
+
+  // Parameters for the basis
+  ParameterMap intparams;
+  intparams.update_copy("k_exponent", k_exp);
+  intparams.update_copy("Z_charge", Z);
+  intparams.update_copy("n_max", static_cast<int>(n_max));
+  intparams.update_copy("l_max", static_cast<int>(l_max));
 
   // Types of the integrals we use:
   const gint::OrbitalType otype = gint::COMPLEX_ATOMIC;
@@ -42,24 +49,16 @@ void run_rhf_sturmian_debug(double Z, double k_exp, size_t n_alpha,
   //
   // Integral terms
   //
-  // Set up parameter map for integral calculation
-  linalgwrap::ParameterMap integral_parameters;
-  integral_parameters.update_copy("Z_charge",Z);
-  integral_parameters.update_copy("k_exponent",k_exp);
-  integral_parameters.update_copy("n_max", 3);
-  integral_parameters.update_copy("l_max", 2);
-  
-  //
-  // Generate integral lookup object  
-  int_lookup_type integrals(basis_type, integral_parameters);
- 
+  // Generate integral lookup object
+  int_lookup_type integrals(basis_type, intparams);
+
   // Get the integral as actual objects.
-  int_term_type S_bb  = integrals("overlap");
-  int_term_type T_bb  = integrals("kinetic");
+  int_term_type S_bb = integrals("overlap");
+  int_term_type T_bb = integrals("kinetic");
   int_term_type V0_bb = integrals("nuclear_attraction");
-  int_term_type J_bb  = integrals("coulomb");
-  int_term_type K_bb  = integrals("exchange");
-  
+  int_term_type J_bb = integrals("coulomb");
+  int_term_type K_bb = integrals("exchange");
+
   // Combine 1e terms:
   std::vector<int_term_type> terms_1e{std::move(T_bb), std::move(V0_bb)};
 
@@ -68,8 +67,8 @@ void run_rhf_sturmian_debug(double Z, double k_exp, size_t n_alpha,
   //
   std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
   auto debugout = linalgwrap::io::make_formatted_stream_writer<
-        linalgwrap::io::Mathematica, scalar_type>(mathematicafile, 1e-5);
-  
+        linalgwrap::io::Mathematica, scalar_type>(mathematicafile, 1e-12);
+
   //
   // Problem setup
   //
@@ -82,12 +81,15 @@ void run_rhf_sturmian_debug(double Z, double k_exp, size_t n_alpha,
   // The term container for the fock operator matrix
   IntegralTermContainer<stored_matrix_type> integral_container(
         std::move(terms_1e), std::move(J_bb), std::move(K_bb));
-  
-  RestrictedClosedIntegralOperator<stored_matrix_type> m_fock(
-        integral_container, guess_bf, n_alpha, n_beta);
-  IopPlainScfSolver<decltype(m_fock)> solver(debugout);
 
-  solver.solve(m_fock, static_cast<stored_matrix_type>(S_bb));
+  RestrictedClosedIntegralOperator<stored_matrix_type> fock_bb(
+        integral_container, guess_bf, n_alpha, n_beta);
+
+  debugout.write("guessfock", fock_bb);
+
+  IopPlainScfSolver<decltype(fock_bb)> solver(debugout);
+  solver.scf_control().max_iter = 10;
+  solver.solve(fock_bb, static_cast<stored_matrix_type>(S_bb));
 }
 
 struct args_type {
@@ -95,6 +97,8 @@ struct args_type {
   double k_exp = 1.0;
   size_t n_alpha = 2;
   size_t n_beta = n_alpha;
+  size_t n_max = 3;
+  size_t l_max = n_max - 1;
 };
 
 /** Quick and dirty function to parse a string to a different type.
@@ -117,6 +121,8 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_alpha = false;
   bool had_beta = false;
   bool had_k_exp = false;
+  bool had_n_max = false;
+  bool had_l_max = false;
 
   // Parsing
   for (int i = 1; i < argc; ++i) {
@@ -160,9 +166,24 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
                   << std::endl;
         return false;
       }
+    } else if (flag == std::string("--nmax")) {
+      had_n_max = true;
+      if (!str_to_type<size_t>(argument, parsed.n_max)) {
+        std::cerr << "Invalid int provided to --nmax: " << argument
+                  << std::endl;
+        return false;
+      }
+    } else if (flag == std::string("--lmax")) {
+      had_l_max = true;
+      if (!str_to_type<size_t>(argument, parsed.n_max)) {
+        std::cerr << "Invalid int provided to --lmax: " << argument
+                  << std::endl;
+        return false;
+      }
     } else {
       std::cerr << "Unknown flag: " << flag << std::endl;
-      std::cerr << "Valid are: --Z, --alpha, --beta, --kexp" << std::endl;
+      std::cerr << "Valid are: --Z, --alpha, --beta, --kexp, --lmax, --nmax"
+                << std::endl;
       return false;
     }
   }
@@ -183,8 +204,17 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   if (!had_k_exp) {
     std::cerr << "Need flag --kexp <double> to supply k exponent." << std::endl;
   }
+  if (!had_n_max) {
+    std::cerr << "Need flag --nmax <int> to supply maximal principle quantum "
+                 "number."
+              << std::endl;
+  }
 
-  if (had_Z && had_alpha && had_beta && had_k_exp) {
+  if (!had_l_max) {
+    parsed.l_max = parsed.n_max - 1;
+  }
+
+  if (had_Z && had_alpha && had_beta && had_k_exp && had_n_max) {
     return true;
   }
   return false;
@@ -206,13 +236,16 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "The following configuration was read:" << std::endl
-            << "Z:        " << args.Z << std::endl
             << "k_exp:    " << args.k_exp << std::endl
+            << "n_max:    " << args.n_max << std::endl
+            << "l_max:    " << args.l_max << std::endl
+            << "Z:        " << args.Z << std::endl
             << "n_alpha:  " << args.n_alpha << std::endl
             << "n_beta:   " << args.n_beta << std::endl
             << std::endl;
 
-  run_rhf_sturmian_debug(args.Z, args.k_exp, args.n_alpha, args.n_beta);
+  run_rhf_sturmian_debug(args.k_exp, args.n_max, args.l_max, args.Z,
+                         args.n_alpha, args.n_beta);
   return 0;
 }
 
