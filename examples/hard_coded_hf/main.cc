@@ -85,6 +85,17 @@ void run_rhf_sturmian_debug(double k_exp, size_t n_max, size_t l_max, double Z,
   RestrictedClosedIntegralOperator<stored_matrix_type> fock_bb(
         integral_container, guess_bf, n_alpha, n_beta);
 
+  // Write terms:
+  for (auto kv : fock_bb.terms_alpha()) {
+    // Normalise the label: The id of the term may contain funny symbols
+    std::string lala = debugout.normalise_label("guess" + kv.first + "a");
+    debugout.write(lala, kv.second);
+  }
+  for (auto kv : fock_bb.terms_beta()) {
+    // Normalise the label: The id of the term may contain funny symbols
+    std::string lalb = debugout.normalise_label("guess" + kv.first + "b");
+    debugout.write(lalb, kv.second);
+  }
   debugout.write("guessfock", fock_bb);
 
   IopPlainScfSolver<decltype(fock_bb)> solver(debugout);
