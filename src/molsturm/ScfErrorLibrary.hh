@@ -44,8 +44,8 @@ public:
     assert_size(n_alpha, n_beta);
     auto ca_bo = view::columns(coefficients_bf, range(n_alpha));
 
-    // Density:
-    auto pa_bb = ca_bo * view::transpose(ca_bo);
+    // Density: (Factor of 2 since alpha and beta density are equal)
+    auto pa_bb = 2. * ca_bo * view::transpose(ca_bo);
 
     // TODO This would be nice, but does not work
     // Return error expression, not evaluated
@@ -58,6 +58,47 @@ public:
     //     Think of a clever way to get around this.
     return overlap_bb * static_cast<matrix_type>(pa_bb * fock_bb) -
            fock_bb * (pa_bb * overlap_bb);
+  }
+
+  /** \brief Calculate the pulay error matrix projected onto the occupied
+   * orbital
+   *   space on the right.
+   *
+   * Constructs the lazy expression (S * P * F - F * P * S) * C, where
+   * S is the overlap matrix from the state, F is the Restricted operator of the
+   * state and P is the density computed from the alpha and beta values in F
+   * and the eigenvalues of the state.
+   * C are the cofficients provided.
+   */
+  static auto pulay_error_projected(const matrix_type& overlap_bb,
+                                    const matrix_type& coefficients_bf,
+                                    const operator_type& fock_bb)
+        -> matrix_type {
+    using namespace linalgwrap;
+
+    static_assert(
+          std::is_same<IntegralOperator,
+                       RestrictedClosedIntegralOperator<matrix_type>>::value,
+          "Currently this implementation only works for the "
+          "RestrictedClosedIntegralOperator.");
+    const size_type n_alpha = fock_bb.n_alpha();
+    const size_type n_beta = fock_bb.n_beta();
+
+    // Apply fock matrix to coefficients
+    auto fc_bf = fock_bb * coefficients_bf;
+
+    // Occupied coefficients
+    assert_size(n_alpha, n_beta);
+    auto ca_bo = view::columns(coefficients_bf, range(n_alpha));
+
+    // Density: (Factor of 2 since alpha and beta density are equal)
+    auto pa_bb = 2. * ca_bo * view::transpose(ca_bo);
+
+    // TODO Unfortunately we need to evaluate it, since we use the views, which
+    // point to references as temporaries.
+    //     Think of a clever way to get around this.
+    return static_cast<matrix_type>(overlap_bb * (pa_bb * fc_bf) -
+                                    view::columns(fc_bf, range(n_alpha)));
   }
 };
 
