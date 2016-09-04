@@ -13,3 +13,6 @@
 [submodule "modules/krims"]
 	path = modules/krims
 	url = ssh://git@github.com/linalgwrap/krims
+[submodule "modules/rapidcheck"]
+	path = modules/rapidcheck
+	url = https://github.com/emil-e/rapidcheck
