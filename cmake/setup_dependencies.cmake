@@ -25,116 +25,51 @@ set(MOLSTURM_DEFINITIONS_RELEASE "")
 #-- Macros --#
 ##############
 
-# macro to find a library from the system
-# and set it up.
-macro(add_required_upstream_library LIBRARY VERSION)
-	find_package(${LIBRARY} ${VERSION} REQUIRED CONFIG)
-
-	# Set the apropriate target names:
-	set(${LIBRARY}_DEBUG_TARGET   "${LIBRARY}.g" 
-		CACHE INTERNAL "Target name of debug version of ${LIBRARY}")
-	set(${LIBRARY}_RELEASE_TARGET "${LIBRARY}"
-		CACHE INTERNAL "Target name of release version of ${LIBRARY}")
-
-	message(STATUS "Found ${LIBRARY} config at ${${LIBRARY}_CONFIG}")
-
-	# Check that all required targets are available.
-	foreach(build ${DRB_BUILD_TYPES})
-		if(NOT TARGET "${${LIBRARY}_${build}_TARGET}")
-			message(FATAL_ERROR "We could not find a ${build} version of linalwrap at this location. \
-Either disable building a ${build} version of ${CMAKE_PROJECT_NAME} or else \
-rebuild linalgwrap with a ${build} version as well.")
-		endif()
-
-		# Add dependencies to appropriate versions of molsturm
-		set(MOLSTURM_DEPENDENCIES_${build} ${MOLSTURM_DEPENDENCIES_${build}} ${${LIBRARY}_${build}_TARGET})
-	endforeach()
-endmacro(add_required_upstream_library)
-
-# macro to setup a library from the git submodules in modules/
-# TODO Version is silently ignored.
-macro(add_required_submodule_library LIBRARY VERSION)
-	if(NOT EXISTS "${molsturm_SOURCE_DIR}/${MOLSTURM_SUBMODULES_DIR}/${LIBRARY}/CMakeLists.txt")
-		message(FATAL_ERROR "Did not find expected submodule in ${molsturm_SOURCE_DIR}/${MOLSTURM_SUBMODULES_DIR}/${LIBRARY}/. \
+macro(add_submodule_dependency LIBRARY VERSION)
+	set(${LIBRARY}_DIR "${PROJECT_SOURCE_DIR}/modules/${LIBRARY}")
+	if(NOT EXISTS "${${LIBRARY}_DIR}/CMakeLists.txt")
+		message(FATAL_ERROR "Did not find expected submodule ${LIBRARY} in ${${LIBRARY}_DIR}. \
 Try \"git submodule update --init --recursive\"")
 	endif()
 
-	message(STATUS "Found ${LIBRARY} as a submodule in ${molsturm_SOURCE_DIR}/modules/${LIBRARY}/.")
+	# Extract version from CMakeLists.txt:
+	file(STRINGS "${${LIBRARY}_DIR}/CMakeLists.txt" VERSION_RAW
+		REGEX "${LIBRARY} VERSION [0-9.]+"
+		LIMIT_COUNT 1)
+	string(REGEX MATCH "[0-9.]+" ${LIBRARY}_VERSION "${VERSION_RAW}")
+
+	# Compare against what is needed
+	if("${${LIBRARY}_VERSION}" VERSION_LESS "${VERSION}")
+		message(FATAL_ERROR "Inconsistency in the repo: Version ${VERSION} of ${LIBRARY} \
+was requested, but only version ${${LIBRARY}_VERSION} was found. Maybe a \
+\"git submodule update --init --recursive\" helps?")
+	endif()
 
 	# Set the project up:
-	add_subdirectory("${MOLSTURM_SUBMODULES_DIR}/${LIBRARY}")
+	add_subdirectory("${${LIBRARY}_DIR}")
+	include_directories("${${LIBRARY}_DIR}/src")
 
-	# Now add dependencies:
+	# Add dependencies:
 	foreach(build ${DRB_BUILD_TYPES})
 		set(MOLSTURM_DEPENDENCIES_${build} ${MOLSTURM_DEPENDENCIES_${build}} ${${LIBRARY}_${build}_TARGET})
 	endforeach()
-endmacro(add_required_submodule_library)
+endmacro(add_submodule_dependency)
 
-
-###################
-#--  libraries  --#
-###################
-
-#
-# krims
-#
-if(MOLSTURM_WITH_SYSTEM_KRIMS)
-	add_required_upstream_library(krims 0.0.0)
-else()
-	add_required_submodule_library(krims 0.0.0)
+############################
+#-- rapidcheck and catch --#
+############################
+if (MOLSTURM_ENABLE_TESTS)
+	# We need rapidcheck and catch for the tests:
+	include(cmake/setupRapidcheckCatch.cmake)
+	set(MOLSTURM_DEPENDENCIES_TEST ${MOLSTURM_DEPENDENCIES_TEST} ${rapidcheck_TARGET} ${catch_TARGET})
 endif()
 
-#
-# linalgwrap
-#
-if(MOLSTURM_WITH_SYSTEM_LINALGWRAP)
-	add_required_upstream_library(linalgwrap 0.1.0)
-else()
-	add_required_submodule_library(linalgwrap 0.1.0)
-endif()
+#######################
+#-- Other libraries --#
+#######################
 
-#
-# sturmint
-#
-if(MOLSTURM_WITH_SYSTEM_STURMINT)
-	add_required_upstream_library(sturmint 0.0.0)
-else()
-	add_required_submodule_library(sturmint 0.0.0)
-endif()
-
-#
-# gint
-#
-if(MOLSTURM_WITH_SYSTEM_GINT)
-	add_required_upstream_library(gint 0.0.0)
-else()
-	add_required_submodule_library(gint 0.0.0)
-endif()
-
-#
-# gscf
-#
-if(MOLSTURM_WITH_SYSTEM_GSCF)
-	add_required_upstream_library(gscf 0.0.0)
-else()
-	add_required_submodule_library(gscf 0.0.0)
-endif()
-
-#
-# catch and rapidcheck
-#
-if(MOLSTURM_ENABLE_TESTS)
-	# We need to have a way for the common library to be forced to expose
-	# rapidcheck and catch in this way.
-
-	if (NOT TARGET common_catch)
-		message(FATAL_ERROR "No target common_catch defined.")
-	endif()
-
-	if (NOT TARGET common_rapidcheck)
-		message(FATAL_ERROR "No target common_rapidcheck defined.")
-	endif()
-
-	# Add them to dependencies:
-	set(MOLSTURM_DEPENDENCIES_TEST ${MOLSTURM_DEPENDENCIES_TEST} common_catch common_rapidcheck)
-endif()
+add_submodule_dependency(krims 0.0.0)
+add_submodule_dependency(linalgwrap 0.2.0)
+add_submodule_dependency(sturmint 0.0.0)
+add_submodule_dependency(gint 0.0.0)
+add_submodule_dependency(gscf 0.0.0)

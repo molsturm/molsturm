@@ -21,13 +21,16 @@
 
 cmake_minimum_required(VERSION 3.0.0)
 
-# The DebugReleaseBuild module provides a nice infrastructure to 
-# simultaneously build a Debug and a Release version of the same program
-# or library, exactly what we need. Try to load it:
-include("${CMAKE_SOURCE_DIR}/cmake/IncludeLinalgwrapCmakeModule.cmake")
-include_linalgwrap_cmake_module(DebugReleaseBuild)
+# Try to locate module location of krims submodule:
+if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/modules/krims/CMakeLists.txt")
+	message(FATAL_ERROR "Could not find krims submodule. \
+Try \"git submodule update --init --recursive\"")
+endif()
+list(APPEND CMAKE_MODULE_PATH  "${CMAKE_CURRENT_LIST_DIR}/modules/krims/cmake/modules")
 
-# initialise DebugReleaseBuild:
+# Load the DebugReleaseBuild module for a simultaneous Debug and Release
+# and release build and initialise it.
+include(DebugReleaseBuild)
 drb_init()
 
 ##########################################################################
@@ -40,28 +43,13 @@ set(PackageModuleLocation share/cmake)
 option(MOLSTURM_ENABLE_TESTS "Build molsturm tests" ON)
 option(MOLSTURM_ENABLE_EXAMPLES "Build molsturm examples" ON)
 
-option(MOLSTURM_WITH_SYSTEM_LINALGWRAP
-	"Compile and install the linalgwrap library
-from the git submodule (OFF) or use system-provided version (ON)" OFF)
-option(MOLSTURM_WITH_SYSTEM_KRIMS
-	"Compile and install the krims library from the git
-submodule (OFF) or use system-provided (ON)" OFF)
-option(MOLSTURM_WITH_SYSTEM_GINT
-	"Compile and install the gint library from the git
-submodule (OFF) or use system-provided (ON)" OFF)
-option(MOLSTURM_WITH_SYSTEM_GSCF
-	"Compile and install the gscf library from the git
-submodule (OFF) or use system-provided (ON)" OFF)
-option(MOLSTURM_WITH_SYSTEM_STURMINT
-	"Compile and install the sturmint library from the git
-submodule (OFF) or use system-provided (ON)" OFF)
-
 ##########################################################################
 # Project setup
 
 # enable the new version feature introduced in cmake 3.0.0
 cmake_policy(SET CMP0048 NEW)
 project(molsturm VERSION 0.0.0)
+message("\n# Configuring ${PROJECT_NAME}\n#")
 
 # Global include directories for this project:
 include_directories("${PROJECT_SOURCE_DIR}/src")
@@ -73,11 +61,8 @@ enable_testing()
 ##########################################################################
 # Setup hard and optional dependencies and find components
 
-# Determine and setup compiler flags
-drb_setup_compiler_flags()
-
-# Set modules directory:
-set(MOLSTURM_SUBMODULES_DIR "modules")
+# Determine and setup compiler flags, enforcing C++11
+drb_setup_compiler_flags(11)
 
 # setup hard dependencies
 include(cmake/setup_dependencies.cmake)
@@ -88,20 +73,23 @@ include(cmake/setup_optional.cmake)
 ##########################################################################
 # Pass on to subdirectories:
 
-# The src directory does most of the work: Here the library is build and 
+# The src directory does most of the work: Here the library is build and
 # installation is configured.
 add_subdirectory(src)
 
 # Add subdirectories for the test.
-if(MOLSTURM_ENABLE_TESTS) 
+if(MOLSTURM_ENABLE_TESTS)
 	add_subdirectory(tests)
 endif()
 
 # Add subdirectories for the test.
-if(MOLSTURM_ENABLE_EXAMPLES) 
+if(MOLSTURM_ENABLE_EXAMPLES)
 	add_subdirectory(examples)
 endif()
 
 ##########################################################################
 # Finally install package:
 include(cmake/install_package.cmake)
+
+# and print a closing message
+message("#\n# Configuring ${PROJECT_NAME} done\n")

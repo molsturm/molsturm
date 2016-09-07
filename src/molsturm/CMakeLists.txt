@@ -6,7 +6,7 @@ set(MOLSTURM_SOURCES
 )
 
 # Dump the current version as an include file.
-include_linalgwrap_cmake_module(WriteVersionHeader)
+include(WriteVersionHeader)
 write_version_header("${CMAKE_BINARY_DIR}/src/molsturm/version_defs.hh")
 
 # Add the libraries for Debug and Release builds:
@@ -32,12 +32,12 @@ drb_target_link_libraries(RELEASE molsturm ${MOLSTURM_DEPENDENCIES_RELEASE})
 # set the installation property for these targets:
 install(TARGETS ${molsturm_TARGETS}
 	EXPORT MolsturmTargets
-	DESTINATION lib 
+	DESTINATION lib
 	COMPONENT library
 )
 
 # install the includes:
-install(DIRECTORY . 
+install(DIRECTORY .
 	DESTINATION "include/molsturm"
 	COMPONENT devel
 	FILES_MATCHING PATTERN "*.hh"

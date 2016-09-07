@@ -11,4 +11,14 @@
 #       MOLSTURM_DEFINITIONS_RELEASE		definitions for release mode
 #       
 
-# TODO nothing atm
+####################
+#-- C++ standard --#
+####################
+if (DRB_HAS_CXX14_SUPPORT)
+	message(STATUS "Detected C++14 support: Setting MOLSTURM_HAVE_CXX14")
+	LIST(APPEND MOLSTURM_DEFINITIONS "MOLSTURM_HAVE_CXX14")
+endif()
+if (DRB_HAS_CXX17_SUPPORT)
+	message(STATUS "Detected C++17 support: Setting MOLSTURM_HAVE_CXX17")
+	LIST(APPEND MOLSTURM_DEFINITIONS "MOLSTURM_HAVE_CXX17")
+endif()
