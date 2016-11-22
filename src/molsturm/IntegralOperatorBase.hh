@@ -27,7 +27,7 @@ template <typename T, typename = void>
 struct IsIntegralOperator : public std::false_type {};
 
 template <typename T>
-struct IsIntegralOperator<T, linalgwrap::void_t<typename T::stored_matrix_type>>
+struct IsIntegralOperator<T, krims::VoidType<typename T::stored_matrix_type>>
       : public std::is_base_of<
               IntegralOperatorBase<typename T::stored_matrix_type>, T> {};
 //@}

@@ -3,6 +3,7 @@
 #
 set(MOLSTURM_SOURCES
 	version.cc
+	IopPlainScfKeys.cc
 )
 
 # Dump the current version as an include file.

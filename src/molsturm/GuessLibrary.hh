@@ -17,14 +17,11 @@ DefException1(ExcObtainingGuessFailed, std::string,
  * ExcObtainingGuessFailed.
  */
 template <typename Matrix>
-linalgwrap::MultiVector<
-      typename linalgwrap::StoredTypeOf<Matrix>::type::vector_type>
+linalgwrap::MultiVector<typename linalgwrap::StoredTypeOf<Matrix>::type::vector_type>
 loewdin_guess(const Matrix& overlap_bb,
               const typename Matrix::size_type n_vectors =
                     linalgwrap::Constants<typename Matrix::size_type>::all) {
   typedef typename Matrix::size_type size_type;
-  typedef typename linalgwrap::StoredTypeOf<Matrix>::type::vector_type
-        vector_type;
 
   // apply Löwdin normalisation to the basis functions
   //   - Diagonalise the overlap
@@ -32,14 +29,16 @@ loewdin_guess(const Matrix& overlap_bb,
   //   - results in orthonormalised basis functions
 
   try {
-    auto sol = eigensystem_hermitian(overlap_bb, n_vectors);
+    auto sol = linalgwrap::eigensystem_hermitian(overlap_bb, n_vectors);
 
     // Eigenvectors and eigenvalues.
     auto& evectors = sol.evectors();
     const auto& evalues = sol.evalues();
 
-    assert_dbg(evectors.n_vectors(), n_vectors);
-    assert_dbg(evectors.n_elem(), overlap_bb.n_cols());
+    if (n_vectors != linalgwrap::Constants<typename Matrix::size_type>::all) {
+      assert_dbg(evectors.n_vectors() == n_vectors, krims::ExcInternalError());
+    }
+    assert_dbg(evectors.n_elem() == overlap_bb.n_cols(), krims::ExcInternalError());
 
     for (size_type i = 0; i < evectors.n_vectors(); ++i) {
       evectors[i] *= 1. / sqrt(evalues[i]);
@@ -47,9 +46,9 @@ loewdin_guess(const Matrix& overlap_bb,
 
     return std::move(sol.evectors());
   } catch (const linalgwrap::SolverException& e) {
-    assert_throw(false, ExcObtainingGuessFailed(
-                              "Eigensolver for overlap failed with message " +
-                              e.extra()));
+    assert_throw(false,
+                 ExcObtainingGuessFailed("Eigensolver for overlap failed with message " +
+                                         e.extra()));
   }
 }
 
