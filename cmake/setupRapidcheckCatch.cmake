@@ -31,9 +31,7 @@ set(CMAKE_CXX_FLAGS "")
 
 # Add the rapidcheck subdirectory and configure its built.
 message(STATUS "Configuring rapidcheck in dir ${rapidcheck_DIR}")
-#message("\n# Configuring rapidcheck\n#")
 add_subdirectory(${rapidcheck_DIR})
-#message("#\n# Configuring rapidcheck done\n")
 
 # undo the changes to the compiler flags:
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_STORED_TMP})

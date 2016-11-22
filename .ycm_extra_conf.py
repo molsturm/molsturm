@@ -1,24 +1,3 @@
-## ---------------------------------------------------------------------
-##
-## Copyright (C) 2016 by the linalgwrap authors
-##
-## This file is part of linalgwrap.
-##
-## linalgwrap is free software: you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published
-## by the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## linalgwrap is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with linalgwrap. If not, see <http://www.gnu.org/licenses/>.
-##
-## ---------------------------------------------------------------------
-
 import os
 
 # This file is loosely based upon the file
@@ -44,6 +23,14 @@ flags = [
     # Compile extra code blocks:
     # '-DLINALGWRAP_HAVE_GLIBC_STACKTRACE',
     '-DLINALGWRAP_HAVE_ARMADILLO',
+    '-DLINALGWRAP_HAVE_ARPACK',
+    # C++14 code blocks:
+    '-DLINALGWRAP_HAVE_CXX14',
+    '-DKRIMS_HAVE_CXX14',
+    '-DSTURMINT_HAVE_CXX14',
+    '-DGINT_HAVE_CXX14',
+    '-DGSCF_HAVE_CXX14',
+    '-DMOLSTURM_HAVE_CXX14',
     # Compile as c++14
     '-std=c++14',
     # Treat .h header files as c++:
@@ -53,11 +40,15 @@ flags = [
     # To suppress errors shown here, use "-isystem" 
     # instead of "-I"
     '-I', 'src',
-    '-isystem', './../linalgwrap/src',
-    '-isystem', './../linalgwrap/external/rapidcheck/include',
-    '-isystem', './../linalgwrap/external/catch/include',
-    '-isystem', './../gint/src',
-    '-isystem', './../gscf/src',
+    '-isystem', './modules/rapidcheck/include',
+    '-isystem', './modules/rapidcheck/ext/catch/include',
+    '-isystem', './modules/krims/src',
+    '-isystem', './modules/linalgwrap/src',
+    '-isystem', './modules/sturmint/src',
+    '-isystem', './modules/gint/src',
+    '-isystem', './modules/gscf/src',
+    # Explicit clang includes:
+    '-isystem', '/usr/lib/ycmd/clang_includes',
 ]
 
 def DirectoryOfThisScript():
