@@ -5,6 +5,8 @@
 #include <linalgwrap/io.hh>
 #include <linalgwrap/version.hh>
 #include <molsturm/GuessLibrary.hh>
+#include <molsturm/IopDiisScf.hh>
+#include <molsturm/IopDiisScfKeys.hh>
 #include <molsturm/IopPlainScf.hh>
 #include <molsturm/IopPlainScfKeys.hh>
 #include <molsturm/RestrictedClosedIntegralOperator.hh>
@@ -100,9 +102,10 @@ void run_rhf_sturmian_debug(double k_exp, size_t n_max, size_t l_max, double Z,
   debugout.write("guessfock", fock_bb);
 
   krims::ParameterMap params{//{IopPlainScfKeys::max_error_norm, 1e-9},
-                             {IopPlainScfKeys::max_iter, 20ul},
-                             {IopPlainScfKeys::print_orbital_energies, false}};
-  IopPlainScf<decltype(fock_bb)> solver(debugout, params);
+                             {IopDiisScfKeys::max_iter, 15ul},
+                             {IopDiisScfKeys::print_orbital_energies, false}};
+  IopDiisScf<decltype(fock_bb)> solver(debugout, params);
+  // IopPlainScf<decltype(fock_bb)> solver(debugout, params);
   solver.solve(fock_bb, static_cast<stored_matrix_type>(S_bb));
 }
 
