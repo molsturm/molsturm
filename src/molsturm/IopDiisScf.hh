@@ -5,7 +5,6 @@
 #include <gscf/PulayDiisScf.hh>
 #include <iostream>
 #include <iterator>
-#include <linalgwrap/io.hh>
 
 // TODO A lot of duplicated code with the plain solver
 // Maybe one should find a generalisation and merge them?
@@ -58,13 +57,8 @@ public:
   typedef typename base_type::matrix_type matrix_type;
   typedef typename base_type::vector_type vector_type;
 
-  IopDiisScf(linalgwrap::io::DataWriter_i<scalar_type>& writer,
-             const krims::ParameterMap& map)
-        : m_writer(writer) {
-    update_control_params(map);
-  }
-
-  IopDiisScf(linalgwrap::io::DataWriter_i<scalar_type>& writer) : m_writer(writer) {}
+  /** Construct scf from parameter map */
+  IopDiisScf(const krims::ParameterMap& map) { update_control_params(map); }
 
   /** \name Iteration control */
   ///@{
@@ -74,10 +68,7 @@ public:
   //! Maximal 1e energy change between two cycles.
   real_type max_1e_energy_change = 1e-5;
 
-  // Should orbital energies be printed?
-  bool print_orbital_energies = false;
-
-  /** Check convergence by checking the maximial deviation of
+  /** Check convergence by checking the maximal deviation of
    *  the last and previous eval pointers */
   bool is_converged(const state_type& state) const override {
     // We cannot be converged on the first iteration
@@ -110,8 +101,6 @@ public:
           map.at(IopDiisScfKeys::max_tot_energy_change, max_tot_energy_change);
     max_1e_energy_change =
           map.at(IopDiisScfKeys::max_1e_energy_change, max_1e_energy_change);
-    print_orbital_energies =
-          map.at(IopDiisScfKeys::print_orbital_energies, print_orbital_energies);
   }
   ///@}
 
@@ -133,44 +122,6 @@ protected:
                 << std::setw(14) << "e2e" << std::setw(14) << "etot" << std::setw(14)
                 << "scf_error" << std::endl;
     }
-  }
-
-  void on_update_eigenpairs(state_type& s) const override {
-    assert_dbg(m_writer, krims::ExcIO());
-    m_writer.write("evals" + std::to_string(s.n_iter_count()),
-                   linalgwrap::make_as_multivector<vector_type>(*s.eigenvalues_ptr()));
-    m_writer.write("evecs" + std::to_string(s.n_iter_count()), *s.eigenvectors_ptr());
-
-    // Print orbital evals:
-    if (print_orbital_energies) {
-      const std::string indent = "         ";
-      std::cout << indent << "New orbital eigenvalues: " << std::endl;
-      std::cout << indent;
-      std::ostream_iterator<scalar_type> out_it(std::cout, " ");
-      std::copy(s.eigenvalues_ptr()->begin(), s.eigenvalues_ptr()->end(), out_it);
-      std::cout << std::endl;
-    }
-
-    assert_dbg(m_writer, krims::ExcIO());
-  }
-
-  void on_update_problem_matrix(state_type& s) const override {
-    const probmat_type& fock_bb = *s.problem_matrix_ptr();
-    auto n_iter = s.n_iter_count();
-    std::string itstr = std::to_string(n_iter);
-
-    // Write current findings:
-    for (auto kv : fock_bb.terms_alpha()) {
-      // Normalise the label: The id of the term may contain funny symbols
-      std::string lala = m_writer.normalise_label(kv.first + "a" + itstr);
-      m_writer.write(lala, kv.second);
-    }
-    for (auto kv : fock_bb.terms_beta()) {
-      // Normalise the label: The id of the term may contain funny symbols
-      std::string lalb = m_writer.normalise_label(kv.first + "b" + itstr);
-      m_writer.write(lalb, kv.second);
-    }
-    m_writer.write("fock" + itstr, fock_bb);
   }
 
   void after_iteration_step(state_type& s) const override {
@@ -223,9 +174,6 @@ protected:
               << " = " << std::setprecision(15) << problem_matrix.energy_total()
               << std::endl;
   }
-
-private:
-  linalgwrap::io::DataWriter_i<scalar_type>& m_writer;
 };
 
 }  // namespace molsturm

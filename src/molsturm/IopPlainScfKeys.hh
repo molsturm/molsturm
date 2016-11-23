@@ -15,9 +15,5 @@ struct IopPlainScfKeys : public gscf::PlainScfKeys {
   /** Maximal 1e energy change between two cycles for convergence
    * (Type: real_type) */
   static const std::string max_1e_energy_change;
-
-  /** Should individual orbital energies be printed each iteration
-   * (Type: bool */
-  static const std::string print_orbital_energies;
 };
 }  // namespace molsturm

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <linalgwrap/io.hh>
 #include <linalgwrap/version.hh>
+#include <molsturm/DebugScfWrapper.hh>
 #include <molsturm/GuessLibrary.hh>
 #include <molsturm/IopDiisScf.hh>
 #include <molsturm/IopDiisScfKeys.hh>
@@ -89,28 +90,17 @@ void run_rhf_sturmian_debug(double k_exp, size_t n_max, size_t l_max, double Z,
   RestrictedClosedIntegralOperator<stored_matrix_type> fock_bb(
         integral_container, std::move(guess_bf_ptr), n_alpha, n_beta);
 
-  // Write terms:
-  for (auto kv : fock_bb.terms_alpha()) {
-    // Normalise the label: The id of the term may contain funny symbols
-    std::string lala = debugout.normalise_label("guess" + kv.first + "a");
-    debugout.write(lala, kv.second);
-  }
-  for (auto kv : fock_bb.terms_beta()) {
-    // Normalise the label: The id of the term may contain funny symbols
-    std::string lalb = debugout.normalise_label("guess" + kv.first + "b");
-    debugout.write(lalb, kv.second);
-  }
-  debugout.write("guessfock", fock_bb);
-
   krims::ParameterMap params{
         {IopPlainScfKeys::max_error_norm, 1e-9},
         {IopDiisScfKeys::max_iter, 15ul},
-        {IopDiisScfKeys::print_orbital_energies, false},
         {IopDiisScfKeys::n_eigenpairs, n_eigenpairs},
   };
-  IopDiisScf<decltype(fock_bb), decltype(S_bb)> solver(debugout, params);
-  // IopPlainScf<decltype(fock_bb), decltype(S_bb)> solver(debugout, params);
-  solver.solve(fock_bb, S_bb);
+
+  IopDiisScf<decltype(fock_bb), decltype(S_bb)> solver(params);
+  // IopPlainScf<decltype(fock_bb), decltype(S_bb)> solver(params);
+
+  DebugScfWrapper<decltype(solver)> solwrap(debugout, solver);
+  solwrap.solve(fock_bb, S_bb);
 }
 
 struct args_type {
