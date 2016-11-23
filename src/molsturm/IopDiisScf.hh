@@ -13,10 +13,11 @@
 
 namespace molsturm {
 
-template <typename ProblemMatrix>
-struct IopDiisScfState : public gscf::PulayDiisScfState<ProblemMatrix> {
-  typedef gscf::PulayDiisScfState<ProblemMatrix> base_type;
+template <typename ProblemMatrix, typename OverlapMatrix>
+struct IopDiisScfState : public gscf::PulayDiisScfState<ProblemMatrix, OverlapMatrix> {
+  typedef gscf::PulayDiisScfState<ProblemMatrix, OverlapMatrix> base_type;
   typedef typename base_type::probmat_type probmat_type;
+  typedef typename base_type::overlap_type overlap_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::real_type real_type;
   typedef typename base_type::size_type size_type;
@@ -35,24 +36,24 @@ struct IopDiisScfState : public gscf::PulayDiisScfState<ProblemMatrix> {
   // Norm of the most recent Pulay error
   real_type last_error_norm;
 
-  IopDiisScfState(probmat_type probmat, const matrix_type& overlap_mat)
+  IopDiisScfState(probmat_type probmat, const overlap_type& overlap_mat)
         : base_type{std::move(probmat), overlap_mat},
           last_step_tot_energy{linalgwrap::Constants<real_type>::invalid},
           last_step_1e_energy{linalgwrap::Constants<real_type>::invalid},
           last_error_norm{linalgwrap::Constants<real_type>::invalid} {}
 };
 
-template <typename IntegralOperator>
+template <typename IntegralOperator, typename OverlapMatrix>
 class IopDiisScf
-      : public gscf::PulayDiisScf<IntegralOperator, IopDiisScfState<IntegralOperator>> {
+      : public gscf::PulayDiisScf<IopDiisScfState<IntegralOperator, OverlapMatrix>> {
 public:
   typedef IntegralOperator operator_type;
-  typedef gscf::PulayDiisScf<IntegralOperator, IopDiisScfState<IntegralOperator>>
-        base_type;
+  typedef gscf::PulayDiisScf<IopDiisScfState<IntegralOperator, OverlapMatrix>> base_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::real_type real_type;
   typedef typename base_type::state_type state_type;
   typedef typename base_type::probmat_type probmat_type;
+  typedef typename base_type::overlap_type overlap_type;
   typedef typename base_type::size_type size_type;
   typedef typename base_type::matrix_type matrix_type;
   typedef typename base_type::vector_type vector_type;
@@ -128,7 +129,7 @@ protected:
           s.problem_matrix_ptr()->energy_2e_terms() + s.last_step_1e_energy;
 
     if (s.n_iter_count() == 1) {
-      std::cout << " " << std::setw(5) << std::right << "iter" << std::setw(14) << "e1e"
+      std::cout << "" << std::setw(5) << std::right << "iter" << std::setw(14) << "e1e"
                 << std::setw(14) << "e2e" << std::setw(14) << "etot" << std::setw(14)
                 << "scf_error" << std::endl;
     }

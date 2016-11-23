@@ -76,8 +76,9 @@ void run_rhf_sturmian_debug(double k_exp, size_t n_max, size_t l_max, double Z,
   //
   // Problem setup
   //
-  auto guess_bf_ptr =
-        std::make_shared<linalgwrap::MultiVector<vector_type>>(loewdin_guess(S_bb));
+  size_t n_eigenpairs = 2 * n_alpha;  // TODO make this configurable
+  auto guess_bf_ptr = std::make_shared<linalgwrap::MultiVector<vector_type>>(
+        loewdin_guess(S_bb, n_eigenpairs));
   debugout.write("sbb", S_bb);
   debugout.write("guess", *guess_bf_ptr);
 
@@ -101,12 +102,15 @@ void run_rhf_sturmian_debug(double k_exp, size_t n_max, size_t l_max, double Z,
   }
   debugout.write("guessfock", fock_bb);
 
-  krims::ParameterMap params{//{IopPlainScfKeys::max_error_norm, 1e-9},
-                             {IopDiisScfKeys::max_iter, 15ul},
-                             {IopDiisScfKeys::print_orbital_energies, false}};
-  IopDiisScf<decltype(fock_bb)> solver(debugout, params);
-  // IopPlainScf<decltype(fock_bb)> solver(debugout, params);
-  solver.solve(fock_bb, static_cast<stored_matrix_type>(S_bb));
+  krims::ParameterMap params{
+        {IopPlainScfKeys::max_error_norm, 1e-9},
+        {IopDiisScfKeys::max_iter, 15ul},
+        {IopDiisScfKeys::print_orbital_energies, false},
+        {IopDiisScfKeys::n_eigenpairs, n_eigenpairs},
+  };
+  IopDiisScf<decltype(fock_bb), decltype(S_bb)> solver(debugout, params);
+  // IopPlainScf<decltype(fock_bb), decltype(S_bb)> solver(debugout, params);
+  solver.solve(fock_bb, S_bb);
 }
 
 struct args_type {

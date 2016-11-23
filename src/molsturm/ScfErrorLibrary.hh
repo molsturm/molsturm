@@ -25,8 +25,9 @@ public:
    * state and P is the density computed from the alpha and beta values in F
    * and the eigenvalues of the state.
    */
+  template <typename OverlapMatrix>
   static auto pulay_error(
-        const matrix_type& overlap_bb,
+        const OverlapMatrix& overlap_bb,
         const linalgwrap::MultiVector<const vector_type>& coefficients_bf,
         const operator_type& fock_bb) -> matrix_type {
     const size_type n_alpha = fock_bb.n_alpha();

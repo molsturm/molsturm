@@ -13,10 +13,11 @@
 
 namespace molsturm {
 
-template <typename ProblemMatrix>
-struct IopPlainScfState : public gscf::PlainScfState<ProblemMatrix> {
-  typedef gscf::PlainScfState<ProblemMatrix> base_type;
+template <typename ProblemMatrix, typename OverlapMatrix>
+struct IopPlainScfState : public gscf::PlainScfState<ProblemMatrix, OverlapMatrix> {
+  typedef gscf::PlainScfState<ProblemMatrix, OverlapMatrix> base_type;
   typedef typename base_type::probmat_type probmat_type;
+  typedef typename base_type::overlap_type overlap_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::real_type real_type;
   typedef typename base_type::size_type size_type;
@@ -38,7 +39,7 @@ struct IopPlainScfState : public gscf::PlainScfState<ProblemMatrix> {
   // Current Frobenius norm of the Pulay SCF error
   real_type last_error_norm;
 
-  IopPlainScfState(probmat_type probmat, const matrix_type& overlap_mat)
+  IopPlainScfState(probmat_type probmat, const overlap_type& overlap_mat)
         : base_type{std::move(probmat), overlap_mat},
           last_step_tot_energy{linalgwrap::Constants<real_type>::invalid},
           last_step_1e_energy{linalgwrap::Constants<real_type>::invalid},
@@ -46,16 +47,17 @@ struct IopPlainScfState : public gscf::PlainScfState<ProblemMatrix> {
           last_error_norm{linalgwrap::Constants<real_type>::invalid} {}
 };
 
-template <typename IntegralOperator>
+template <typename IntegralOperator, typename OverlapMatrix>
 class IopPlainScf
-      : public gscf::PlainScf<IntegralOperator, IopPlainScfState<IntegralOperator>> {
+      : public gscf::PlainScf<IopPlainScfState<IntegralOperator, OverlapMatrix>> {
 public:
   typedef IntegralOperator operator_type;
-  typedef gscf::PlainScf<IntegralOperator, IopPlainScfState<IntegralOperator>> base_type;
+  typedef gscf::PlainScf<IopPlainScfState<IntegralOperator, OverlapMatrix>> base_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::real_type real_type;
   typedef typename base_type::state_type state_type;
   typedef typename base_type::probmat_type probmat_type;
+  typedef typename base_type::overlap_type overlap_type;
   typedef typename base_type::size_type size_type;
   typedef typename base_type::matrix_type matrix_type;
   typedef typename base_type::vector_type vector_type;
@@ -179,17 +181,15 @@ protected:
 
   void after_iteration_step(state_type& s) const override {
     const probmat_type& fock_bb = *s.problem_matrix_ptr();
-    const auto& coeff_bf = *s.eigenvectors_ptr();
-    const matrix_type& overlap_bb = s.overlap_matrix();
     auto n_iter = s.n_iter_count();
 
     // Compute the SCF Pulay error
     typedef ScfErrorLibrary<probmat_type> errorlib;
-    s.last_error_norm =
-          norm_frobenius(errorlib::pulay_error(overlap_bb, coeff_bf, fock_bb));
+    s.last_error_norm = norm_frobenius(
+          errorlib::pulay_error(s.overlap_matrix(), *s.eigenvectors_ptr(), fock_bb));
 
     // scf_iter        e1e         e2e       etot        scf_error
-    std::cout << " " << std::setw(4) << std::right << n_iter << std::setw(14)
+    std::cout << "" << std::setw(4) << std::right << n_iter << std::setw(14)
               << fock_bb.energy_1e_terms() << std::setw(14) << fock_bb.energy_2e_terms()
               << std::setw(14) << fock_bb.energy_total() << std::setw(14)
               << s.last_error_norm << std::endl;
