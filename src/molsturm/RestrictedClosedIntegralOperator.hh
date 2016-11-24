@@ -164,7 +164,7 @@ public:
    *  construction time to the energy value of that corresponding
    *  term.
    */
-  const std::map<std::string, scalar_type>& energies() const;
+  const std::map<std::string, scalar_type>& energies() const { return m_energies; }
 
   /** Return the sum of the energies of all one-electron terms */
   scalar_type energy_1e_terms() const;
@@ -417,13 +417,6 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_energies(
     m_energies[m_coul.id()] = 0.5 * m_coeff_coul * energy_coul;
     m_energies[m_exchge.id()] = 0.5 * m_coeff_exchge * energy_exchge;
   }
-}
-
-template <typename StoredMatrix>
-const std::map<std::string,
-               typename RestrictedClosedIntegralOperator<StoredMatrix>::scalar_type>&
-RestrictedClosedIntegralOperator<StoredMatrix>::energies() const {
-  return m_energies;
 }
 
 template <typename StoredMatrix>

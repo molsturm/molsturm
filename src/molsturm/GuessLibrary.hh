@@ -29,7 +29,9 @@ loewdin_guess(const Matrix& overlap_bb,
   //   - results in orthonormalised basis functions
 
   try {
-    auto sol = linalgwrap::eigensystem_hermitian(overlap_bb, n_vectors);
+    // Solve eigensystem for smallest real eigenvalues
+    krims::ParameterMap params{{linalgwrap::EigensystemKeys::which, "SR"}};
+    auto sol = linalgwrap::eigensystem_hermitian(overlap_bb, n_vectors, params);
 
     // Eigenvectors and eigenvalues.
     auto& evectors = sol.evectors();

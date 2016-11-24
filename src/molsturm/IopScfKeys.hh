@@ -1,13 +1,9 @@
 #pragma once
-#include <gscf/PlainScfKeys.hh>
+#include <gscf/PulayDiisScfKeys.hh>
 
 namespace molsturm {
 
-struct IopPlainScfKeys : public gscf::PlainScfKeys {
-  /** Maximal frobenius norm of the Pulay error matrix for convergence
-   * (Type: real_type) */
-  static const std::string max_error_norm;
-
+struct IopScfKeys : public gscf::PulayDiisScfKeys {
   /** Maximal total energy change between two cycles for convergence
    * (Type: real_type) */
   static const std::string max_tot_energy_change;
@@ -15,5 +11,9 @@ struct IopPlainScfKeys : public gscf::PlainScfKeys {
   /** Maximal 1e energy change between two cycles for convergence
    * (Type: real_type) */
   static const std::string max_1e_energy_change;
+
+  /** Verbosity for the scf solver
+   * (Type: ScfMsgType) */
+  static const std::string verbosity;
 };
 }  // namespace molsturm

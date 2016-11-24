@@ -2,7 +2,7 @@
 # The sources for the test executable
 #
 set(MOLSTURM_TESTS_SOURCES
-	DummyTest.cc
+	FunctionalityTest.cc
 	main.cc
 )
 

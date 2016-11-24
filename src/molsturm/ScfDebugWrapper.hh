@@ -1,11 +1,12 @@
 #pragma once
 #include <linalgwrap/io.hh>
 
-/** Wrap around an existing SCF and use the handler calls in order to
+/** Wrap around an existing SCF (Pulay, Iop, Plain)
+ *  and use the handler calls in order to
  *  extract status information, which is written to a file
  */
 template <typename InnerScf>
-class DebugScfWrapper : public InnerScf {
+class ScfDebugWrapper : public InnerScf {
 public:
   typedef InnerScf scf_type;
   typedef typename scf_type::probmat_type probmat_type;
@@ -13,7 +14,7 @@ public:
   typedef typename scf_type::state_type state_type;
   typedef typename scf_type::vector_type vector_type;
 
-  DebugScfWrapper(linalgwrap::io::DataWriter_i<scalar_type>& writer,
+  ScfDebugWrapper(linalgwrap::io::DataWriter_i<scalar_type>& writer,
                   const InnerScf& innerscf)
         : scf_type(innerscf), m_writer(writer) {}
 
@@ -21,7 +22,7 @@ protected:
   void before_iteration_step(state_type& s) const override {
     scf_type::before_iteration_step(s);
 
-    if (s.n_iter_count() == 1) {
+    if (s.n_iter() == 1) {
       write_fock_and_terms("guess", *s.problem_matrix_ptr());
     }
   }
@@ -29,15 +30,15 @@ protected:
   void on_update_eigenpairs(state_type& s) const override {
     scf_type::on_update_eigenpairs(s);
     assert_throw(m_writer, krims::ExcIO());
-    m_writer.write("evals" + std::to_string(s.n_iter_count()),
+    m_writer.write("evals" + std::to_string(s.n_iter()),
                    linalgwrap::make_as_multivector<vector_type>(*s.eigenvalues_ptr()));
-    m_writer.write("evecs" + std::to_string(s.n_iter_count()), *s.eigenvectors_ptr());
+    m_writer.write("evecs" + std::to_string(s.n_iter()), *s.eigenvectors_ptr());
     assert_throw(m_writer, krims::ExcIO());
   }
 
   void on_update_problem_matrix(state_type& s) const override {
     scf_type::on_update_problem_matrix(s);
-    std::string itstr = std::to_string(s.n_iter_count());
+    std::string itstr = std::to_string(s.n_iter());
     write_fock_and_terms(itstr, *s.problem_matrix_ptr());
   }
 
@@ -62,6 +63,10 @@ private:
       m_writer.write(lalb, kv.second);
     }
     m_writer.write("fock" + itstr, fock_bb);
+
+    for (auto kv : fock_bb.energies()) {
+      m_writer.write(m_writer.normalise_label(kv.first + "energy" + itstr), kv.second);
+    }
 
     assert_throw(m_writer, krims::ExcIO());
   }
