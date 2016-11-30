@@ -124,7 +124,8 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   (*guess_bf_ptr)[3](4) = (*guess_bf_ptr)[3](8) = -0.9192110607898044;
 
   /*
-   * TODO the guess builder is currently pretty bad ... so short circuit it here.
+   * TODO the guess builder is currently pretty bad and unreliable
+   *      ... so short circuit it here.
    *
    * auto guess_bf_ptr = std::make_shared<linalgwrap::MultiVector<vector_type>>(
    *    loewdin_guess(S_bb, n_eigenpairs));
@@ -153,12 +154,12 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   CHECK(res.n_iter() <= 10);
 
   // Check the eigenvalues
-  const auto& evalues = *res.eigenvalues_ptr();
+  const auto& evalues = res.orbital_energies();
   eval_expected.resize(n_eigenpairs);
   CHECK(vector_type(evalues) ==
         numcomp(vector_type(eval_expected)).tolerance(1000. * tolerance));
 
-  const auto& evectors = *res.eigenvectors_ptr();
+  const auto& evectors = res.orbital_coeff();
   // TODO For comparing all of them one needs to take rotations
   //      inside degenerate subspaces into account
   for (size_t i = 0; i < n_alpha; ++i) {
@@ -168,7 +169,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
 
   // Check the energies:
   double energytol = tolerance / 10.;
-  const auto& fock = *res.problem_matrix_ptr();
+  const auto& fock = res.problem_matrix();
   auto energies = fock.energies();
   CHECK(energies[J_bb.id()] == numcomp(exp_energy_coulomb).tolerance(energytol));
   CHECK(energies[K_bb.id()] == numcomp(exp_energy_exchange).tolerance(energytol));

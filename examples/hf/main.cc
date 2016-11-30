@@ -59,7 +59,7 @@ void print_res(const IopScfState<ProblemMatrix, OverlapMatrix>& res) {
  * \param n_beta  Number of beta electrons
  */
 void run_rhf_sturmian(double k_exp, size_t n_max, size_t l_max, double Z, size_t n_alpha,
-                      size_t n_beta, bool debug) {
+                      size_t n_beta, bool debug, double error) {
   //
   // Types and settings
   //
@@ -124,27 +124,30 @@ void run_rhf_sturmian(double k_exp, size_t n_max, size_t l_max, double Z, size_t
         integral_container, guess_bf_ptr, n_alpha, n_beta);
 
   // TODO make threshold configurable
-  krims::ParameterMap params{IopScfKeys::max_error_norm, 1e-9},
-        {IopScfKeys::max_iter, 20ul}, {IopScfKeys::n_eigenpairs, n_eigenpairs},
+  krims::ParameterMap params{
+        {IopScfKeys::max_error_norm, error},
+        {IopScfKeys::max_iter, 20ul},
+        {IopScfKeys::n_eigenpairs, n_eigenpairs},
         {IopScfKeys::verbosity, ScfMsgType::FinalSummary | ScfMsgType::IterationProcess},
         {IopScfKeys::n_prev_steps, size_t(4)},
-};
+  };
 
-if (debug) {
-  std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
-  auto debugout =
-        linalgwrap::io::make_formatted_stream_writer<linalgwrap::io::Mathematica,
-                                                     scalar_type>(mathematicafile, 1e-12);
-  debugout.write("guess", *guess_bf_ptr);
-  debugout.write("sbb", S_bb);
-  IopScf<decltype(fock_bb), decltype(S_bb)> solver(params);
-  ScfDebugWrapper<decltype(solver)> solwrap(debugout, solver);
-  auto res = solwrap.solve(fock_bb, S_bb);
-  print_res(res);
-} else {
-  auto res = run_scf(fock_bb, S_bb, params);
-  print_res(res);
-}
+  if (debug) {
+    std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
+    auto debugout =
+          linalgwrap::io::make_formatted_stream_writer<linalgwrap::io::Mathematica,
+                                                       scalar_type>(mathematicafile,
+                                                                    1e-12);
+    debugout.write("guess", *guess_bf_ptr);
+    debugout.write("sbb", S_bb);
+    IopScf<decltype(fock_bb), decltype(S_bb)> solver(params);
+    ScfDebugWrapper<decltype(solver)> solwrap(debugout, solver);
+    auto res = solwrap.solve(fock_bb, S_bb);
+    print_res(res);
+  } else {
+    auto res = run_scf(fock_bb, S_bb, params);
+    print_res(res);
+  }
 }
 
 struct args_type {
@@ -154,6 +157,7 @@ struct args_type {
   size_t n_beta = n_alpha;
   size_t n_max = 3;
   size_t l_max = n_max - 1;
+  double error = 5e-7;
 };
 
 /** Quick and dirty function to parse a string to a different type.
@@ -178,6 +182,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_k_exp = false;
   bool had_n_max = false;
   bool had_l_max = false;
+  bool had_error = false;
 
   // Parsing
   for (int i = 1; i < argc; ++i) {
@@ -229,9 +234,16 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         std::cerr << "Invalid int provided to --lmax: " << argument << std::endl;
         return false;
       }
+    } else if (flag == std::string("--error")) {
+      had_error = true;
+      if (!str_to_type<double>(argument, parsed.error)) {
+        std::cerr << "Invalid double provided to --error: " << argument << std::endl;
+        return false;
+      }
     } else {
       std::cerr << "Unknown flag: " << flag << std::endl;
-      std::cerr << "Valid are: --Z, --alpha, --beta, --kexp, --lmax, --nmax" << std::endl;
+      std::cerr << "Valid are: --Z, --alpha, --beta, --kexp, --lmax, --nmax, --error"
+                << std::endl;
       return false;
     }
   }
@@ -261,6 +273,10 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
     parsed.l_max = parsed.n_max - 1;
   }
 
+  if (!had_error) {
+    parsed.error = 5e-7;
+  }
+
   if (had_Z && had_alpha && had_beta && had_k_exp && had_n_max) {
     return true;
   }
@@ -286,11 +302,12 @@ int main(int argc, char** argv) {
             << "Z:        " << args.Z << std::endl
             << "n_alpha:  " << args.n_alpha << std::endl
             << "n_beta:   " << args.n_beta << std::endl
+            << "error:   " << args.error << std::endl
             << std::endl;
 
   const bool debug_mode = false;
   run_rhf_sturmian(args.k_exp, args.n_max, args.l_max, args.Z, args.n_alpha, args.n_beta,
-                   debug_mode);
+                   debug_mode, args.error);
   return 0;
 }
 

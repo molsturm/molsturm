@@ -30,7 +30,7 @@ loewdin_guess(const Matrix& overlap_bb,
 
   try {
     // Solve eigensystem for smallest real eigenvalues
-    krims::ParameterMap params{{linalgwrap::EigensystemKeys::which, "SR"}};
+    krims::ParameterMap params{{linalgwrap::EigensystemSolverKeys::which, "LR"}};
     auto sol = linalgwrap::eigensystem_hermitian(overlap_bb, n_vectors, params);
 
     // Eigenvectors and eigenvalues.

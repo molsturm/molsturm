@@ -1,13 +1,15 @@
 #pragma once
 #include <linalgwrap/io.hh>
 
+namespace molsturm {
+
 /** Wrap around an existing SCF (Pulay, Iop, Plain)
  *  and use the handler calls in order to
  *  extract status information, which is written to a file
  */
 template <typename InnerScf>
 class ScfDebugWrapper : public InnerScf {
-public:
+ public:
   typedef InnerScf scf_type;
   typedef typename scf_type::probmat_type probmat_type;
   typedef typename scf_type::scalar_type scalar_type;
@@ -18,31 +20,35 @@ public:
                   const InnerScf& innerscf)
         : scf_type(innerscf), m_writer(writer) {}
 
-protected:
+ protected:
   void before_iteration_step(state_type& s) const override {
     scf_type::before_iteration_step(s);
 
     if (s.n_iter() == 1) {
-      write_fock_and_terms("guess", *s.problem_matrix_ptr());
+      write_fock_and_terms("guess", s.problem_matrix());
     }
   }
 
   void on_update_eigenpairs(state_type& s) const override {
     scf_type::on_update_eigenpairs(s);
     assert_throw(m_writer, krims::ExcIO());
-    m_writer.write("evals" + std::to_string(s.n_iter()),
-                   linalgwrap::make_as_multivector<vector_type>(*s.eigenvalues_ptr()));
-    m_writer.write("evecs" + std::to_string(s.n_iter()), *s.eigenvectors_ptr());
+    m_writer.write(
+          "evals" + std::to_string(s.n_iter()),
+          linalgwrap::make_as_multivector<vector_type>(s.eigensolution().evalues()));
+
+    auto tmp_copy =
+          s.eigensolution().evectors();  // TODO right now we need this. Get rid later.
+    m_writer.write("evecs" + std::to_string(s.n_iter()), tmp_copy);
     assert_throw(m_writer, krims::ExcIO());
   }
 
   void on_update_problem_matrix(state_type& s) const override {
     scf_type::on_update_problem_matrix(s);
     std::string itstr = std::to_string(s.n_iter());
-    write_fock_and_terms(itstr, *s.problem_matrix_ptr());
+    write_fock_and_terms(itstr, s.problem_matrix());
   }
 
-private:
+ private:
   /** Write both the inner terms of the fock matrix as well as the matrix itself to the
    *  DataWriter
    *
@@ -73,3 +79,5 @@ private:
 
   linalgwrap::io::DataWriter_i<scalar_type>& m_writer;
 };
+
+}  // namespace molsturm

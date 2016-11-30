@@ -29,14 +29,20 @@ struct IopScfState : public gscf::PulayDiisScfState<ProblemMatrix, OverlapMatrix
   // One electron energy of the previous step
   real_type last_step_1e_energy;
 
-  // Norm of the most recent Pulay error
-  real_type last_error_norm;
+  /** The orbital energies of the SCF */
+  const std::vector<scalar_type>& orbital_energies() const {
+    return base_type::eigensolution().evalues();
+  }
+
+  /** The orbital coefficients of the SCF */
+  const linalgwrap::MultiVector<vector_type>& orbital_coeff() const {
+    return base_type::eigensolution().evectors();
+  }
 
   IopScfState(probmat_type probmat, const overlap_type& overlap_mat)
         : base_type{std::move(probmat), overlap_mat},
           last_step_tot_energy{linalgwrap::Constants<real_type>::invalid},
-          last_step_1e_energy{linalgwrap::Constants<real_type>::invalid},
-          last_error_norm{linalgwrap::Constants<real_type>::invalid} {}
+          last_step_1e_energy{linalgwrap::Constants<real_type>::invalid} {}
 };
 /** Scf Solver which should be used for integral operators.
  *
@@ -85,7 +91,7 @@ public:
     if (state.last_error_norm > base_type::max_error_norm) return false;
 
     // Total energy change
-    const probmat_type& fock_bb = *state.problem_matrix_ptr();
+    const probmat_type& fock_bb = state.problem_matrix();
     real_type tot_energy = fock_bb.energy_1e_terms() + fock_bb.energy_2e_terms();
     real_type tot_energy_diff = std::abs(state.last_step_tot_energy - tot_energy);
     if (tot_energy_diff > max_tot_energy_change) return false;
@@ -114,76 +120,75 @@ public:
 protected:
   matrix_type calculate_error(const state_type& s) const override {
     typedef ScfErrorLibrary<probmat_type> errorlib;
-    return errorlib::pulay_error(s.overlap_matrix(), *s.eigenvectors_ptr(),
-                                 *s.problem_matrix_ptr());
+    return errorlib::pulay_error(s.overlap_matrix(), s.eigensolution().evectors(),
+                                 s.problem_matrix());
   }
 
   void before_iteration_step(state_type& s) const override {
     // Store the last step data away for use in the convergence check:
-    s.last_step_1e_energy = s.problem_matrix_ptr()->energy_1e_terms();
-    s.last_step_tot_energy =
-          s.problem_matrix_ptr()->energy_2e_terms() + s.last_step_1e_energy;
+    s.last_step_1e_energy = s.problem_matrix().energy_1e_terms();
+    s.last_step_tot_energy = s.problem_matrix().energy_2e_terms() + s.last_step_1e_energy;
 
     if (s.n_iter() == 1) {
       if (common_bit(verbosity, ScfMsgType::IterationProcess)) {
-        std::cout << "" << std::setw(5) << std::right << "iter" << std::setw(14) << "e1e"
-                  << std::setw(14) << "e2e" << std::setw(14) << "etot" << std::setw(14)
-                  << "scf_error" << std::endl;
+        std::cout << std::setw(5) << std::right << "iter" << std::setw(12) << "e1e"
+                  << std::setw(12) << "e2e" << std::setw(12) << "etot" << std::setw(14)
+                  << "scf_error" << std::right << std::setw(12) << "n_eprob_it"
+                  << std::endl;
       }
     }
   }
 
   void after_iteration_step(state_type& s) const override {
-    const probmat_type& fock_bb = *s.problem_matrix_ptr();
-    auto n_iter = s.n_iter();
-
-    // Compute the SCF Pulay error
-    s.last_error_norm = norm_frobenius(s.errors.back());
+    const probmat_type& fock_bb = s.problem_matrix();
 
     if (common_bit(verbosity, ScfMsgType::IterationProcess)) {
       // scf_iter        e1e         e2e       etot        scf_error
-      std::cout << " " << std::setw(4) << std::right << n_iter << std::setw(14)
-                << fock_bb.energy_1e_terms() << std::setw(14) << fock_bb.energy_2e_terms()
-                << std::setw(14) << fock_bb.energy_total() << std::setw(14)
-                << s.last_error_norm << std::endl;
+      std::cout << " " << std::setw(4) << std::right << s.n_iter() << std::setw(12)
+                << fock_bb.energy_1e_terms() << std::setw(12) << fock_bb.energy_2e_terms()
+                << std::setw(12) << fock_bb.energy_total() << std::setw(14)
+                << s.last_error_norm << std::right << std::setw(12)
+                << s.eigenproblem_stats().n_iter() << std::endl;
     }
   }
 
   void on_converged(state_type& s) const override {
-    auto& problem_matrix = *s.problem_matrix_ptr();
-    auto n_iter = s.n_iter();
+    auto& fock_bb = s.problem_matrix();
 
     if (common_bit(verbosity, ScfMsgType::FinalSummary)) {
       // Indention unit:
       const std::string ind = "      ";
 
       std::cout << std::endl
-                << "Converged after " << n_iter << " iterations with energies"
-                << std::endl;
+                << "Converged after  " << std::endl
+                << ind << "SCF iterations:    " << std::right << std::setw(7)
+                << s.n_iter() << std::endl
+                << ind << "operator applies:  " << std::right << std::setw(7)
+                << s.n_mtx_applies() << std::endl
+                << "with energies" << std::endl;
 
       size_t longestfirst = 0;
-      for (auto kv : problem_matrix.energies()) {
+      for (auto kv : fock_bb.energies()) {
         longestfirst = std::max(kv.first.size(), longestfirst);
       }
 
       // Store original precision:
       linalgwrap::io::OstreamState outstate(std::cout);
 
-      for (auto kv : problem_matrix.energies()) {
-        std::cout << ind << ind << std::left << std::setw(longestfirst) << kv.first
-                  << " = " << kv.second << std::endl;
+      for (auto kv : fock_bb.energies()) {
+        std::cout << ind << std::left << std::setw(longestfirst) << kv.first << " = "
+                  << kv.second << std::endl;
       }
 
       std::cout << ind << std::left << std::setw(longestfirst) << "E_1e"
-                << " = " << std::setprecision(10) << problem_matrix.energy_1e_terms()
+                << " = " << std::setprecision(10) << fock_bb.energy_1e_terms()
                 << std::endl
                 << ind << std::left << std::setw(longestfirst) << "E_2e"
-                << " = " << std::setprecision(10) << problem_matrix.energy_2e_terms()
+                << " = " << std::setprecision(10) << fock_bb.energy_2e_terms()
                 << std::endl
                 << std::endl
                 << ind << std::left << std::setw(longestfirst) << "E_total"
-                << " = " << std::setprecision(15) << problem_matrix.energy_total()
-                << std::endl;
+                << " = " << std::setprecision(15) << fock_bb.energy_total() << std::endl;
     }
   }
 };
