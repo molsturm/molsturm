@@ -30,6 +30,8 @@ ScfMsgType& operator|=(ScfMsgType& l, ScfMsgType r) {
   return l;
 }
 
-bool common_bit(ScfMsgType in, ScfMsgType what) { return static_cast<bool>(in & what); }
+bool have_common_bit(ScfMsgType in, ScfMsgType what) {
+  return static_cast<bool>(in & what);
+}
 
 }  // namespace molsturm

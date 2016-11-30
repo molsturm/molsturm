@@ -1,17 +1,16 @@
 #pragma once
-#include "IntegralOperatorBase.hh"
-#include "IopScfKeys.hh"
-#include "ScfErrorLibrary.hh"
-#include "ScfMsgType.hh"
+#include "detail/IopScfWrapper.hh"
+#include <gscf/PlainScf.hh>
 #include <gscf/PulayDiisScf.hh>
-#include <iostream>
-#include <iterator>
 
 namespace molsturm {
 
+// TODO Maybe a common base between this guy and linalgwrap's EigensystemSolver is
+// sensible?
+
 template <typename ProblemMatrix, typename OverlapMatrix>
-struct IopScfState : public gscf::PulayDiisScfState<ProblemMatrix, OverlapMatrix> {
-  typedef gscf::PulayDiisScfState<ProblemMatrix, OverlapMatrix> base_type;
+struct IopScfState : public gscf::ScfStateBase<ProblemMatrix, OverlapMatrix> {
+  typedef gscf::ScfStateBase<ProblemMatrix, OverlapMatrix> base_type;
   typedef typename base_type::probmat_type probmat_type;
   typedef typename base_type::overlap_type overlap_type;
   typedef typename base_type::scalar_type scalar_type;
@@ -19,15 +18,6 @@ struct IopScfState : public gscf::PulayDiisScfState<ProblemMatrix, OverlapMatrix
   typedef typename base_type::size_type size_type;
   typedef typename base_type::matrix_type matrix_type;
   typedef typename base_type::vector_type vector_type;
-
-  static_assert(IsIntegralOperator<probmat_type>::value,
-                "IopDiisScf only works sensibly with a proper IntegralOperator");
-
-  // Total energy of the previous step
-  real_type last_step_tot_energy;
-
-  // One electron energy of the previous step
-  real_type last_step_1e_energy;
 
   /** The orbital energies of the SCF */
   const std::vector<scalar_type>& orbital_energies() const {
@@ -40,10 +30,53 @@ struct IopScfState : public gscf::PulayDiisScfState<ProblemMatrix, OverlapMatrix
   }
 
   IopScfState(probmat_type probmat, const overlap_type& overlap_mat)
-        : base_type{std::move(probmat), overlap_mat},
-          last_step_tot_energy{linalgwrap::Constants<real_type>::invalid},
-          last_step_1e_energy{linalgwrap::Constants<real_type>::invalid} {}
+        : base_type{std::move(probmat), overlap_mat}, m_n_iter(0), m_n_mtx_applies(0) {}
+
+  /** Transfer data from an arbitrary other state by copying
+   * it into this one. This is needed, since we need to get the
+   * data back here once the inner solvers are done with
+   * (partially) solving the SCF.
+   *
+   * \note Do not use this to setup a guess state.
+   * For this case the function obtain_guess_from exists.
+   **/
+  //@{
+  template <typename DiagMat>
+  void push_intermediate_results(
+        gscf::ScfStateBase<probmat_type, overlap_type, DiagMat>&& other_state) {
+    static_cast<linalgwrap::SolverStateBase&>(*this) = other_state;
+
+    // Copy things from ScfStateBase
+    // TODO This is all but good. The DiagMat template argument really has to
+    //      disappear (or we need yet a layer ... a common base independent of
+    //      DiagMat.
+    base_type::last_error_norm = other_state.last_error_norm;
+    base_type::problem_matrix_ptr = other_state.problem_matrix_ptr;
+    base_type::push_new_eigensolution(other_state.previous_eigensolution(),
+                                      other_state.eigenproblem_stats());
+    base_type::push_new_eigensolution(other_state.eigensolution(),
+                                      other_state.eigenproblem_stats());
+
+    // Copy extra things from us:
+    m_n_iter += other_state.n_iter();
+    m_n_mtx_applies += other_state.n_mtx_applies();
+  }
+
+  void push_intermediate_results(base_type&& other_state) {
+    static_cast<base_type&>(*this) = other_state;
+    m_n_iter += other_state.n_iter();
+    m_n_mtx_applies += other_state.n_mtx_applies();
+  }
+  //@}
+
+  size_t n_iter() const override { return m_n_iter; }
+  size_t n_mtx_applies() const override { return m_n_mtx_applies; }
+
+ private:
+  size_t m_n_iter;
+  size_t m_n_mtx_applies;
 };
+
 /** Scf Solver which should be used for integral operators.
  *
  * TODO
@@ -54,10 +87,10 @@ struct IopScfState : public gscf::PulayDiisScfState<ProblemMatrix, OverlapMatrix
  * DIIS becomes ill-conditioned
  */
 template <typename IntegralOperator, typename OverlapMatrix>
-class IopScf : public gscf::PulayDiisScf<IopScfState<IntegralOperator, OverlapMatrix>> {
-public:
+class IopScf : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapMatrix>> {
+ public:
   typedef IntegralOperator operator_type;
-  typedef gscf::PulayDiisScf<IopScfState<IntegralOperator, OverlapMatrix>> base_type;
+  typedef gscf::ScfBase<IopScfState<IntegralOperator, OverlapMatrix>> base_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::real_type real_type;
   typedef typename base_type::state_type state_type;
@@ -81,30 +114,7 @@ public:
   //! How verbose should the solver be.
   ScfMsgType verbosity = ScfMsgType::Silent;
 
-  /** Check convergence by checking the maximal deviation of
-   *  the last and previous eval pointers */
-  bool is_converged(const state_type& state) const override {
-    // We cannot be converged on the first iteration
-    if (state.n_iter() <= 1) return false;
-
-    // Check the most recent SCF error
-    if (state.last_error_norm > base_type::max_error_norm) return false;
-
-    // Total energy change
-    const probmat_type& fock_bb = state.problem_matrix();
-    real_type tot_energy = fock_bb.energy_1e_terms() + fock_bb.energy_2e_terms();
-    real_type tot_energy_diff = std::abs(state.last_step_tot_energy - tot_energy);
-    if (tot_energy_diff > max_tot_energy_change) return false;
-
-    // 1e energy change
-    real_type e1_energy_diff =
-          std::abs(state.last_step_1e_energy - fock_bb.energy_1e_terms());
-    if (e1_energy_diff > max_1e_energy_change) return false;
-
-    // TODO check convergence in density
-
-    return true;
-  }
+  // TODO introduce method parameter!
 
   /** Update control parameters from Parameter map */
   void update_control_params(const krims::ParameterMap& map) {
@@ -114,83 +124,36 @@ public:
           map.at(IopScfKeys::max_tot_energy_change, max_tot_energy_change);
     max_1e_energy_change = map.at(IopScfKeys::max_1e_energy_change, max_1e_energy_change);
     verbosity = map.at(IopScfKeys::verbosity, verbosity);
+
+    // Copy the map to the internal storage such that we
+    // can pass it on to the actual eigensolvers.
+    m_inner_params = map;
+  }
+
+  /** Get the current settings of all internal control parameters and
+   *  update the ParameterMap accordingly.
+   */
+  void get_control_params(krims::ParameterMap& map) const {
+    base_type::get_control_params(map);
+    map.update(IopScfKeys::max_tot_energy_change, max_tot_energy_change);
+    map.update(IopScfKeys::max_1e_energy_change, max_1e_energy_change);
+    map.update(IopScfKeys::verbosity, verbosity);
   }
   ///@}
 
-protected:
-  matrix_type calculate_error(const state_type& s) const override {
-    typedef ScfErrorLibrary<probmat_type> errorlib;
-    return errorlib::pulay_error(s.overlap_matrix(), s.eigensolution().evectors(),
-                                 s.problem_matrix());
-  }
+  /** Solve the state. Uses different SCF algorithms depending
+   *  on certain properties of the iteration process */
+  void solve_state(state_type& state) const override;
 
-  void before_iteration_step(state_type& s) const override {
-    // Store the last step data away for use in the convergence check:
-    s.last_step_1e_energy = s.problem_matrix().energy_1e_terms();
-    s.last_step_tot_energy = s.problem_matrix().energy_2e_terms() + s.last_step_1e_energy;
-
-    if (s.n_iter() == 1) {
-      if (common_bit(verbosity, ScfMsgType::IterationProcess)) {
-        std::cout << std::setw(5) << std::right << "iter" << std::setw(12) << "e1e"
-                  << std::setw(12) << "e2e" << std::setw(12) << "etot" << std::setw(14)
-                  << "scf_error" << std::right << std::setw(12) << "n_eprob_it"
-                  << std::endl;
-      }
-    }
-  }
-
-  void after_iteration_step(state_type& s) const override {
-    const probmat_type& fock_bb = s.problem_matrix();
-
-    if (common_bit(verbosity, ScfMsgType::IterationProcess)) {
-      // scf_iter        e1e         e2e       etot        scf_error
-      std::cout << " " << std::setw(4) << std::right << s.n_iter() << std::setw(12)
-                << fock_bb.energy_1e_terms() << std::setw(12) << fock_bb.energy_2e_terms()
-                << std::setw(12) << fock_bb.energy_total() << std::setw(14)
-                << s.last_error_norm << std::right << std::setw(12)
-                << s.eigenproblem_stats().n_iter() << std::endl;
-    }
-  }
-
-  void on_converged(state_type& s) const override {
-    auto& fock_bb = s.problem_matrix();
-
-    if (common_bit(verbosity, ScfMsgType::FinalSummary)) {
-      // Indention unit:
-      const std::string ind = "      ";
-
-      std::cout << std::endl
-                << "Converged after  " << std::endl
-                << ind << "SCF iterations:    " << std::right << std::setw(7)
-                << s.n_iter() << std::endl
-                << ind << "operator applies:  " << std::right << std::setw(7)
-                << s.n_mtx_applies() << std::endl
-                << "with energies" << std::endl;
-
-      size_t longestfirst = 0;
-      for (auto kv : fock_bb.energies()) {
-        longestfirst = std::max(kv.first.size(), longestfirst);
-      }
-
-      // Store original precision:
-      linalgwrap::io::OstreamState outstate(std::cout);
-
-      for (auto kv : fock_bb.energies()) {
-        std::cout << ind << std::left << std::setw(longestfirst) << kv.first << " = "
-                  << kv.second << std::endl;
-      }
-
-      std::cout << ind << std::left << std::setw(longestfirst) << "E_1e"
-                << " = " << std::setprecision(10) << fock_bb.energy_1e_terms()
-                << std::endl
-                << ind << std::left << std::setw(longestfirst) << "E_2e"
-                << " = " << std::setprecision(10) << fock_bb.energy_2e_terms()
-                << std::endl
-                << std::endl
-                << ind << std::left << std::setw(longestfirst) << "E_total"
-                << " = " << std::setprecision(15) << fock_bb.energy_total() << std::endl;
-    }
-  }
+ private:
+  /** Cache of the parameters which will be passed to the actual SCF.
+   *
+   * A mixture of the original parameters, which the user passed to us
+   * and the current state which is reflected in the member variables
+   * in this class and the subclasses. Should be updated with
+   * get_control_params *before* the actual inner eigensolver invocation.
+   */
+  mutable krims::ParameterMap m_inner_params;
 };
 
 /** Try to find the self consistent field configuration for an integral operator
@@ -199,8 +162,42 @@ protected:
 template <typename IntegralOperator, typename OverlapMatrix>
 typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
       IntegralOperator iop, const OverlapMatrix& s, krims::ParameterMap map) {
-  IopScf<IntegralOperator, OverlapMatrix> solver(map);
-  return solver.solve(std::move(iop), s);
+  typedef IopScf<IntegralOperator, OverlapMatrix> scf;
+  return scf{map}.solve(std::move(iop), s);
+}
+
+//
+// -----------------------------------------------------------
+//
+
+template <typename IntegralOperator, typename OverlapMatrix>
+void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) const {
+  using namespace gscf;
+  assert_dbg(!state.is_failed(), krims::ExcInvalidState("Cannot solve a failed state"));
+
+  // For now always do DIIS:
+  typedef detail::IopScfWrapper<PulayDiisScf<
+        detail::IopScfStateWrapper<PulayDiisScfState<IntegralOperator, OverlapMatrix>>>>
+        Solver;
+
+  //
+  //
+  //
+
+  typename Solver::state_type inner_state{state.problem_matrix(), state.overlap_matrix()};
+  inner_state.obtain_guess_from(state);
+
+  // Make sure that control parameters are up to date:
+  get_control_params(m_inner_params);
+
+  try {
+    Solver{m_inner_params}.solve_state(inner_state);
+    state.push_intermediate_results(std::move(inner_state));
+  } catch (linalgwrap::SolverException& e) {
+    // On exception still update the state reference
+    state.push_intermediate_results(std::move(inner_state));
+    throw;
+  }
 }
 
 }  // namespace molsturm
