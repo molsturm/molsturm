@@ -11,10 +11,45 @@
 #include <molsturm/ScfDebugWrapper.hh>
 #include <molsturm/version.hh>
 
+DefException1(
+      ExcTooSmallBasis, size_t,
+      << "A basis of size " << arg1
+      << " is too small to incorporate this many electrons. Choose a larger basis.");
+
 namespace hf {
 using namespace molsturm;
 using namespace linalgwrap;
 using namespace krims;
+
+/** Print the resulting eigenstates */
+template <typename ProblemMatrix, typename OverlapMatrix>
+void print_res(const IopScfState<ProblemMatrix, OverlapMatrix>& res) {
+  io::OstreamState oldstate(std::cout);
+
+  const std::string indt = "    ";
+  std::cout << "Obtained Hartree-Fock orbitals: " << std::endl;
+  std::cout << indt << "a b" << std::endl;
+
+  size_t n_alpha = res.problem_matrix().n_alpha();
+  size_t n_beta = res.problem_matrix().n_beta();
+  const auto& orben = res.orbital_energies();
+  for (const auto& val : orben) {
+    std::cout << indt;
+    if (n_alpha > 0) {
+      --n_alpha;
+      std::cout << "* ";
+    } else {
+      std::cout << "  ";
+    }
+    if (n_beta > 0) {
+      --n_beta;
+      std::cout << "* ";
+    } else {
+      std::cout << "  ";
+    }
+    std::cout << std::right << std::setw(17) << std::setprecision(12) << val << std::endl;
+  }
+}
 
 /** Run an (atomic) SCF based on the integral data Sturmian14.
  *
@@ -61,6 +96,8 @@ void run_rhf_sturmian(double k_exp, size_t n_max, size_t l_max, double Z, size_t
   integral_type J_bb = integrals("coulomb");
   integral_type K_bb = integrals("exchange");
 
+  std::cout << "Basis size:  " << S_bb.n_rows() << std::endl << std::endl;
+
   // Combine 1e terms:
   std::vector<integral_type> terms_1e{std::move(T_bb), std::move(V0_bb)};
 
@@ -68,10 +105,14 @@ void run_rhf_sturmian(double k_exp, size_t n_max, size_t l_max, double Z, size_t
   // Problem setup
   //
   // TODO Make this configurable
-  // TODO There is an error in arpack if one chooses n_eig == 6 or n_eig == 5
-  //      A bad guess is found if n_eig ==4 or n_eig == 3 or n_eig ==2
-  //      i.e. slower than expected convergence
+  //   It is important to note, that the value should not be too small
+  //   (not enough virtuals) and not too large
+  //   (numerical problems with eigensolvers)
   size_t n_eigenpairs = std::max(n_alpha, n_beta) * 2 + 2;
+  n_eigenpairs = std::min(S_bb.n_rows() / 2 - 2, n_eigenpairs);
+  assert_throw(std::max(n_alpha, n_beta) <= n_eigenpairs,
+               ExcTooSmallBasis(S_bb.n_rows()));
+
   auto guess_bf_ptr = std::make_shared<linalgwrap::MultiVector<vector_type>>(
         loewdin_guess(S_bb, n_eigenpairs));
 
@@ -82,28 +123,28 @@ void run_rhf_sturmian(double k_exp, size_t n_max, size_t l_max, double Z, size_t
   RestrictedClosedIntegralOperator<stored_matrix_type> fock_bb(
         integral_container, guess_bf_ptr, n_alpha, n_beta);
 
-  krims::ParameterMap params{
-        {IopScfKeys::max_error_norm, 1e-9},
-        {IopScfKeys::max_iter, 20ul},
-        {IopScfKeys::n_eigenpairs, n_eigenpairs},
+  // TODO make threshold configurable
+  krims::ParameterMap params{IopScfKeys::max_error_norm, 1e-9},
+        {IopScfKeys::max_iter, 20ul}, {IopScfKeys::n_eigenpairs, n_eigenpairs},
         {IopScfKeys::verbosity, ScfMsgType::FinalSummary | ScfMsgType::IterationProcess},
         {IopScfKeys::n_prev_steps, size_t(4)},
-  };
+};
 
-  if (debug) {
-    std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
-    auto debugout =
-          linalgwrap::io::make_formatted_stream_writer<linalgwrap::io::Mathematica,
-                                                       scalar_type>(mathematicafile,
-                                                                    1e-12);
-    debugout.write("guess", *guess_bf_ptr);
-    debugout.write("sbb", S_bb);
-    IopScf<decltype(fock_bb), decltype(S_bb)> solver(params);
-    ScfDebugWrapper<decltype(solver)> solwrap(debugout, solver);
-    solwrap.solve(fock_bb, S_bb);
-  } else {
-    run_scf(fock_bb, S_bb, params);
-  }
+if (debug) {
+  std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
+  auto debugout =
+        linalgwrap::io::make_formatted_stream_writer<linalgwrap::io::Mathematica,
+                                                     scalar_type>(mathematicafile, 1e-12);
+  debugout.write("guess", *guess_bf_ptr);
+  debugout.write("sbb", S_bb);
+  IopScf<decltype(fock_bb), decltype(S_bb)> solver(params);
+  ScfDebugWrapper<decltype(solver)> solwrap(debugout, solver);
+  auto res = solwrap.solve(fock_bb, S_bb);
+  print_res(res);
+} else {
+  auto res = run_scf(fock_bb, S_bb, params);
+  print_res(res);
+}
 }
 
 struct args_type {
@@ -247,7 +288,7 @@ int main(int argc, char** argv) {
             << "n_beta:   " << args.n_beta << std::endl
             << std::endl;
 
-  const bool debug_mode = true;
+  const bool debug_mode = false;
   run_rhf_sturmian(args.k_exp, args.n_max, args.l_max, args.Z, args.n_alpha, args.n_beta,
                    debug_mode);
   return 0;
