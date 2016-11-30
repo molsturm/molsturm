@@ -13,7 +13,7 @@ namespace molsturm {
 /** Class representing an restricted closed-shell integral operator */
 template <typename StoredMatrix>
 class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatrix> {
-public:
+ public:
   typedef IntegralOperatorBase<StoredMatrix> base_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::stored_matrix_type stored_matrix_type;
@@ -201,7 +201,7 @@ public:
   /** Get the number of beta electrons */
   size_type n_beta() const { return m_n_alpha; }
 
-private:
+ private:
   typedef const linalgwrap::MultiVector<vector_type> coefficients_type;
   typedef std::shared_ptr<coefficients_type> coefficients_ptr_type;
 

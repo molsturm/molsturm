@@ -7,7 +7,7 @@ namespace molsturm {
 
 template <typename IntegralOperator>
 class ScfErrorLibrary {
-public:
+ public:
   static_assert(IsIntegralOperator<IntegralOperator>::value,
                 "IntegralOperator needs to be derived off IntegralOperatorBase");
 

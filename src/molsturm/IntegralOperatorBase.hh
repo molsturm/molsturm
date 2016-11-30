@@ -5,7 +5,7 @@ namespace molsturm {
 
 template <typename StoredMatrix>
 class IntegralOperatorBase : public linalgwrap::LazyMatrix_i<StoredMatrix> {
-public:
+ public:
   typedef linalgwrap::LazyMatrix_i<StoredMatrix> base_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::stored_matrix_type stored_matrix_type;
@@ -28,8 +28,8 @@ struct IsIntegralOperator : public std::false_type {};
 
 template <typename T>
 struct IsIntegralOperator<T, krims::VoidType<typename T::stored_matrix_type>>
-      : public std::is_base_of<
-              IntegralOperatorBase<typename T::stored_matrix_type>, T> {};
+      : public std::is_base_of<IntegralOperatorBase<typename T::stored_matrix_type>, T> {
+};
 //@}
 
 }  // namespace molsturm

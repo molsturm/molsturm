@@ -13,9 +13,8 @@ namespace molsturm {
 // This was a try for a generalisation of the RestrictedClosedIntegralOperator
 // to a general restricted operator.
 template <typename StoredMatrix>
-class RestrictedIntegralOperator
-      : public linalgwrap::LazyMatrix_i<StoredMatrix> {
-public:
+class RestrictedIntegralOperator : public linalgwrap::LazyMatrix_i<StoredMatrix> {
+ public:
   typedef linalgwrap::LazyMatrix_i<StoredMatrix> base_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::stored_matrix_type stored_matrix_type;
@@ -24,14 +23,12 @@ public:
         lazy_matrix_expression_ptr_type;
 
   //! Type of a integral term
-  typedef typename IntegralTermContainer<stored_matrix_type>::int_term_type
-        int_term_type;
+  typedef typename IntegralTermContainer<stored_matrix_type>::int_term_type int_term_type;
 
   // TODO this is really bad, since it is a type which is only defined in
   // the detail namespace
   //! Type of a scale view to an integral term
-  typedef linalgwrap::view::detail::ScaleView<int_term_type>
-        scaled_int_term_type;
+  typedef linalgwrap::view::detail::ScaleView<int_term_type> scaled_int_term_type;
 
   /** \name Construct a Fock/Kohn-Sham operator for a restricted calculation
    *
@@ -115,7 +112,7 @@ public:
   /** Get the number of beta electrons */
   size_type n_beta() const;
 
-private:
+ private:
   /** Update the state of m_operator and calculate the new energies */
   void update_state_and_energies(const stored_matrix_type& coefficients_bf);
 
@@ -173,8 +170,7 @@ private:
 template <typename StoredMatrix>
 RestrictedIntegralOperator<StoredMatrix>::RestrictedIntegralOperator(
       IntegralTermContainer<StoredMatrix> integral_terms,
-      const stored_matrix_type& initial_guess_bf, size_type n_alpha,
-      size_type n_beta)
+      const stored_matrix_type& initial_guess_bf, size_type n_alpha, size_type n_beta)
       : m_coeff_1e{std::move(integral_terms.coefficients_1e)},
         m_terms_1e{std::move(integral_terms.integral_terms_1e)},
         m_coeff_coul{integral_terms.coefficient_coulomb},
@@ -258,8 +254,7 @@ RestrictedIntegralOperator<StoredMatrix>::n_cols() const {
 
 template <typename StoredMatrix>
 typename RestrictedIntegralOperator<StoredMatrix>::scalar_type
-RestrictedIntegralOperator<StoredMatrix>::operator()(size_type row,
-                                                     size_type col) const {
+RestrictedIntegralOperator<StoredMatrix>::operator()(size_type row, size_type col) const {
   assert_greater(row, n_rows());
   assert_greater(col, n_cols());
 
@@ -275,8 +270,7 @@ typename RestrictedIntegralOperator<StoredMatrix>::stored_matrix_type
 }
 
 template <typename StoredMatrix>
-typename RestrictedIntegralOperator<
-      StoredMatrix>::lazy_matrix_expression_ptr_type
+typename RestrictedIntegralOperator<StoredMatrix>::lazy_matrix_expression_ptr_type
 RestrictedIntegralOperator<StoredMatrix>::clone() const {
   return lazy_matrix_expression_ptr_type(
         new RestrictedIntegralOperator<StoredMatrix>(*this));
@@ -309,14 +303,12 @@ void RestrictedIntegralOperator<StoredMatrix>::update_state_and_energies(
   const std::string occ_coeff_key("coefficients_occupied");
 
   ParameterMap occa_map;
-  occa_map.update(
-        occ_coeff_key,
-        make_subscription(ca_bo, "ParameterMap in RestrictedOperator"));
+  occa_map.update(occ_coeff_key,
+                  make_subscription(ca_bo, "ParameterMap in RestrictedOperator"));
 
   ParameterMap occb_map;
-  occb_map.update(
-        occ_coeff_key,
-        make_subscription(cb_bo, "ParameterMap in RestrictedOperator"));
+  occb_map.update(occ_coeff_key,
+                  make_subscription(cb_bo, "ParameterMap in RestrictedOperator"));
 
   //
   // Update 1e part, J and K == Update the operator.
@@ -342,8 +334,7 @@ void RestrictedIntegralOperator<StoredMatrix>::update_state_and_energies(
     assert_dbg(m_n_beta == m_n_alpha, ExcNotImplemented());
 
     // Calculate energy. Factor 2 because of alpha == beta
-    scalar_type energy =
-          2. * (view::transpose(ca_bo) * (*itterm) * ca_bo).trace();
+    scalar_type energy = 2. * (view::transpose(ca_bo) * (*itterm) * ca_bo).trace();
 
     // Scale energy appropriately and set it in map:
     m_energies[itterm->id()] = (*itcoeff) * energy;
@@ -357,12 +348,10 @@ void RestrictedIntegralOperator<StoredMatrix>::update_state_and_energies(
     assert_dbg(m_n_beta == m_n_alpha, ExcNotImplemented());
 
     // Coulomb: Factor 2 because of alpha == beta
-    scalar_type energy_coul =
-          2. * (view::transpose(ca_bo) * m_coul * ca_bo).trace();
+    scalar_type energy_coul = 2. * (view::transpose(ca_bo) * m_coul * ca_bo).trace();
 
     // Exchange: Factor 2 because of alpha == beta
-    scalar_type energy_exchge =
-          2. * (view::transpose(ca_bo) * m_exchge * ca_bo).trace();
+    scalar_type energy_exchge = 2. * (view::transpose(ca_bo) * m_exchge * ca_bo).trace();
 
     // Scale energy appropriately and set it in map:
     // 0.5 because those are 2e term and we need to avoid double counting.
@@ -400,8 +389,8 @@ RestrictedIntegralOperator<StoredMatrix>::energy_2e_terms() const {
 }
 
 template <typename StoredMatrix>
-std::map<std::string, typename RestrictedIntegralOperator<
-                            StoredMatrix>::scaled_int_term_type>
+std::map<std::string,
+         typename RestrictedIntegralOperator<StoredMatrix>::scaled_int_term_type>
 RestrictedIntegralOperator<StoredMatrix>::terms_alpha() const {
   using namespace linalgwrap;
 
@@ -424,8 +413,8 @@ RestrictedIntegralOperator<StoredMatrix>::terms_alpha() const {
 }
 
 template <typename StoredMatrix>
-std::map<std::string, typename RestrictedIntegralOperator<
-                            StoredMatrix>::scaled_int_term_type>
+std::map<std::string,
+         typename RestrictedIntegralOperator<StoredMatrix>::scaled_int_term_type>
 RestrictedIntegralOperator<StoredMatrix>::terms_beta() const {
   assert_dbg(m_n_beta == m_n_alpha, linalgwrap::ExcNotImplemented());
   return terms_alpha();
