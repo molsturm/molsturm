@@ -37,7 +37,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   const gint::OrbitalType otype = gint::COMPLEX_ATOMIC;
 
   // The lookup class type to get the actual integrals
-  typedef gint::IntegralLookup<stored_matrix_type, otype> int_lookup_type;
+  typedef gint::IntegralLookup<otype> int_lookup_type;
 
   // The type of the integral terms:
   typedef typename int_lookup_type::integral_type integral_type;

@@ -72,7 +72,7 @@ void run_rhf_sturmian(double k_exp, size_t n_max, size_t l_max, double Z, size_t
   const gint::OrbitalType otype = gint::COMPLEX_ATOMIC;
 
   // The lookup class type to get the actual integrals
-  typedef gint::IntegralLookup<stored_matrix_type, otype> int_lookup_type;
+  typedef gint::IntegralLookup<otype> int_lookup_type;
 
   // The type of the integral terms:
   typedef typename int_lookup_type::integral_type integral_type;
