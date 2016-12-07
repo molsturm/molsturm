@@ -58,8 +58,8 @@ void print_res(const IopScfState<ProblemMatrix, OverlapMatrix>& res) {
  * \param n_alpha Number of alpha electrons
  * \param n_beta  Number of beta electrons
  */
-void run_rhf_sturmian(double k_exp, size_t n_max, size_t l_max, double Z, size_t n_alpha,
-                      size_t n_beta, bool debug, double error) {
+  void run_rhf_sturmian(double k_exp, size_t n_max, size_t l_max, size_t m_max, double Z, size_t n_alpha,
+                      size_t n_beta, bool debug, double error, string basis_type) {
   //
   // Types and settings
   //
@@ -81,12 +81,13 @@ void run_rhf_sturmian(double k_exp, size_t n_max, size_t l_max, double Z, size_t
   // Integral terms
   //
   // Generate integral lookup object
-  krims::ParameterMap intparams{{"basis_type", "atomic/static14"},
-                                // {"basis_type", "atomic/cs_dummy"},
+  krims::ParameterMap intparams{//{"basis_type", "cs_static14"},
+                                {"basis_type", basis_type},
                                 {"k_exponent", k_exp},
                                 {"Z_charge", Z},
                                 {"n_max", static_cast<int>(n_max)},
-                                {"l_max", static_cast<int>(l_max)}};
+				{"l_max", static_cast<int>(l_max)},
+				{"m_max", static_cast<int>(m_max)}};
   int_lookup_type integrals{intparams};
 
   // Get the integral as actual objects.
@@ -157,7 +158,9 @@ struct args_type {
   size_t n_beta = n_alpha;
   size_t n_max = 3;
   size_t l_max = n_max - 1;
+  size_t m_max = n_max - 1;  
   double error = 5e-7;
+  string basis_type = "cs_dummy";
 };
 
 /** Quick and dirty function to parse a string to a different type.
@@ -182,7 +185,9 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_k_exp = false;
   bool had_n_max = false;
   bool had_l_max = false;
+  bool had_m_max = false;  
   bool had_error = false;
+  bool had_basis_type = false;
 
   // Parsing
   for (int i = 1; i < argc; ++i) {
@@ -234,15 +239,24 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         std::cerr << "Invalid int provided to --lmax: " << argument << std::endl;
         return false;
       }
+    } else if (flag == std::string("--mmax")) {
+      had_m_max = true;
+      if (!str_to_type<size_t>(argument, parsed.m_max)) {
+        std::cerr << "Invalid int provided to --mmax: " << argument << std::endl;
+        return false;
+      }
     } else if (flag == std::string("--error")) {
       had_error = true;
       if (!str_to_type<double>(argument, parsed.error)) {
         std::cerr << "Invalid double provided to --error: " << argument << std::endl;
         return false;
       }
+    } else if (flag == std::string("--basis_type")) {
+      had_basis_type = true;
+      parsed.basis_type = string(argument);
     } else {
       std::cerr << "Unknown flag: " << flag << std::endl;
-      std::cerr << "Valid are: --Z, --alpha, --beta, --kexp, --lmax, --nmax, --error"
+      std::cerr << "Valid are: --Z, --alpha, --beta, --kexp, --lmax, --nmax, --error, --basis_type"
                 << std::endl;
       return false;
     }
@@ -276,6 +290,12 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   if (!had_error) {
     parsed.error = 5e-7;
   }
+  if(!had_basis_type) {
+    parsed.basis_type = "cs_dummy";
+  }
+  if(!had_m_max) {
+    parsed.m_max = parsed.l_max;
+  }
 
   if (had_Z && had_alpha && had_beta && had_k_exp && had_n_max) {
     return true;
@@ -299,6 +319,7 @@ int main(int argc, char** argv) {
             << "k_exp:    " << args.k_exp << std::endl
             << "n_max:    " << args.n_max << std::endl
             << "l_max:    " << args.l_max << std::endl
+            << "m_max:    " << args.m_max << std::endl    
             << "Z:        " << args.Z << std::endl
             << "n_alpha:  " << args.n_alpha << std::endl
             << "n_beta:   " << args.n_beta << std::endl
@@ -306,8 +327,8 @@ int main(int argc, char** argv) {
             << std::endl;
 
   const bool debug_mode = false;
-  run_rhf_sturmian(args.k_exp, args.n_max, args.l_max, args.Z, args.n_alpha, args.n_beta,
-                   debug_mode, args.error);
+  run_rhf_sturmian(args.k_exp, args.n_max, args.l_max, args.m_max, args.Z, args.n_alpha, args.n_beta,
+                   debug_mode, args.error, args.basis_type);
   return 0;
 }
 
