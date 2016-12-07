@@ -94,12 +94,13 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   //
   // Setup integrals
   //
-  krims::ParameterMap intparams{{"basis_type", "atomic/static14"},
-                                // {"basis_type", "atomic/cs_dummy"},
+  krims::ParameterMap intparams{//{"basis_type", "cs_static14"},
+                                {"basis_type", "cs_naive"},
                                 {"k_exponent", k_exp},
                                 {"Z_charge", Z},
                                 {"n_max", n_max},
-                                {"l_max", l_max}};
+				{"l_max", l_max},
+				{"m_max", l_max}};
   int_lookup_type integrals{intparams};
 
   // Get the integral as actual objects.
@@ -116,12 +117,12 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   // Problem setup and run.
   //
   auto guess_bf_ptr = std::make_shared<MultiVector<vector_type>>(S_bb.n_rows(), 4);
-  (*guess_bf_ptr)[0](0) = -0.9238795325112872;
-  (*guess_bf_ptr)[0](1) = -1.306562964876376;
-  (*guess_bf_ptr)[0](5) = -0.9238795325112864;
-  (*guess_bf_ptr)[1](3) = (*guess_bf_ptr)[1](7) = -0.9192110607898044;
-  (*guess_bf_ptr)[2](2) = (*guess_bf_ptr)[2](6) = -0.9192110607898044;
-  (*guess_bf_ptr)[3](4) = (*guess_bf_ptr)[3](8) = -0.9192110607898044;
+  (*guess_bf_ptr)[0](0) = -0.9238795325112872L;
+  (*guess_bf_ptr)[0](1) = -1.306562964876376L;
+  (*guess_bf_ptr)[0](5) = -0.9238795325112864L;
+  (*guess_bf_ptr)[1](3) = (*guess_bf_ptr)[1](7) = -0.9192110607898044L;
+  (*guess_bf_ptr)[2](2) = (*guess_bf_ptr)[2](6) = -0.9192110607898044L;
+  (*guess_bf_ptr)[3](4) = (*guess_bf_ptr)[3](8) = -0.9192110607898044L;
 
   /*
    * TODO the guess builder is currently pretty bad and unreliable
