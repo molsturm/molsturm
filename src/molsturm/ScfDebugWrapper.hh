@@ -13,6 +13,7 @@ class ScfDebugWrapper : public InnerScf {
   typedef InnerScf scf_type;
   typedef typename scf_type::probmat_type probmat_type;
   typedef typename scf_type::scalar_type scalar_type;
+  typedef typename scf_type::matrix_type matrix_type;
   typedef typename scf_type::state_type state_type;
   typedef typename scf_type::vector_type vector_type;
 
@@ -27,6 +28,12 @@ class ScfDebugWrapper : public InnerScf {
     if (s.n_iter() == 1) {
       write_fock_and_terms("guess", s.problem_matrix());
     }
+  }
+
+  matrix_type calculate_error(const state_type& s) const override {
+    matrix_type error = scf_type::calculate_error(s);
+    m_writer.write("error" + std::to_string(s.n_iter()), error);
+    return error;
   }
 
   void on_update_eigenpairs(state_type& s) const override {
