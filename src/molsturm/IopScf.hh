@@ -9,7 +9,7 @@ namespace molsturm {
 // sensible?
 
 template <typename ProblemMatrix, typename OverlapMatrix>
-struct IopScfState : public gscf::ScfStateBase<ProblemMatrix, OverlapMatrix> {
+struct IopScfState final : public gscf::ScfStateBase<ProblemMatrix, OverlapMatrix> {
   typedef gscf::ScfStateBase<ProblemMatrix, OverlapMatrix> base_type;
   typedef typename base_type::probmat_type probmat_type;
   typedef typename base_type::overlap_type overlap_type;
@@ -40,12 +40,8 @@ struct IopScfState : public gscf::ScfStateBase<ProblemMatrix, OverlapMatrix> {
    * \note Do not use this to setup a guess state.
    * For this case the function obtain_guess_from exists.
    **/
-  //@{
-  template <typename DiagMat>
-  void push_intermediate_results(
-        gscf::ScfStateBase<probmat_type, overlap_type, DiagMat>&& other_state) {
-    static_cast<linalgwrap::SolverStateBase&>(*this) = other_state;
-
+  template <typename State>
+  void push_intermediate_results(State&& other_state) {
     // Copy things from ScfStateBase
     // TODO This is all but good. The DiagMat template argument really has to
     //      disappear (or we need yet a layer ... a common base independent of
@@ -57,20 +53,37 @@ struct IopScfState : public gscf::ScfStateBase<ProblemMatrix, OverlapMatrix> {
     base_type::push_new_eigensolution(other_state.eigensolution(),
                                       other_state.eigenproblem_stats());
 
-    // Copy extra things from us:
-    m_n_iter += other_state.n_iter();
-    m_n_mtx_applies += other_state.n_mtx_applies();
-  }
+    last_tot_energy_change = other_state.last_tot_energy_change;
+    last_1e_energy_change = other_state.last_1e_energy_change;
 
-  void push_intermediate_results(base_type&& other_state) {
-    static_cast<base_type&>(*this) = other_state;
-    m_n_iter += other_state.n_iter();
+    // The following is correct, since we pass the current state number on to the
+    // IopScfStateWrapper as well, such that it accumulates to give the correct
+    // actual iteration count.
+    m_n_iter = other_state.n_iter();
     m_n_mtx_applies += other_state.n_mtx_applies();
+
+    static_cast<linalgwrap::SolverStateBase&>(*this) =
+          static_cast<linalgwrap::SolverStateBase&&>(other_state);
   }
-  //@}
 
   size_t n_iter() const override { return m_n_iter; }
   size_t n_mtx_applies() const override { return m_n_mtx_applies; }
+
+  // Total energy of the previous SCF iteration
+  real_type last_step_tot_energy;
+
+  // One electron energy of the previous SCF iteration
+  real_type last_step_1e_energy;
+
+  // Most recently encountered total energy change
+  // (i.e. between the last inner scf iteration and the
+  //  one before that)
+  real_type last_tot_energy_change;
+
+  // Most recently encountered one electron  energy change
+  // (i.e. between the last inner scf iteration and the
+  //  one before that)
+  real_type last_1e_energy_change;
 
  private:
   size_t m_n_iter;
@@ -87,7 +100,7 @@ struct IopScfState : public gscf::ScfStateBase<ProblemMatrix, OverlapMatrix> {
  * DIIS becomes ill-conditioned
  */
 template <typename IntegralOperator, typename OverlapMatrix>
-class IopScf : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapMatrix>> {
+class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapMatrix>> {
  public:
   typedef IntegralOperator operator_type;
   typedef gscf::ScfBase<IopScfState<IntegralOperator, OverlapMatrix>> base_type;
@@ -145,7 +158,38 @@ class IopScf : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapMatrix>
    *  on certain properties of the iteration process */
   void solve_state(state_type& state) const override;
 
+ protected:
+  bool is_converged(const state_type& state) const override;
+  void on_converged(state_type& s) const override;
+
  private:
+  /** Types of the wrapped solvers */
+  //@{
+  typedef detail::IopScfWrapper<gscf::PulayDiisScf<detail::IopScfStateWrapper<
+        gscf::PulayDiisScfState<IntegralOperator, OverlapMatrix>>>>
+        DiisSolver;
+  typedef detail::IopScfWrapper<gscf::PlainScf<
+        detail::IopScfStateWrapper<gscf::PlainScfState<IntegralOperator, OverlapMatrix>>>>
+        PlainSolver;
+  //@}
+
+  /** Solve until a provided maximal error norm is reached
+   *
+   *  Sets the error values as follows:
+   *  - max_error_norm            the provided value
+   *  - max_tot_energy_change     the provided value
+   *  - max_1e_energy_change      100 times the provided value
+   *  Of course: If the user wants only a less accurate solve, than
+   *  this setting takes preference.
+   *
+   *  \param s           State type (guess on input, result on output)
+   *  \param max_error   Maximum error to solve for. 0 means same
+   *                     accuracy as user asked for via ParameterMap
+   *                     or setting class arguments.
+   */
+  template <typename WrappedSolver>
+  void solve_up_to(real_type error, state_type& s) const;
+
   /** Cache of the parameters which will be passed to the actual SCF.
    *
    * A mixture of the original parameters, which the user passed to us
@@ -171,32 +215,125 @@ typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
 //
 
 template <typename IntegralOperator, typename OverlapMatrix>
-void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) const {
-  using namespace gscf;
-  assert_dbg(!state.is_failed(), krims::ExcInvalidState("Cannot solve a failed state"));
+template <typename WrappedSolver>
+void IopScf<IntegralOperator, OverlapMatrix>::solve_up_to(real_type error,
+                                                          state_type& state) const {
+  // Setup inner solver (max => User settings of accuracy take preference)
+  WrappedSolver inner_solver{m_inner_params};
+  inner_solver.max_error_norm = std::max(base_type::max_error_norm, error);
+  inner_solver.max_1e_energy_change = std::max(100. * error, max_1e_energy_change);
+  inner_solver.max_tot_energy_change = std::max(error, max_tot_energy_change);
 
-  // For now always do DIIS:
-  typedef detail::IopScfWrapper<PulayDiisScf<
-        detail::IopScfStateWrapper<PulayDiisScfState<IntegralOperator, OverlapMatrix>>>>
-        Solver;
-
-  //
-  //
-  //
-
-  typename Solver::state_type inner_state{state.problem_matrix(), state.overlap_matrix()};
+  // Setup inner state
+  typename WrappedSolver::state_type inner_state{state.problem_matrix(),
+                                                 state.overlap_matrix(), state.n_iter()};
   inner_state.obtain_guess_from(state);
+  inner_state.obtain_last_errors_from(state);
 
-  // Make sure that control parameters are up to date:
-  get_control_params(m_inner_params);
-
+  // Do solve
   try {
-    Solver{m_inner_params}.solve_state(inner_state);
+    inner_solver.solve_state(inner_state);
     state.push_intermediate_results(std::move(inner_state));
   } catch (linalgwrap::SolverException& e) {
     // On exception still update the state reference
     state.push_intermediate_results(std::move(inner_state));
     throw;
+  }
+}
+
+template <typename IntegralOperator, typename OverlapMatrix>
+void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) const {
+  assert_dbg(!state.is_failed(), krims::ExcInvalidState("Cannot solve a failed state"));
+
+  // Make sure that control parameters are up to date:
+  get_control_params(m_inner_params);
+
+  const bool print_progress = have_common_bit(verbosity, ScfMsgType::IterationProcess);
+
+  // Print table header if user wishes an iteration progress:
+  if (print_progress) {
+    std::cout << std::setw(5) << std::right << "iter" << std::setw(12) << "e1e"
+              << std::setw(12) << "e2e" << std::setw(12) << "etot" << std::setw(14)
+              << "scf_error" << std::right << std::setw(12) << "n_eprob_it" << std::endl;
+  }
+
+  // TODO make this configurable
+  //      Idea: have a mapping
+  //         { {accuracy, method},
+  //           {accuracy2, method2},
+  //         }
+  //      or just a threshold to stop using DIIS
+  const real_type diis_limit_max_error_norm = 5e-7;
+
+  {  // DIIS
+    if (print_progress) {
+      std::cout << "               ****     Using DIIS     ****" << std::endl;
+    }
+    solve_up_to<DiisSolver>(diis_limit_max_error_norm, state);
+    if (base_type::convergence_reached(state)) return;
+    if (print_progress) {
+      std::cout << "               **** Switching off DIIS ****" << std::endl;
+    }
+  }
+
+  {  // Plain
+    solve_up_to<PlainSolver>(0., state);
+    if (base_type::convergence_reached(state)) return;
+  }
+
+  // Cannot happen since last solver should have thrown
+  // otherwise if no convergence up to here
+  assert_dbg(false, krims::ExcInternalError());
+}
+
+template <typename IntegralOperator, typename OverlapMatrix>
+bool IopScf<IntegralOperator, OverlapMatrix>::is_converged(
+      const state_type& state) const {
+  if (state.last_error_norm > base_type::max_error_norm) return false;
+  if (state.last_tot_energy_change > max_tot_energy_change) return false;
+  if (state.last_1e_energy_change > max_1e_energy_change) return false;
+  // TODO check convergence in density / coefficients
+  // TODO code duplication with IopScfWrapper
+
+  return true;
+}
+
+template <typename IntegralOperator, typename OverlapMatrix>
+void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const {
+  auto& fock_bb = s.problem_matrix();
+
+  if (have_common_bit(verbosity, ScfMsgType::FinalSummary)) {
+    // Indention unit:
+    const std::string ind = "      ";
+
+    std::cout << std::endl
+              << "Converged after  " << std::endl
+              << ind << "SCF iterations:    " << std::right << std::setw(7) << s.n_iter()
+              << std::endl
+              << ind << "operator applies:  " << std::right << std::setw(7)
+              << s.n_mtx_applies() << std::endl
+              << "with energies" << std::endl;
+
+    size_t longestfirst = 0;
+    for (auto kv : fock_bb.energies()) {
+      longestfirst = std::max(kv.first.size(), longestfirst);
+    }
+
+    // Store original precision:
+    linalgwrap::io::OstreamState outstate(std::cout);
+
+    for (auto kv : fock_bb.energies()) {
+      std::cout << ind << std::left << std::setw(longestfirst) << kv.first << " = "
+                << kv.second << std::endl;
+    }
+
+    std::cout << ind << std::left << std::setw(longestfirst) << "E_1e"
+              << " = " << std::setprecision(10) << fock_bb.energy_1e_terms() << std::endl
+              << ind << std::left << std::setw(longestfirst) << "E_2e"
+              << " = " << std::setprecision(10) << fock_bb.energy_2e_terms() << std::endl
+              << std::endl
+              << ind << std::left << std::setw(longestfirst) << "E_total"
+              << " = " << std::setprecision(15) << fock_bb.energy_total() << std::endl;
   }
 }
 

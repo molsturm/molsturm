@@ -13,7 +13,7 @@ namespace detail {
  *  which are specific to IopScf
  */
 template <typename InnerState>
-class IopScfStateWrapper final : public InnerState {
+class IopScfStateWrapper /*final*/ : public InnerState {
  public:
   // Use final here, because overwriting from the methods
   // makes no sense (we are the top level of the tree
@@ -27,23 +27,48 @@ class IopScfStateWrapper final : public InnerState {
   static_assert(IsIntegralOperator<probmat_type>::value,
                 "IopDiisScf only works sensibly with a proper IntegralOperator");
 
-  // Total energy of the previous step
+  // Total energy of the previous SCF iteration
   real_type last_step_tot_energy;
 
-  // One electron energy of the previous step
+  // One electron energy of the previous SCF iteration
   real_type last_step_1e_energy;
 
-  IopScfStateWrapper(probmat_type probmat, const overlap_type& overlap_mat)
+  // Most recently encountered total energy change
+  // (i.e. between the last iteration and the one before that)
+  real_type last_tot_energy_change;
+
+  // Most recently encountered one electron  energy change
+  // (i.e. between the last iteration and the one before that)
+  real_type last_1e_energy_change;
+
+  IopScfStateWrapper(probmat_type probmat, const overlap_type& overlap_mat,
+                     size_t n_iter_offset = 0)
         : base_type{std::move(probmat), overlap_mat},
           last_step_tot_energy{linalgwrap::Constants<real_type>::invalid},
-          last_step_1e_energy{linalgwrap::Constants<real_type>::invalid} {}
+          last_step_1e_energy{linalgwrap::Constants<real_type>::invalid},
+          m_n_iter_offset(n_iter_offset) {}
+
+  /** Move the most recently obtained error values from another state */
+  template <typename OtherState>
+  void obtain_last_errors_from(const OtherState& s) {
+    last_step_tot_energy = s.last_step_tot_energy;
+    last_step_1e_energy = s.last_step_1e_energy;
+    base_type::last_error_norm = s.last_error_norm;
+    last_tot_energy_change = s.last_tot_energy_change;
+    last_1e_energy_change = s.last_1e_energy_change;
+  }
+
+  size_t n_iter() const override { return m_n_iter_offset + base_type::n_iter(); }
+
+ private:
+  size_t m_n_iter_offset;
 };
 
 /** Wrapper around other SCF solvers, which IopScf uses to
  *  produce output and take care of a couple of things.
  */
 template <typename InnerScf>
-class IopScfWrapper final : public InnerScf {
+class IopScfWrapper /*final*/ : public InnerScf {
  public:
   // Use final here, because overwriting from the methods
   // makes no sense (we are the top level of the tree
@@ -77,8 +102,7 @@ class IopScfWrapper final : public InnerScf {
   //! How verbose should the solver be.
   ScfMsgType verbosity = ScfMsgType::Silent;
 
-  /** Check convergence by checking the maximal deviation of
-   *  the last and previous eval pointers */
+  /** Check convergence */
   bool is_converged(const state_type& state) const override;
 
   /** Update control parameters from Parameter map */
@@ -108,9 +132,7 @@ class IopScfWrapper final : public InnerScf {
 
  protected:
   matrix_type calculate_error(const state_type& s) const override;
-  void before_iteration_step(state_type& s) const override;
   void after_iteration_step(state_type& s) const override;
-  void on_converged(state_type& s) const override;
 };
 
 //
@@ -121,21 +143,11 @@ bool IopScfWrapper<InnerScf>::is_converged(const state_type& state) const {
   // We cannot be converged on the first iteration
   if (state.n_iter() <= 1) return false;
 
-  // Check the most recent SCF error
   if (state.last_error_norm > base_type::max_error_norm) return false;
-
-  // Total energy change
-  const probmat_type& fock_bb = state.problem_matrix();
-  real_type tot_energy = fock_bb.energy_1e_terms() + fock_bb.energy_2e_terms();
-  real_type tot_energy_diff = std::abs(state.last_step_tot_energy - tot_energy);
-  if (tot_energy_diff > max_tot_energy_change) return false;
-
-  // 1e energy change
-  real_type e1_energy_diff =
-        std::abs(state.last_step_1e_energy - fock_bb.energy_1e_terms());
-  if (e1_energy_diff > max_1e_energy_change) return false;
-
-  // TODO check convergence in density
+  if (state.last_tot_energy_change > max_tot_energy_change) return false;
+  if (state.last_1e_energy_change > max_1e_energy_change) return false;
+  // TODO check convergence in density / coefficients
+  // TODO code duplication with IopScf
 
   return true;
 }
@@ -143,31 +155,23 @@ bool IopScfWrapper<InnerScf>::is_converged(const state_type& state) const {
 template <typename InnerScf>
 typename IopScfWrapper<InnerScf>::matrix_type IopScfWrapper<InnerScf>::calculate_error(
       const state_type& s) const {
-  // Forward pulay error as the error matrix for the DIIS and
-  // other SCFs
+  // TODO: Note that this actually is an apply and should increase the apply count
+
+  // Forward pulay error as the error matrix for the DIIS and other SCFs
   return ScfErrorLibrary<probmat_type>::pulay_error(
         s.overlap_matrix(), s.eigensolution().evectors(), s.problem_matrix());
 }
 
 template <typename InnerScf>
-void IopScfWrapper<InnerScf>::before_iteration_step(state_type& s) const {
-  // Store the last step data away for use in the convergence check:
-  s.last_step_1e_energy = s.problem_matrix().energy_1e_terms();
-  s.last_step_tot_energy = s.problem_matrix().energy_2e_terms() + s.last_step_1e_energy;
-
-  if (s.n_iter() == 1) {
-    if (have_common_bit(verbosity, ScfMsgType::IterationProcess)) {
-      std::cout << std::setw(5) << std::right << "iter" << std::setw(12) << "e1e"
-                << std::setw(12) << "e2e" << std::setw(12) << "etot" << std::setw(14)
-                << "scf_error" << std::right << std::setw(12) << "n_eprob_it"
-                << std::endl;
-    }
-  }
-}
-
-template <typename InnerScf>
 void IopScfWrapper<InnerScf>::after_iteration_step(state_type& s) const {
   const probmat_type& fock_bb = s.problem_matrix();
+
+  // Update last step energy values and differences:
+  s.last_1e_energy_change = std::abs(s.last_step_1e_energy - fock_bb.energy_1e_terms());
+  s.last_tot_energy_change = std::abs(s.last_step_tot_energy - fock_bb.energy_2e_terms() -
+                                      fock_bb.energy_1e_terms());
+  s.last_step_1e_energy = s.problem_matrix().energy_1e_terms();
+  s.last_step_tot_energy = s.problem_matrix().energy_2e_terms() + s.last_step_1e_energy;
 
   if (have_common_bit(verbosity, ScfMsgType::IterationProcess)) {
     // scf_iter        e1e         e2e       etot        scf_error
@@ -176,45 +180,6 @@ void IopScfWrapper<InnerScf>::after_iteration_step(state_type& s) const {
               << std::setw(12) << fock_bb.energy_total() << std::setw(14)
               << s.last_error_norm << std::right << std::setw(12)
               << s.eigenproblem_stats().n_iter() << std::endl;
-  }
-}
-
-template <typename InnerScf>
-void IopScfWrapper<InnerScf>::on_converged(state_type& s) const {
-  auto& fock_bb = s.problem_matrix();
-
-  if (have_common_bit(verbosity, ScfMsgType::FinalSummary)) {
-    // Indention unit:
-    const std::string ind = "      ";
-
-    std::cout << std::endl
-              << "Converged after  " << std::endl
-              << ind << "SCF iterations:    " << std::right << std::setw(7) << s.n_iter()
-              << std::endl
-              << ind << "operator applies:  " << std::right << std::setw(7)
-              << s.n_mtx_applies() << std::endl
-              << "with energies" << std::endl;
-
-    size_t longestfirst = 0;
-    for (auto kv : fock_bb.energies()) {
-      longestfirst = std::max(kv.first.size(), longestfirst);
-    }
-
-    // Store original precision:
-    linalgwrap::io::OstreamState outstate(std::cout);
-
-    for (auto kv : fock_bb.energies()) {
-      std::cout << ind << std::left << std::setw(longestfirst) << kv.first << " = "
-                << kv.second << std::endl;
-    }
-
-    std::cout << ind << std::left << std::setw(longestfirst) << "E_1e"
-              << " = " << std::setprecision(10) << fock_bb.energy_1e_terms() << std::endl
-              << ind << std::left << std::setw(longestfirst) << "E_2e"
-              << " = " << std::setprecision(10) << fock_bb.energy_2e_terms() << std::endl
-              << std::endl
-              << ind << std::left << std::setw(longestfirst) << "E_total"
-              << " = " << std::setprecision(15) << fock_bb.energy_total() << std::endl;
   }
 }
 
