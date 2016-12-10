@@ -2,6 +2,7 @@
 # set the source files.
 #
 set(MOLSTURM_SOURCES
+	scf_guess.cc
 	version.cc
 	IopScfKeys.cc
 )
