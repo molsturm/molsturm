@@ -26,10 +26,10 @@ class ScfErrorLibrary {
    * and the eigenvalues of the state.
    */
   template <typename OverlapMatrix>
-  static auto pulay_error(
+  static matrix_type pulay_error(
         const OverlapMatrix& overlap_bb,
         const linalgwrap::MultiVector<const vector_type>& coefficients_bf,
-        const operator_type& fock_bb) -> matrix_type {
+        const operator_type& fock_bb) {
     const size_type n_alpha = fock_bb.n_alpha();
 #ifdef DEBUG
     const size_type n_beta = fock_bb.n_beta();
