@@ -266,12 +266,25 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
               << "scf_error" << std::right << std::setw(12) << "n_eprob_it" << std::endl;
   }
 
+  // TODO Since Hcore guesses are really bad we only want to use DIIS
+  //      once we are a little better to not drag the bad stuff around.
+  //
+  //      One should improve the guess and get rid of this
+  const real_type startup_error_norm = 0.5;
+
+  {  // Plain
+    solve_up_to<PlainSolver>(startup_error_norm, state);
+    if (base_type::convergence_reached(state)) return;
+  }
+
   // TODO make this configurable
   //      Idea: have a mapping
   //         { {accuracy, method},
   //           {accuracy2, method2},
   //         }
-  //      or just a threshold to stop using DIIS
+  //      or just a threshold to stop using DIIS ???
+  //
+  //   TODO   How does ORCA do it?
   const real_type diis_limit_max_error_norm = 5e-7;
 
   {  // DIIS
