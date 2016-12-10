@@ -210,6 +210,15 @@ typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
   return scf{map}.solve(std::move(iop), s);
 }
 
+/** Try to find the self consistent field configuration for an integral operator
+ *  and an overlap matrix given a guess solution.
+ */
+template <typename IntegralOperator, typename OverlapMatrix>
+typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
+      IntegralOperator iop, const OverlapMatrix& s, krims::ParameterMap map,
+      typename IopScf<IntegralOperator, OverlapMatrix>::state_type::esoln_type
+            guess_solution);
+
 //
 // -----------------------------------------------------------
 //
@@ -335,6 +344,24 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
               << ind << std::left << std::setw(longestfirst) << "E_total"
               << " = " << std::setprecision(15) << fock_bb.energy_total() << std::endl;
   }
+}
+
+//
+// -------------------------------------------------------------------
+//
+
+template <typename IntegralOperator, typename OverlapMatrix>
+typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
+      IntegralOperator iop, const OverlapMatrix& s, krims::ParameterMap map,
+      typename IopScf<IntegralOperator, OverlapMatrix>::state_type::esoln_type
+            guess_solution) {
+  typedef IopScf<IntegralOperator, OverlapMatrix> scf;
+
+  IopScfState<IntegralOperator, OverlapMatrix> state(std::move(iop), s);
+  state.obtain_guess_from(guess_solution);
+
+  scf{map}.solve_state(state);
+  return state;
 }
 
 }  // namespace molsturm
