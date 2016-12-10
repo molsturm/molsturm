@@ -22,6 +22,11 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   typedef typename base_type::lazy_matrix_expression_ptr_type
         lazy_matrix_expression_ptr_type;
 
+  /** Type of the coefficients and the pointer to the coefficients
+   *  used inside the operator */
+  typedef const linalgwrap::MultiVector<vector_type> coefficients_type;
+  typedef std::shared_ptr<coefficients_type> coefficients_ptr_type;
+
   //! Type of a integral term
   typedef typename IntegralTermContainer<stored_matrix_type>::int_term_type int_term_type;
 
@@ -39,7 +44,6 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    * representing the projected.
    *
    * \param integral_terms   The IntegralTerms object.
-   * \param initial_guess_bf The initial guess matrix.
    *        If the provided basis set behind the integrals has
    *        \t nbas basis functions, then this matrix should have
    *        the dimensionality \t nbas x \t nfock, where \t nfock is the
@@ -48,10 +52,8 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    * \param nbeta            Number of beta electrons
    *                         (has to be equal to nalpha)
    */
-  RestrictedClosedIntegralOperator(
-        IntegralTermContainer<StoredMatrix> integral_terms,
-        std::shared_ptr<const linalgwrap::MultiVector<vector_type>> initial_guess_bf_ptr,
-        size_type n_alpha, size_type n_beta);
+  RestrictedClosedIntegralOperator(IntegralTermContainer<StoredMatrix> integral_terms,
+                                   size_type n_alpha, size_type n_beta);
 
   /** Return the number of rows of the matrix */
   size_type n_rows() const override { return m_operator.n_rows(); }
@@ -151,9 +153,14 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    * Build the Fock matrix with the new coefficients
    *
    * It expects the new coefficients under the parameter key
-   * "evec_coefficients"
+   * returned by scf_update_key()
    */
   void update(const krims::ParameterMap& map) override;
+
+  /** Update the inner state:
+   * Build the Fock matrix with the new coefficients
+   */
+  void update(coefficients_ptr_type coefficients);
 
   /** Return the update key for the solver */
   const std::string& scf_update_key() const { return m_update_key; }
@@ -174,6 +181,9 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
 
   /** Return the total energy */
   scalar_type energy_total() const;
+
+  /** Return the 1e terms */
+  const std::vector<int_term_type>& terms_1e() const { return m_terms_1e; }
 
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of alpha
@@ -202,9 +212,6 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   size_type n_beta() const { return m_n_alpha; }
 
  private:
-  typedef const linalgwrap::MultiVector<vector_type> coefficients_type;
-  typedef std::shared_ptr<coefficients_type> coefficients_ptr_type;
-
   /** Update the state of the lazy matrix operator terms and rebuild
    *  the operator m_operator from them.
    */
@@ -257,9 +264,8 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
 
 template <typename StoredMatrix>
 RestrictedClosedIntegralOperator<StoredMatrix>::RestrictedClosedIntegralOperator(
-      IntegralTermContainer<StoredMatrix> integral_terms,
-      std::shared_ptr<const linalgwrap::MultiVector<vector_type>> initial_guess_bf_ptr,
-      size_type n_alpha, size_type n_beta)
+      IntegralTermContainer<StoredMatrix> integral_terms, size_type n_alpha,
+      size_type n_beta)
       : m_coeff_1e{std::move(integral_terms.coefficients_1e)},
         m_terms_1e{std::move(integral_terms.integral_terms_1e)},
         m_coeff_coul{integral_terms.coefficient_coulomb},
@@ -277,10 +283,8 @@ RestrictedClosedIntegralOperator<StoredMatrix>::RestrictedClosedIntegralOperator
   // Check that number of terms and number of coefficients agrees:
   assert_size(m_terms_1e.size(), m_coeff_1e.size());
 
-// Check operator size and zero energy terms
-#ifdef DEBUG
-  size_type op_size = m_coul.n_rows();
-#endif
+  // Check operator size and zero energy terms
+  const size_type op_size = m_coul.n_rows();
 
   auto itterm = std::begin(m_terms_1e);
   auto itcoeff = std::begin(m_coeff_1e);
@@ -299,8 +303,10 @@ RestrictedClosedIntegralOperator<StoredMatrix>::RestrictedClosedIntegralOperator
   assert_size(m_exchge.n_rows(), op_size);
   m_energies.insert(std::make_pair(m_exchge.id(), Constants<scalar_type>::zero));
 
-  // Build m_operator with the initial guess
-  update_operator(initial_guess_bf_ptr);
+  // Initialise as a core hamiltonian (only 1e terms)
+  coefficients_ptr_type zero_coefficients =
+        std::make_shared<coefficients_type>(op_size, std::max(n_alpha, n_beta));
+  update_operator(zero_coefficients);
 }
 
 template <typename StoredMatrix>
@@ -315,12 +321,18 @@ RestrictedClosedIntegralOperator<StoredMatrix>::operator()(size_type row,
 
 template <typename StoredMatrix>
 void RestrictedClosedIntegralOperator<StoredMatrix>::update(
+      coefficients_ptr_type coeff_bf_ptr) {
+  update_operator(coeff_bf_ptr);
+  update_energies(coeff_bf_ptr);
+}
+
+template <typename StoredMatrix>
+void RestrictedClosedIntegralOperator<StoredMatrix>::update(
       const krims::ParameterMap& map) {
   if (map.exists(m_update_key)) {
     auto coeff_bf_ptr =
           static_cast<coefficients_ptr_type>(map.at_ptr<coefficients_type>(m_update_key));
-    update_operator(coeff_bf_ptr);
-    update_energies(coeff_bf_ptr);
+    update(coeff_bf_ptr);
   }
 }
 
