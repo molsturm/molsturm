@@ -289,7 +289,7 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
 
   {  // DIIS
     if (print_progress) {
-      std::cout << "               ****     Using DIIS     ****" << std::endl;
+      std::cout << "               ****   Turning on DIIS  ****" << std::endl;
     }
     solve_up_to<DiisSolver>(diis_limit_max_error_norm, state);
     if (base_type::convergence_reached(state)) return;
