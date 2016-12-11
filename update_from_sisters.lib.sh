@@ -97,8 +97,9 @@ find_repo() {
 
 # Update a file if necessary and replace its licence header
 update_file() {
-	local ORIGREPO=$1 # repo to get the file from
-	local FILE=$2     # File to update (same location in both repos)
+	local ORIGREPO=$1       # repo to get the file from
+	local FILE=$2           # File to update (same location in both repos)
+	local REPLACEHEADER=$3  # Replace the licence header or not
 
 	# Try to find the other repository to get the file from
 	local REPODIR
@@ -125,7 +126,11 @@ update_file() {
 
 	if [ ! -f "$FILE" -o "$FROMPATH" -nt "$FILE" ]; then
 		echo "Updating $FILE from $FROMPATH"
-		< "$FROMPATH" replace_header "$ORIGREPO"> "$FILE" || return 1
+		if [ "$REPLACEHEADER" == "keep_header" ]; then
+			cp "$FROMPATH" "$FILE" || return 1
+		else
+			< "$FROMPATH" replace_header "$ORIGREPO"> "$FILE" || return 1
+		fi
 		touch --reference="$FROMPATH" "$FILE"
 		chmod --reference="$FROMPATH" "$FILE"
 	fi
