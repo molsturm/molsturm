@@ -8,6 +8,8 @@ struct args_type {
   std::string basis_type;
   double k_exp = 1.0;
   size_t n_max = 3;
+  size_t l_max = 2;
+  size_t m_max = 2;
 
   double Z_charge = 4.0;
   size_t n_alpha = 2;

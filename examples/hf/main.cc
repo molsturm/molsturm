@@ -83,8 +83,8 @@ void run_rhf_sturmian(args_type args, bool debug = false) {
         {"k_exponent", args.k_exp},
         {"Z_charge", args.Z_charge},
         {"n_max", static_cast<int>(args.n_max)},
-        {"l_max", static_cast<int>(args.n_max) - 1},
-        {"m_max", static_cast<int>(args.n_max) - 1},
+        {"l_max", static_cast<int>(args.l_max)},
+        {"m_max", static_cast<int>(args.m_max)},
   };
   int_lookup_type integrals{intparams};
 

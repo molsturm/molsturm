@@ -8,6 +8,8 @@ std::ostream& operator<<(std::ostream& o, const args_type& args) {
   o << "basis_type:    " << args.basis_type << std::endl
     << "k_exp:         " << args.k_exp << std::endl
     << "n_max:         " << args.n_max << std::endl
+    << "l_max:         " << args.l_max << std::endl
+    << "m_max:         " << args.m_max << std::endl
     << "Z_charge:      " << args.Z_charge << std::endl
     << "n_alpha:       " << args.n_alpha << std::endl
     << "n_beta:        " << args.n_beta << std::endl
@@ -23,6 +25,8 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_beta = false;
   bool had_k_exp = false;
   bool had_n_max = false;
+  bool had_l_max = false;
+  bool had_m_max = false;
   bool had_error = false;
   bool had_basis_type = false;
   bool had_diis_size = false;
@@ -66,10 +70,22 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         std::cerr << "Invalid double provided to --kexp: " << argument << std::endl;
         return false;
       }
-    } else if (flag == std::string("--nmax")) {
+    } else if (flag == std::string("--n_max")) {
       had_n_max = true;
       if (!str_to_type<size_t>(argument, parsed.n_max)) {
-        std::cerr << "Invalid int provided to --nmax: " << argument << std::endl;
+        std::cerr << "Invalid int provided to --n_max: " << argument << std::endl;
+        return false;
+      }
+    } else if (flag == std::string("--l_max")) {
+      had_l_max = true;
+      if (!str_to_type<size_t>(argument, parsed.l_max)) {
+        std::cerr << "Invalid int provided to --l_max: " << argument << std::endl;
+        return false;
+      }
+    } else if (flag == std::string("--m_max")) {
+      had_m_max = true;
+      if (!str_to_type<size_t>(argument, parsed.m_max)) {
+        std::cerr << "Invalid int provided to --m_max: " << argument << std::endl;
         return false;
       }
     } else if (flag == std::string("--basis_type")) {
@@ -108,8 +124,8 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
       }
     } else {
       std::cerr << "Unknown flag: " << flag << std::endl;
-      std::cerr << "Valid are: --basis_type, --nmax, --kexp, --Z_charge, --alpha, "
-                   "--beta, --error, --diis_size, --n_eigenpairs"
+      std::cerr << "Valid are: --basis_type, --n_max, --l_max, --n_max, --kexp, "
+                   "--Z_charge, --alpha, --beta, --error, --diis_size, --n_eigenpairs"
                 << std::endl;
       return false;
     }
@@ -135,7 +151,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
               << std::endl;
   }
   if (!had_n_max) {
-    std::cerr << "Need flag --nmax <int> to supply maximal principle quantum "
+    std::cerr << "Need flag --n_max <int> to supply maximal principle quantum "
                  "number."
               << std::endl;
   }
@@ -150,6 +166,12 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
 
   if (!had_n_eigenpairs) {
     parsed.n_eigenpairs = 2 * std::max(parsed.n_alpha, parsed.n_beta);
+  }
+  if (!had_l_max) {
+    parsed.l_max = parsed.n_max - 1;
+  }
+  if (!had_m_max) {
+    parsed.m_max = parsed.l_max;
   }
 
   if (had_Z_charge && had_alpha && had_beta && had_k_exp && had_n_max && had_basis_type) {
