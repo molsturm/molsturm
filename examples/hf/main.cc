@@ -127,7 +127,7 @@ void run_rhf_sturmian(args_type args, bool debug = false) {
         {IopScfKeys::max_1e_energy_change, args.error * 100.},
         {IopScfKeys::max_tot_energy_change, args.error / 4.},
         //
-        {IopScfKeys::max_iter, 25ul},
+        {IopScfKeys::max_iter, args.max_iter},
         {IopScfKeys::n_eigenpairs, args.n_eigenpairs},
         {IopScfKeys::verbosity, ScfMsgType::FinalSummary | ScfMsgType::IterationProcess},
         {IopScfKeys::n_prev_steps, args.diis_size},

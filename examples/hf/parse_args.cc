@@ -14,6 +14,7 @@ std::ostream& operator<<(std::ostream& o, const args_type& args) {
     << "n_alpha:       " << args.n_alpha << std::endl
     << "n_beta:        " << args.n_beta << std::endl
     << "error:         " << args.error << std::endl
+    << "max_iter       " << args.max_iter << std::endl
     << "diis_size:     " << args.diis_size << std::endl
     << "n_eigenpairs:  " << args.n_eigenpairs << std::endl;
   return o;
@@ -28,6 +29,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_l_max = false;
   bool had_m_max = false;
   bool had_error = false;
+  bool had_max_iter = false;
   bool had_basis_type = false;
   bool had_diis_size = false;
   bool had_n_eigenpairs = false;
@@ -109,6 +111,12 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         std::cerr << "Invalid double provided to --error: " << argument << std::endl;
         return false;
       }
+    } else if (flag == std::string("--max_iter")) {
+      had_max_iter = true;
+      if (!str_to_type<size_t>(argument, parsed.max_iter)) {
+        std::cerr << "Invalid double provided to --max_iter: " << argument << std::endl;
+        return false;
+      }
     } else if (flag == std::string("--diis_size")) {
       had_diis_size = true;
       if (!str_to_type<size_t>(argument, parsed.diis_size)) {
@@ -125,7 +133,8 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
     } else {
       std::cerr << "Unknown flag: " << flag << std::endl;
       std::cerr << "Valid are: --basis_type, --n_max, --l_max, --n_max, --kexp, "
-                   "--Z_charge, --alpha, --beta, --error, --diis_size, --n_eigenpairs"
+                   "--Z_charge, --alpha, --beta, --error, --max_iter, --diis_size, "
+                   "--n_eigenpairs"
                 << std::endl;
       return false;
     }
@@ -158,6 +167,10 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
 
   if (!had_error) {
     parsed.error = 5e-7;
+  }
+
+  if (!had_max_iter) {
+    parsed.max_iter = 25;
   }
 
   if (!had_diis_size) {

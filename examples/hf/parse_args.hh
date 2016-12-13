@@ -15,6 +15,7 @@ struct args_type {
   size_t n_alpha = 2;
   size_t n_beta = n_alpha;
 
+  size_t max_iter = 25;
   double error = 5e-7;
   size_t diis_size = 4;
   size_t n_eigenpairs = 0;
