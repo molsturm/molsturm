@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# TODO use chebychev polynomial interpolation with 4 or 6 points in a sensible vicinity
+#      around a guess k and then optimise that polynomial instead.
+
 import common
 import math
 from scipy.optimize import minimize
