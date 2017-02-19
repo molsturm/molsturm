@@ -9,7 +9,7 @@ set(MOLSTURM_SOURCES
 
 # Dump the current version as an include file.
 include(WriteVersionHeader)
-write_version_header("${CMAKE_BINARY_DIR}/src/molsturm/version_defs.hh")
+write_version_header("${molsturm_BINARY_DIR}/src/molsturm/version_defs.hh")
 
 # Add the libraries for Debug and Release builds:
 drb_add_library(molsturm
@@ -44,7 +44,7 @@ install(DIRECTORY .
 	COMPONENT devel
 	FILES_MATCHING PATTERN "*.hh"
 )
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/version_defs.hh"
+install(FILES "${molsturm_BINARY_DIR}/src/molsturm/version_defs.hh"
 	DESTINATION "include/molsturm"
 	COMPONENT devel
 )
