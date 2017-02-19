@@ -1,3 +1,6 @@
+#define KRIMS_INIT_EXCEPTION_SYSTEM
+#include <krims/ExceptionSystem.hh>
+
 #include "parse_args.hh"
 
 #include <gint/IntegralLookup.hh>
@@ -78,7 +81,7 @@ void run_rhf_sturmian(args_type args, bool debug = false) {
   // Integral terms
   //
   // Generate integral lookup object
-  krims::ParameterMap intparams{
+  krims::GenMap intparams{
         {"basis_type", args.basis_type},
         {"k_exponent", args.k_exp},
         {"Z_charge", args.Z_charge},
@@ -121,7 +124,7 @@ void run_rhf_sturmian(args_type args, bool debug = false) {
         scf_guess(fock_bb, S_bb, {{ScfGuessKeys::method, /*"hcore"*/ "loewdin"}});
   fock_bb.update(guess_solution.evectors_ptr);
 
-  krims::ParameterMap params{
+  krims::GenMap params{
         // error
         {IopScfKeys::max_error_norm, args.error},
         {IopScfKeys::max_1e_energy_change, args.error * 100.},

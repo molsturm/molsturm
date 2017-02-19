@@ -155,7 +155,7 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    * It expects the new coefficients under the parameter key
    * returned by scf_update_key()
    */
-  void update(const krims::ParameterMap& map) override;
+  void update(const krims::GenMap& map) override;
 
   /** Update the inner state:
    * Build the Fock matrix with the new coefficients
@@ -327,8 +327,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update(
 }
 
 template <typename StoredMatrix>
-void RestrictedClosedIntegralOperator<StoredMatrix>::update(
-      const krims::ParameterMap& map) {
+void RestrictedClosedIntegralOperator<StoredMatrix>::update(const krims::GenMap& map) {
   if (map.exists(m_update_key)) {
     auto coeff_bf_ptr =
           static_cast<coefficients_ptr_type>(map.at_ptr<coefficients_type>(m_update_key));
@@ -349,7 +348,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_operator(
   // Build multivector of occupied alpha orbitals
   auto ca_bo_ptr = std::make_shared<const linalgwrap::MultiVector<const vector_type>>(
         coeff_bf_ptr->subview({0, m_n_alpha}));
-  krims::ParameterMap occa_map{{int_term_type::update_key_coefficients, ca_bo_ptr}};
+  krims::GenMap occa_map{{int_term_type::update_key_coefficients, ca_bo_ptr}};
 
   // Initialise an empty operator
   m_operator = linalgwrap::LazyMatrixSum<StoredMatrix>();
@@ -388,7 +387,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_energies(
   auto ca_bo_ptr = std::make_shared<const linalgwrap::MultiVector<const vector_type>>(
         coeff_bf_ptr->subview({0, m_n_alpha}));
   const auto& ca_bo = *ca_bo_ptr;
-  krims::ParameterMap occa_map{{int_term_type::update_key_coefficients, ca_bo_ptr}};
+  krims::GenMap occa_map{{int_term_type::update_key_coefficients, ca_bo_ptr}};
 
   // Calculate the energies of the 1e terms:
   //

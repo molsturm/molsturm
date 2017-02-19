@@ -106,7 +106,7 @@ class IopScfWrapper /*final*/ : public InnerScf {
   bool is_converged(const state_type& state) const override;
 
   /** Update control parameters from Parameter map */
-  void update_control_params(const krims::ParameterMap& map) {
+  void update_control_params(const krims::GenMap& map) {
     base_type::update_control_params(map);
 
     max_tot_energy_change =
@@ -116,9 +116,9 @@ class IopScfWrapper /*final*/ : public InnerScf {
   }
 
   /** Get the current settings of all internal control parameters and
-   *  update the ParameterMap accordingly.
+   *  update the GenMap accordingly.
    */
-  void get_control_params(krims::ParameterMap& map) const {
+  void get_control_params(krims::GenMap& map) const {
     base_type::get_control_params(map);
     map.update(IopScfKeys::max_tot_energy_change, max_tot_energy_change);
     map.update(IopScfKeys::max_1e_energy_change, max_1e_energy_change);
@@ -126,9 +126,7 @@ class IopScfWrapper /*final*/ : public InnerScf {
   }
   ///@}
 
-  IopScfWrapper(const krims::ParameterMap& map) : InnerScf(map) {
-    update_control_params(map);
-  }
+  IopScfWrapper(const krims::GenMap& map) : InnerScf(map) { update_control_params(map); }
 
  protected:
   matrix_type calculate_error(const state_type& s) const override;

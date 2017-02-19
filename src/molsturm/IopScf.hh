@@ -114,7 +114,7 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
   typedef typename base_type::vector_type vector_type;
 
   /** Construct scf from parameter map */
-  IopScf(const krims::ParameterMap& map) { update_control_params(map); }
+  IopScf(const krims::GenMap& map) { update_control_params(map); }
 
   /** \name Iteration control */
   ///@{
@@ -130,7 +130,7 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
   // TODO introduce method parameter!
 
   /** Update control parameters from Parameter map */
-  void update_control_params(const krims::ParameterMap& map) {
+  void update_control_params(const krims::GenMap& map) {
     base_type::update_control_params(map);
 
     max_tot_energy_change =
@@ -144,9 +144,9 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
   }
 
   /** Get the current settings of all internal control parameters and
-   *  update the ParameterMap accordingly.
+   *  update the GenMap accordingly.
    */
-  void get_control_params(krims::ParameterMap& map) const {
+  void get_control_params(krims::GenMap& map) const {
     base_type::get_control_params(map);
     map.update(IopScfKeys::max_tot_energy_change, max_tot_energy_change);
     map.update(IopScfKeys::max_1e_energy_change, max_1e_energy_change);
@@ -184,7 +184,7 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
    *
    *  \param s           State type (guess on input, result on output)
    *  \param max_error   Maximum error to solve for. 0 means same
-   *                     accuracy as user asked for via ParameterMap
+   *                     accuracy as user asked for via GenMap
    *                     or setting class arguments.
    */
   template <typename WrappedSolver>
@@ -197,7 +197,7 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
    * in this class and the subclasses. Should be updated with
    * get_control_params *before* the actual inner eigensolver invocation.
    */
-  mutable krims::ParameterMap m_inner_params;
+  mutable krims::GenMap m_inner_params;
 };
 
 /** Try to find the self consistent field configuration for an integral operator
@@ -205,7 +205,7 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
  */
 template <typename IntegralOperator, typename OverlapMatrix>
 typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
-      IntegralOperator iop, const OverlapMatrix& s, krims::ParameterMap map) {
+      IntegralOperator iop, const OverlapMatrix& s, krims::GenMap map) {
   typedef IopScf<IntegralOperator, OverlapMatrix> scf;
   return scf{map}.solve(std::move(iop), s);
 }
@@ -215,7 +215,7 @@ typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
  */
 template <typename IntegralOperator, typename OverlapMatrix>
 typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
-      IntegralOperator iop, const OverlapMatrix& s, krims::ParameterMap map,
+      IntegralOperator iop, const OverlapMatrix& s, krims::GenMap map,
       typename IopScf<IntegralOperator, OverlapMatrix>::state_type::esoln_type
             guess_solution);
 
@@ -266,11 +266,8 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
               << "scf_error" << std::right << std::setw(12) << "n_eprob_it" << std::endl;
   }
 
-  // TODO Since Hcore guesses are really bad we only want to use DIIS
-  //      once we are a little better to not drag the bad stuff around.
-  //
-  //      One should improve the guess and get rid of this
-  const real_type startup_error_norm = 0.5;
+  // TODO make this configurable
+  const real_type startup_error_norm = 0.25;
 
   {  // Plain
     solve_up_to<PlainSolver>(startup_error_norm, state);
@@ -349,6 +346,8 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
                 << kv.second << std::endl;
     }
 
+    // TODO compute virial coefficient (ratio potential / kinetic energy)
+
     std::cout << ind << std::left << std::setw(longestfirst) << "E_1e"
               << " = " << std::setprecision(10) << fock_bb.energy_1e_terms() << std::endl
               << ind << std::left << std::setw(longestfirst) << "E_2e"
@@ -365,7 +364,7 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
 
 template <typename IntegralOperator, typename OverlapMatrix>
 typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
-      IntegralOperator iop, const OverlapMatrix& s, krims::ParameterMap map,
+      IntegralOperator iop, const OverlapMatrix& s, krims::GenMap map,
       typename IopScf<IntegralOperator, OverlapMatrix>::state_type::esoln_type
             guess_solution) {
   typedef IopScf<IntegralOperator, OverlapMatrix> scf;

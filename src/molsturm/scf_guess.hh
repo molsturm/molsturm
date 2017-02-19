@@ -45,7 +45,7 @@ struct ScfGuessKeys {
 template <typename IntegralOperator, typename OverlapMatrix>
 linalgwrap::EigensolutionTypeFor<true, IntegralOperator> scf_guess(
       const IntegralOperator& fock_bb, const OverlapMatrix& s_bb,
-      const krims::ParameterMap& params) {
+      const krims::GenMap& params) {
   const std::string method = params.at<std::string>(ScfGuessKeys::method, "hcore");
 
   if (method == std::string("loewdin")) {

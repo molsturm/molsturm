@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 
 namespace molsturm {
 
@@ -13,11 +14,13 @@ enum class ScfMsgType {
 };
 
 ScfMsgType operator&(ScfMsgType l, ScfMsgType r) {
-  return static_cast<ScfMsgType>(static_cast<int>(l) & static_cast<int>(r));
+  using type = typename std::underlying_type<ScfMsgType>::type;
+  return static_cast<ScfMsgType>(static_cast<type>(l) & static_cast<type>(r));
 }
 
 ScfMsgType operator|(ScfMsgType l, ScfMsgType r) {
-  return static_cast<ScfMsgType>(static_cast<int>(l) | static_cast<int>(r));
+  using type = typename std::underlying_type<ScfMsgType>::type;
+  return static_cast<ScfMsgType>(static_cast<type>(l) | static_cast<type>(r));
 }
 
 ScfMsgType& operator&=(ScfMsgType& l, ScfMsgType r) {

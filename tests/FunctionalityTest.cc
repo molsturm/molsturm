@@ -94,7 +94,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   //
   // Setup integrals
   //
-  krims::ParameterMap intparams{
+  krims::GenMap intparams{
         {"basis_type", "cs_naive"}, {"k_exponent", k_exp}, {"Z_charge", Z},
         {"n_max", n_max},           {"l_max", l_max},      {"m_max", l_max}};
   int_lookup_type integrals{intparams};
@@ -136,10 +136,10 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
                                                                n_alpha, n_beta);
   fock_bb.update(guess_bf_ptr);
 
-  const krims::ParameterMap params{{IopScfKeys::max_iter, 15ul},
-                                   {IopScfKeys::n_eigenpairs, n_eigenpairs},
-                                   {IopScfKeys::max_error_norm, tolerance},
-                                   {IopScfKeys::n_prev_steps, size_t(4)}};
+  const krims::GenMap params{{IopScfKeys::max_iter, 15ul},
+                             {IopScfKeys::n_eigenpairs, n_eigenpairs},
+                             {IopScfKeys::max_error_norm, tolerance},
+                             {IopScfKeys::n_prev_steps, size_t(4)}};
 
 #ifdef DEBUG
   std::cout << "Running test SCF ... please wait." << std::endl;

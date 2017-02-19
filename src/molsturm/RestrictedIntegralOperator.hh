@@ -75,7 +75,7 @@ class RestrictedIntegralOperator : public linalgwrap::LazyMatrix_i<StoredMatrix>
    * It expects the new coefficients under the parameter key
    * "evec_coefficients"
    */
-  void update(const linalgwrap::ParameterMap& map) override;
+  void update(const linalgwrap::GenMap& map) override;
 
   /* \name Access to energies and individual terms */
   ///@{
@@ -277,8 +277,7 @@ RestrictedIntegralOperator<StoredMatrix>::clone() const {
 }
 
 template <typename StoredMatrix>
-void RestrictedIntegralOperator<StoredMatrix>::update(
-      const linalgwrap::ParameterMap& map) {
+void RestrictedIntegralOperator<StoredMatrix>::update(const linalgwrap::GenMap& map) {
   // The coefficient key we look for:
   const std::string coeff_key("evec_coefficients");
 
@@ -302,13 +301,13 @@ void RestrictedIntegralOperator<StoredMatrix>::update_state_and_energies(
 
   const std::string occ_coeff_key("coefficients_occupied");
 
-  ParameterMap occa_map;
+  GenMap occa_map;
   occa_map.update(occ_coeff_key,
-                  make_subscription(ca_bo, "ParameterMap in RestrictedOperator"));
+                  make_subscription(ca_bo, "GenMap in RestrictedOperator"));
 
-  ParameterMap occb_map;
+  GenMap occb_map;
   occb_map.update(occ_coeff_key,
-                  make_subscription(cb_bo, "ParameterMap in RestrictedOperator"));
+                  make_subscription(cb_bo, "GenMap in RestrictedOperator"));
 
   //
   // Update 1e part, J and K == Update the operator.

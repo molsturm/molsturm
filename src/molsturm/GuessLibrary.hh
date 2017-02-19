@@ -39,7 +39,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> hcore_guess(
 
   // Solve eigensystem for smallest real eigenvalues
   const size_t n_vectors = std::max(fock_bb.n_alpha(), fock_bb.n_beta());
-  krims::ParameterMap params{{EigensystemSolverKeys::which, "SR"}};
+  krims::GenMap params{{EigensystemSolverKeys::which, "SR"}};
   try {
     return eigensystem_hermitian(hcore, S_bb, n_vectors, params);
   } catch (const SolverException& e) {
@@ -66,7 +66,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> loewdin_guess(
   //   - results in orthonormalised basis functions
 
   // Solve eigensystem for largest real eigenvalues
-  krims::ParameterMap params{{EigensystemSolverKeys::which, "LR"}};
+  krims::GenMap params{{EigensystemSolverKeys::which, "LR"}};
   const size_t n_vectors = std::max(fock_bb.n_alpha(), fock_bb.n_beta());
 
   try {
