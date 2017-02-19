@@ -56,6 +56,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> scf_guess(
     assert_throw(false, ExcInvalidScfGuessParametersEncountered(
                               "The method '" + method +
                               "' is not known. Did you spell it wrong?"));
+    return linalgwrap::EigensolutionTypeFor<true, IntegralOperator>{};
   }
 }
 

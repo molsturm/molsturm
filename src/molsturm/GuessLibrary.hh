@@ -47,6 +47,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> hcore_guess(
           Eigenproblem<true, decltype(hcore), OverlapMatrix>(hcore, S_bb), params);
     assert_throw(false, ExcObtainingScfGuessFailed(
                               "Eigensolver for Hcore failed with message " + e.extra()));
+    return EigensolutionTypeFor<true, IntegralOperator>{};
   }
 }
 
