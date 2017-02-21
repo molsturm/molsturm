@@ -333,27 +333,51 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
               << s.n_mtx_applies() << std::endl
               << "with energies" << std::endl;
 
+    // For the virial ratio we need accumulated kinetic
+    // and potential energies.
+    double kinetic_energy = 0;
+    double potential_energy = 0;
+
     size_t longestfirst = 0;
-    for (auto kv : fock_bb.energies()) {
+    for (const auto& kv : fock_bb.energies()) {
       longestfirst = std::max(kv.first.size(), longestfirst);
+
+      if (kv.first.rfind("kinetic") != std::string::npos) {
+        // String "kinetic" is found => assume this is a kinetic energy
+        kinetic_energy += kv.second;
+      } else {
+        // Else assume it is a potential energy
+        potential_energy += kv.second;
+      }
     }
 
     // Store original precision:
     linalgwrap::io::OstreamState outstate(std::cout);
 
-    for (auto kv : fock_bb.energies()) {
+    // Print energy terms
+    for (const auto& kv : fock_bb.energies()) {
       std::cout << ind << std::left << std::setw(longestfirst) << kv.first << " = "
                 << kv.second << std::endl;
     }
 
-    // TODO compute virial coefficient (ratio potential / kinetic energy)
-
+    // Print 1e and 2e energies
     std::cout << ind << std::left << std::setw(longestfirst) << "E_1e"
-              << " = " << std::setprecision(10) << fock_bb.energy_1e_terms() << std::endl
+              << " = " << std::setprecision(10) << fock_bb.energy_1e_terms() << '\n'
               << ind << std::left << std::setw(longestfirst) << "E_2e"
-              << " = " << std::setprecision(10) << fock_bb.energy_2e_terms() << std::endl
-              << std::endl
-              << ind << std::left << std::setw(longestfirst) << "E_total"
+              << " = " << std::setprecision(10) << fock_bb.energy_2e_terms() << '\n'
+              << '\n';
+
+    // Print kinetic and potential and virial ratio
+    const double virial = -potential_energy / kinetic_energy;
+    std::cout << ind << std::left << std::setw(longestfirst) << "E_pot"
+              << " = " << std::setprecision(10) << potential_energy << '\n'
+              << ind << std::left << std::setw(longestfirst) << "E_kin"
+              << " = " << std::setprecision(10) << kinetic_energy << '\n'
+              << ind << std::left << std::setw(longestfirst) << "virial ratio"
+              << " = " << std::setprecision(10) << virial << '\n'
+              << '\n';
+
+    std::cout << ind << std::left << std::setw(longestfirst) << "E_total"
               << " = " << std::setprecision(15) << fock_bb.energy_total() << std::endl;
   }
 }
