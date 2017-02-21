@@ -92,6 +92,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> loewdin_guess(
     assert_throw(false,
                  ExcObtainingScfGuessFailed(
                        "Eigensolver for overlap failed with message " + e.extra()));
+    return EigensolutionTypeFor<true, IntegralOperator>{};
   }
 }
 
