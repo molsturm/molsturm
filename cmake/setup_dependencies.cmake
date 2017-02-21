@@ -26,14 +26,15 @@ set(MOLSTURM_DEFINITIONS_RELEASE "")
 ##############
 
 macro(add_submodule_dependency LIBRARY VERSION)
-	set(${LIBRARY}_DIR "${PROJECT_SOURCE_DIR}/modules/${LIBRARY}")
-	if(NOT EXISTS "${${LIBRARY}_DIR}/CMakeLists.txt")
+	set(${LIBRARY}_SOURCE_DIR "${PROJECT_SOURCE_DIR}/modules/${LIBRARY}")
+	set(${LIBRARY}_BINARY_DIR "${PROJECT_BINARY_DIR}/modules/${LIBRARY}")
+	if(NOT EXISTS "${${LIBRARY}_SOURCE_DIR}/CMakeLists.txt")
 		message(FATAL_ERROR "Did not find expected submodule ${LIBRARY} in ${${LIBRARY}_DIR}. \
 Try \"git submodule update --init --recursive\"")
 	endif()
 
 	# Extract version from CMakeLists.txt:
-	file(STRINGS "${${LIBRARY}_DIR}/CMakeLists.txt" VERSION_RAW
+	file(STRINGS "${${LIBRARY}_SOURCE_DIR}/CMakeLists.txt" VERSION_RAW
 		REGEX "${LIBRARY} VERSION [0-9.]+"
 		LIMIT_COUNT 1)
 	string(REGEX MATCH "[0-9.]+" ${LIBRARY}_VERSION "${VERSION_RAW}")
@@ -46,8 +47,9 @@ was requested, but only version ${${LIBRARY}_VERSION} was found. Maybe a \
 	endif()
 
 	# Set the project up:
-	add_subdirectory("${${LIBRARY}_DIR}")
-	include_directories("${${LIBRARY}_DIR}/src")
+	add_subdirectory("${${LIBRARY}_SOURCE_DIR}")
+	include_directories("${${LIBRARY}_SOURCE_DIR}/src")  # For sources
+	include_directories("${${LIBRARY}_BINARY_DIR}/src")  # For generated files
 
 	# Add dependencies:
 	foreach(build ${DRB_BUILD_TYPES})
