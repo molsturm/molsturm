@@ -34,7 +34,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   typedef stored_matrix_type::vector_type vector_type;
 
   // Types of the integrals we use:
-  const gint::OrbitalType otype = gint::COMPLEX_ATOMIC;
+  const gint::OrbitalType otype = gint::OrbitalType::COMPLEX_ATOMIC;
 
   // The lookup class type to get the actual integrals
   typedef gint::IntegralLookup<otype> int_lookup_type;
@@ -94,17 +94,20 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   //
   // Setup integrals
   //
-  krims::GenMap intparams{
-        {"basis_type", "cs_naive"}, {"k_exponent", k_exp}, {"Z_charge", Z},
-        {"n_max", n_max},           {"l_max", l_max},      {"m_max", l_max}};
+  krims::GenMap intparams{{"basis_type", "atomic/cs_naive"},
+                          {"k_exponent", k_exp},
+                          {"Z_charge", Z},
+                          {"n_max", n_max},
+                          {"l_max", l_max},
+                          {"m_max", l_max}};
   int_lookup_type integrals{intparams};
 
   // Get the integral as actual objects.
-  integral_type S_bb = integrals("overlap");
-  integral_type T_bb = integrals("kinetic");
-  integral_type V0_bb = integrals("nuclear_attraction");
-  integral_type J_bb = integrals("coulomb");
-  integral_type K_bb = integrals("exchange");
+  integral_type S_bb = integrals.lookup_integral("overlap");
+  integral_type T_bb = integrals.lookup_integral("kinetic");
+  integral_type V0_bb = integrals.lookup_integral("nuclear_attraction");
+  integral_type J_bb = integrals.lookup_integral("coulomb");
+  integral_type K_bb = integrals.lookup_integral("exchange");
 
   // Combine 1e terms:
   std::vector<integral_type> terms_1e{T_bb, V0_bb};
