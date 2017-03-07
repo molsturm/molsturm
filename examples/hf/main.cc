@@ -4,6 +4,7 @@
 #include "parse_args.hh"
 
 #include <gint/IntegralLookup.hh>
+#include <gint/chemistry/Molecule.hh>
 #include <gint/version.hh>
 #include <gscf/version.hh>
 #include <iostream>
@@ -56,61 +57,84 @@ void print_res(const State& res) {
   }
 }
 
-/** Run an (atomic) SCF based on the integral data Sturmian14.
- *
- * \param Z       Number of nuclei
- * \param k_exp   Sturmian exponent
- * \param n_alpha Number of alpha electrons
- * \param n_beta  Number of beta electrons
- */
-void run_rhf_sturmian(args_type args, bool debug = false) {
+/** Run an SCF */
+void run_rhf(args_type args, bool debug = false) {
+  using gint::IntegralTypeKeys;
+
   //
   // Types and settings
   //
   // Types of scalar and matrix
   typedef double scalar_type;
   typedef SmallMatrix<scalar_type> stored_matrix_type;
+  typedef gint::Integral<stored_matrix_type> integral_type;
 
   // The lookup class type to get the actual integrals
-  typedef gint::IntegralLookup<gint::COMPLEX_ATOMIC> int_lookup_type;
-
-  // The type of the integral terms:
-  typedef typename int_lookup_type::integral_type integral_type;
+  // TODO This whole handling would be much easier if the orbital type was not in there!
+  typedef gint::IntegralLookup<gint::OrbitalType::COMPLEX_ATOMIC> int_lookup_ca_type;
+  typedef gint::IntegralLookup<gint::OrbitalType::REAL_MOLECULAR> int_lookup_rm_type;
+  std::unique_ptr<int_lookup_ca_type> integrals_ca_ptr;
+  std::unique_ptr<int_lookup_rm_type> integrals_rm_ptr;
 
   //
-  // Integral terms
+  // Lookup integral terms
   //
-  // Generate integral lookup object
-  krims::GenMap intparams{
-        {"basis_type", args.basis_type},
-        {"k_exponent", args.k_exp},
-        {"Z_charge", args.Z_charge},
-        {"n_max", static_cast<int>(args.n_max)},
-        {"l_max", static_cast<int>(args.l_max)},
-        {"m_max", static_cast<int>(args.m_max)},
-  };
-  int_lookup_type integrals{intparams};
+  // The integral objects to be filled:
+  integral_type S_bb, T_bb, V0_bb, J_bb, K_bb;
 
-  // Get the integral as actual objects.
-  integral_type S_bb = integrals("overlap");
-  integral_type T_bb = integrals("kinetic");
-  integral_type V0_bb = integrals("nuclear_attraction");
-  integral_type J_bb = integrals("coulomb");
-  integral_type K_bb = integrals("exchange");
+  gint::Molecule molecule{{static_cast<float>(args.Z_charge), 0, 0, 0}};
+  if (args.sturmian) {
+    krims::GenMap intparams{
+          {"basis_type", args.basis_type},
+          {"Z_charge", args.Z_charge},
+          {"structure", molecule},
+          {"k_exponent", args.k_exp},
+          {"n_max", static_cast<int>(args.n_max)},
+          {"l_max", static_cast<int>(args.l_max)},
+          {"m_max", static_cast<int>(args.m_max)},
+    };
+    integrals_ca_ptr.reset(new int_lookup_ca_type(std::move(intparams)));
 
+    S_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::overlap);
+    T_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::kinetic);
+    V0_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::nuclear_attraction);
+    J_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::coulomb);
+    K_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::exchange);
+
+    assert_throw(2 * std::max(args.n_alpha, args.n_beta) + 2 <= S_bb.n_rows(),
+                 ExcTooSmallBasis(S_bb.n_rows()));
+  } else if (args.gaussian) {
+    krims::GenMap intparams{
+          {"basis_type", args.basis_type},
+          {"Z_charge", args.Z_charge},
+          {"structure", molecule},
+          {"basis_set", args.basis_set},
+    };
+    integrals_rm_ptr.reset(new int_lookup_rm_type(std::move(intparams)));
+
+    S_bb = integrals_rm_ptr->lookup_integral(IntegralTypeKeys::overlap);
+    T_bb = integrals_rm_ptr->lookup_integral(IntegralTypeKeys::kinetic);
+    V0_bb = integrals_rm_ptr->lookup_integral(IntegralTypeKeys::nuclear_attraction);
+    J_bb = integrals_rm_ptr->lookup_integral(IntegralTypeKeys::coulomb);
+    K_bb = integrals_rm_ptr->lookup_integral(IntegralTypeKeys::exchange);
+  }
+
+  //
+  // Print basis info:
+  //
+  std::cout << "Basis name:  " << S_bb.id().basis() << std::endl;
   std::cout << "Basis size:  " << S_bb.n_rows() << std::endl << std::endl;
-
-  // Combine 1e terms:
-  std::vector<integral_type> terms_1e{std::move(T_bb), std::move(V0_bb)};
 
   //
   // Problem setup
   //
+
+  // Combine 1e terms:
+  std::vector<integral_type> terms_1e{std::move(T_bb), std::move(V0_bb)};
+
   assert_throw(args.n_eigenpairs >= std::max(args.n_alpha, args.n_beta),
                krims::ExcTooLarge<size_t>(std::max(args.n_alpha, args.n_beta),
                                           args.n_eigenpairs));
-  assert_throw(2 * std::max(args.n_alpha, args.n_beta) + 2 <= S_bb.n_rows(),
-               ExcTooSmallBasis(S_bb.n_rows()));
 
   // The term container for the fock operator matrix
   IntegralTermContainer<stored_matrix_type> integral_container(
@@ -138,10 +162,8 @@ void run_rhf_sturmian(args_type args, bool debug = false) {
 
   if (debug) {
     std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
-    auto debugout =
-          linalgwrap::io::make_formatted_stream_writer<linalgwrap::io::Mathematica,
-                                                       scalar_type>(mathematicafile,
-                                                                    1e-12);
+    auto debugout = linalgwrap::io::make_writer<linalgwrap::io::Mathematica, scalar_type>(
+          mathematicafile, 1e-12);
     debugout.write("guess", guess_solution.evectors());
     debugout.write("sbb", S_bb);
     typedef gscf::PulayDiisScfState<decltype(fock_bb), decltype(S_bb)> inner_state_type;
@@ -167,7 +189,7 @@ int main(int argc, char** argv) {
   if (!parse_args(argc, argv, args)) return 1;
   std::cout << "The following configuration was read:" << std::endl << args << std::endl;
 
-  run_rhf_sturmian(args, /*debug = */ false);
+  run_rhf(args, /*debug = */ false);
   return 0;
 }
 

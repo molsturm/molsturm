@@ -11,6 +11,7 @@ std::ostream& operator<<(std::ostream& o, const args_type& args) {
     << "l_max:         " << args.l_max << std::endl
     << "m_max:         " << args.m_max << std::endl
     << "Z_charge:      " << args.Z_charge << std::endl
+    << "basis_set:     " << args.basis_set << std::endl
     << "n_alpha:       " << args.n_alpha << std::endl
     << "n_beta:        " << args.n_beta << std::endl
     << "error:         " << args.error << std::endl
@@ -31,6 +32,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_error = false;
   bool had_max_iter = false;
   bool had_basis_type = false;
+  bool had_basis_set = false;
   bool had_diis_size = false;
   bool had_n_eigenpairs = false;
 
@@ -90,21 +92,36 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         std::cerr << "Invalid int provided to --m_max: " << argument << std::endl;
         return false;
       }
+    } else if (flag == std::string("--basis_set")) {
+      had_basis_set = true;
+      parsed.basis_set = argument;
     } else if (flag == std::string("--basis_type")) {
       had_basis_type = true;
 
-      const std::vector<std::string> valid_basis_types{"cs_static14", "cs_dummy",
-                                                       "cs_naive"};
-      const auto res = std::find(std::begin(valid_basis_types),
-                                 std::end(valid_basis_types), argument);
-      if (res == std::end(valid_basis_types)) {
+      const std::vector<std::string> valid_atomic_basis{"cs_static14", "cs_dummy",
+                                                        "cs_naive"};
+      const std::vector<std::string> valid_gaussian_basis{"libint"};
+      const auto res_atomic = std::find(std::begin(valid_atomic_basis),
+                                        std::end(valid_atomic_basis), argument);
+      const auto res_gaussian = std::find(std::begin(valid_gaussian_basis),
+                                          std::end(valid_gaussian_basis), argument);
+
+      if (res_atomic != std::end(valid_atomic_basis)) {
+        parsed.sturmian = true;
+        parsed.gaussian = false;
+        parsed.basis_type = "atomic/" + argument;
+      } else if (res_gaussian != std::end(valid_gaussian_basis)) {
+        parsed.gaussian = true;
+        parsed.sturmian = false;
+        parsed.basis_type = "gaussian/" + argument;
+      } else {
         std::cerr << "Invalid argument provided to --basis_type:   " << argument
                   << "valid are:  ";
-        for (auto& s : valid_basis_types) std::cerr << s << "  ";
+        for (auto& s : valid_atomic_basis) std::cerr << s << "  ";
+        for (auto& s : valid_gaussian_basis) std::cerr << s << "  ";
         std::cerr << std::endl;
         return false;
       }
-      parsed.basis_type = argument;
     } else if (flag == std::string("--error")) {
       had_error = true;
       if (!str_to_type<double>(argument, parsed.error)) {
@@ -134,37 +151,57 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
       std::cerr << "Unknown flag: " << flag << std::endl;
       std::cerr << "Valid are: --basis_type, --n_max, --l_max, --n_max, --kexp, "
                    "--Z_charge, --alpha, --beta, --error, --max_iter, --diis_size, "
-                   "--n_eigenpairs"
+                   "--n_eigenpairs, --basis_set"
                 << std::endl;
       return false;
     }
   }
 
+  //
   // Error handling
+  //
+  bool error_encountered = false;
+  if (!had_basis_type) {
+    error_encountered = true;
+    std::cerr << "Need flag --basis_type <string> to supply basis type to use."
+              << std::endl;
+  }
+  if (parsed.gaussian) {
+    if (!had_basis_set) {
+      error_encountered = true;
+      std::cerr << "Need flag --basis_set <string> to supply basis set to use."
+                << std::endl;
+    }
+  } else if (parsed.sturmian) {
+    if (!had_k_exp) {
+      error_encountered = true;
+      std::cerr << "Need flag --kexp <double> to supply k exponent." << std::endl;
+    }
+    if (!had_n_max) {
+      error_encountered = true;
+      std::cerr << "Need flag --n_max <int> to supply maximal principle quantum "
+                   "number."
+                << std::endl;
+    }
+  }
   if (!had_Z_charge) {
+    error_encountered = true;
     std::cerr << "Need flag --Z_charge <double> to supply nuclear charge." << std::endl;
   }
   if (!had_alpha) {
+    error_encountered = true;
     std::cerr << "Need flag --alpha <int> to supply number of alpha electrons."
               << std::endl;
   }
   if (!had_beta) {
+    error_encountered = true;
     std::cerr << "Need flag --beta <int> to supply number of beta electrons."
               << std::endl;
   }
-  if (!had_k_exp) {
-    std::cerr << "Need flag --kexp <double> to supply k exponent." << std::endl;
-  }
-  if (!had_basis_type) {
-    std::cerr << "Need flag --basis_type <string> to supply basis type to use."
-              << std::endl;
-  }
-  if (!had_n_max) {
-    std::cerr << "Need flag --n_max <int> to supply maximal principle quantum "
-                 "number."
-              << std::endl;
-  }
 
+  //
+  // Set defaults
+  //
   if (!had_error) {
     parsed.error = 5e-7;
   }
@@ -187,9 +224,6 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
     parsed.m_max = parsed.l_max;
   }
 
-  if (had_Z_charge && had_alpha && had_beta && had_k_exp && had_n_max && had_basis_type) {
-    return true;
-  }
-  return false;
+  return !error_encountered;
 }
 }  // namespace hf
