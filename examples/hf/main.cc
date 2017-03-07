@@ -145,7 +145,7 @@ void run_rhf(args_type args, bool debug = false) {
 
   // Update with a guess solution
   auto guess_solution =
-        scf_guess(fock_bb, S_bb, {{ScfGuessKeys::method, /*"hcore"*/ "loewdin"}});
+        scf_guess(fock_bb, S_bb, {{ScfGuessKeys::method, args.guess_method}});
   fock_bb.update(guess_solution.evectors_ptr);
 
   krims::GenMap params{

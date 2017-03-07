@@ -5,15 +5,22 @@
 namespace hf {
 
 std::ostream& operator<<(std::ostream& o, const args_type& args) {
-  o << "basis_type:    " << args.basis_type << std::endl
-    << "k_exp:         " << args.k_exp << std::endl
-    << "n_max:         " << args.n_max << std::endl
-    << "l_max:         " << args.l_max << std::endl
-    << "m_max:         " << args.m_max << std::endl
-    << "Z_charge:      " << args.Z_charge << std::endl
-    << "basis_set:     " << args.basis_set << std::endl
+  o << "basis_type:    " << args.basis_type << std::endl;
+
+  if (args.sturmian) {
+    o << "k_exp:         " << args.k_exp << std::endl
+      << "n_max:         " << args.n_max << std::endl
+      << "l_max:         " << args.l_max << std::endl
+      << "m_max:         " << args.m_max << std::endl;
+  }
+  if (args.gaussian) {
+    o << "basis_set:     " << args.basis_set << std::endl;
+  }
+
+  o << "Z_charge:      " << args.Z_charge << std::endl
     << "n_alpha:       " << args.n_alpha << std::endl
     << "n_beta:        " << args.n_beta << std::endl
+    << "guess_method:  " << args.guess_method << std::endl
     << "error:         " << args.error << std::endl
     << "max_iter       " << args.max_iter << std::endl
     << "diis_size:     " << args.diis_size << std::endl
@@ -35,6 +42,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_basis_set = false;
   bool had_diis_size = false;
   bool had_n_eigenpairs = false;
+  bool had_guess_method = false;
 
   // Parsing
   for (int i = 1; i < argc; ++i) {
@@ -147,11 +155,14 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
                   << std::endl;
         return false;
       }
+    } else if (flag == std::string("--guess_method")) {
+      had_guess_method = true;
+      parsed.guess_method = argument;
     } else {
       std::cerr << "Unknown flag: " << flag << std::endl;
       std::cerr << "Valid are: --basis_type, --n_max, --l_max, --n_max, --kexp, "
                    "--Z_charge, --alpha, --beta, --error, --max_iter, --diis_size, "
-                   "--n_eigenpairs, --basis_set"
+                   "--n_eigenpairs, --basis_set, --guess_method"
                 << std::endl;
       return false;
     }
@@ -209,7 +220,6 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   if (!had_max_iter) {
     parsed.max_iter = 25;
   }
-
   if (!had_diis_size) {
     parsed.diis_size = 4;
   }
