@@ -186,9 +186,17 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
    *  \param max_error   Maximum error to solve for. 0 means same
    *                     accuracy as user asked for via GenMap
    *                     or setting class arguments.
+   *  \param run_until_iter    Maximum iteration count until which to run this solver.
+   *                     I.e. if max_iter == 5 and the current
+   *                     iteration to come is the 4th, then this solver
+   *                     will be run at most for 2 steps (step 4 and 5).
+   *                     The value of all is special and indicates, that
+   *                     the solver will run until convergence in the error
+   *                     has been reached.
    */
   template <typename WrappedSolver>
-  void solve_up_to(real_type error, state_type& s) const;
+  void solve_up_to(state_type& s, real_type error,
+                   size_t run_until_iter = linalgwrap::Constants<size_t>::all) const;
 
   /** Cache of the parameters which will be passed to the actual SCF.
    *
@@ -225,13 +233,15 @@ typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
 
 template <typename IntegralOperator, typename OverlapMatrix>
 template <typename WrappedSolver>
-void IopScf<IntegralOperator, OverlapMatrix>::solve_up_to(real_type error,
-                                                          state_type& state) const {
+void IopScf<IntegralOperator, OverlapMatrix>::solve_up_to(state_type& state,
+                                                          real_type error,
+                                                          size_t run_until_iter) const {
   // Setup inner solver (max => User settings of accuracy take preference)
   WrappedSolver inner_solver{m_inner_params};
   inner_solver.max_error_norm = std::max(base_type::max_error_norm, error);
   inner_solver.max_1e_energy_change = std::max(100. * error, max_1e_energy_change);
   inner_solver.max_tot_energy_change = std::max(error, max_tot_energy_change);
+  inner_solver.run_until_iter = run_until_iter;
 
   // Setup inner state
   typename WrappedSolver::state_type inner_state{state.problem_matrix(),
@@ -267,10 +277,11 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
   }
 
   // TODO make this configurable
-  const real_type startup_error_norm = 0.25;
+  const real_type diis_startup_error_norm = 0.25;
+  const size_t diis_startup_iter = 12;
 
   {  // Plain
-    solve_up_to<PlainSolver>(startup_error_norm, state);
+    solve_up_to<PlainSolver>(state, diis_startup_error_norm, diis_startup_iter);
     if (base_type::convergence_reached(state)) return;
   }
 
@@ -288,15 +299,15 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
     if (print_progress) {
       std::cout << "               ****   Turning on DIIS  ****" << std::endl;
     }
-    solve_up_to<DiisSolver>(diis_limit_max_error_norm, state);
+    solve_up_to<DiisSolver>(state, diis_limit_max_error_norm);
     if (base_type::convergence_reached(state)) return;
     if (print_progress) {
       std::cout << "               **** Switching off DIIS ****" << std::endl;
     }
   }
 
-  {  // Plain
-    solve_up_to<PlainSolver>(0., state);
+  {  // Plain --- TODO here we want to do SOSCF ideally ...
+    solve_up_to<PlainSolver>(state, 0.);
     if (base_type::convergence_reached(state)) return;
   }
 

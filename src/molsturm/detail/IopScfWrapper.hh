@@ -102,6 +102,15 @@ class IopScfWrapper /*final*/ : public InnerScf {
   //! How verbose should the solver be.
   ScfMsgType verbosity = ScfMsgType::Silent;
 
+  /** Run until this iteration count has been reached but no further.
+   *
+   * This is needed to switch to a different solver sensibly once
+   * we have reached a certain iteration number. The special value
+   * 0 indicates to never switch to another solver and finish
+   * the SCF with the one which is currently running.
+   **/
+  size_t run_until_iter = 0;
+
   /** Check convergence */
   bool is_converged(const state_type& state) const override;
 
@@ -140,6 +149,10 @@ template <typename InnerScf>
 bool IopScfWrapper<InnerScf>::is_converged(const state_type& state) const {
   // We cannot be converged on the first iteration
   if (state.n_iter() <= 1) return false;
+
+  // If the run_until_iter iteration count has been reached, we consider
+  // this solver done, i.e. converged.
+  if (state.n_iter() >= run_until_iter) return true;
 
   if (state.last_error_norm > base_type::max_error_norm) return false;
   if (state.last_tot_energy_change > max_tot_energy_change) return false;
