@@ -67,18 +67,22 @@ class ScfDebugWrapper : public InnerScf {
 
     for (auto kv : fock_bb.terms_alpha()) {
       // Normalise the label: The id of the term may contain funny symbols
-      std::string lala = m_writer.normalise_label(kv.first + "a" + itstr);
+      std::string lala =
+            m_writer.normalise_label(kv.first.integral_friendly_name() + "a" + itstr);
       m_writer.write(lala, kv.second);
     }
     for (auto kv : fock_bb.terms_beta()) {
       // Normalise the label: The id of the term may contain funny symbols
-      std::string lalb = m_writer.normalise_label(kv.first + "b" + itstr);
+      std::string lalb =
+            m_writer.normalise_label(kv.first.integral_friendly_name() + "b" + itstr);
       m_writer.write(lalb, kv.second);
     }
     m_writer.write("fock" + itstr, fock_bb);
 
     for (auto kv : fock_bb.energies()) {
-      m_writer.write(m_writer.normalise_label(kv.first + "energy" + itstr), kv.second);
+      m_writer.write(m_writer.normalise_label(kv.first.integral_friendly_name() +
+                                              "energy" + itstr),
+                     kv.second);
     }
 
     assert_throw(m_writer, krims::ExcIO());

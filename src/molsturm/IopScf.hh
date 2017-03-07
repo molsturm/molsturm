@@ -338,15 +338,16 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
     double kinetic_energy = 0;
     double potential_energy = 0;
 
-    size_t longestfirst = 0;
+    size_t friendly_label_size = 0;
     for (const auto& kv : fock_bb.energies()) {
-      longestfirst = std::max(kv.first.size(), longestfirst);
+      const auto& id = kv.first;
 
-      if (kv.first.rfind("kinetic") != std::string::npos) {
-        // String "kinetic" is found => assume this is a kinetic energy
+      friendly_label_size =
+            std::max(id.integral_friendly_name().size(), friendly_label_size);
+
+      if (id.integral_type() == gint::IntegralType::kinetic) {
         kinetic_energy += kv.second;
       } else {
-        // Else assume it is a potential energy
         potential_energy += kv.second;
       }
     }
@@ -356,28 +357,28 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
 
     // Print energy terms
     for (const auto& kv : fock_bb.energies()) {
-      std::cout << ind << std::left << std::setw(longestfirst) << kv.first << " = "
-                << kv.second << std::endl;
+      std::cout << ind << std::left << std::setw(friendly_label_size)
+                << kv.first.integral_friendly_name() << " = " << kv.second << std::endl;
     }
 
     // Print 1e and 2e energies
-    std::cout << ind << std::left << std::setw(longestfirst) << "E_1e"
+    std::cout << ind << std::left << std::setw(friendly_label_size) << "E_1e"
               << " = " << std::setprecision(10) << fock_bb.energy_1e_terms() << '\n'
-              << ind << std::left << std::setw(longestfirst) << "E_2e"
+              << ind << std::left << std::setw(friendly_label_size) << "E_2e"
               << " = " << std::setprecision(10) << fock_bb.energy_2e_terms() << '\n'
               << '\n';
 
     // Print kinetic and potential and virial ratio
     const double virial = -potential_energy / kinetic_energy;
-    std::cout << ind << std::left << std::setw(longestfirst) << "E_pot"
+    std::cout << ind << std::left << std::setw(friendly_label_size) << "E_pot"
               << " = " << std::setprecision(10) << potential_energy << '\n'
-              << ind << std::left << std::setw(longestfirst) << "E_kin"
+              << ind << std::left << std::setw(friendly_label_size) << "E_kin"
               << " = " << std::setprecision(10) << kinetic_energy << '\n'
-              << ind << std::left << std::setw(longestfirst) << "virial ratio"
+              << ind << std::left << std::setw(friendly_label_size) << "virial ratio"
               << " = " << std::setprecision(10) << virial << '\n'
               << '\n';
 
-    std::cout << ind << std::left << std::setw(longestfirst) << "E_total"
+    std::cout << ind << std::left << std::setw(friendly_label_size) << "E_total"
               << " = " << std::setprecision(15) << fock_bb.energy_total() << std::endl;
   }
 }

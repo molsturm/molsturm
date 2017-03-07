@@ -171,7 +171,9 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    *  construction time to the energy value of that corresponding
    *  term.
    */
-  const std::map<std::string, scalar_type>& energies() const { return m_energies; }
+  const std::map<gint::IntegralIdentifier, scalar_type>& energies() const {
+    return m_energies;
+  }
 
   /** Return the sum of the energies of all one-electron terms */
   scalar_type energy_1e_terms() const;
@@ -188,7 +190,8 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of alpha
    * spin. */
-  std::map<std::string, linalgwrap::LazyMatrixProduct<StoredMatrix>> terms_alpha() const;
+  std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+  terms_alpha() const;
 
   // TODO it would be really great to have a better interface
   // for the function above and the one below.
@@ -197,7 +200,8 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of beta
    * spin. */
-  std::map<std::string, linalgwrap::LazyMatrixProduct<StoredMatrix>> terms_beta() const {
+  std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+  terms_beta() const {
     return terms_alpha();
   }
   ///@}
@@ -252,7 +256,7 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   const size_type m_n_alpha;
 
   /** The current energies */
-  std::map<std::string, scalar_type> m_energies;
+  std::map<gint::IntegralIdentifier, scalar_type> m_energies;
 
   //! Key used for updating the state.
   const std::string m_update_key = "evec_coefficients";
@@ -458,10 +462,10 @@ RestrictedClosedIntegralOperator<StoredMatrix>::energy_total() const {
 }
 
 template <typename StoredMatrix>
-std::map<std::string, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
 RestrictedClosedIntegralOperator<StoredMatrix>::terms_alpha() const {
   using namespace linalgwrap;
-  std::map<std::string, LazyMatrixProduct<StoredMatrix>> ret;
+  std::map<gint::IntegralIdentifier, LazyMatrixProduct<StoredMatrix>> ret;
 
   // Insert 1e terms:
   auto itterm = std::begin(m_terms_1e);
