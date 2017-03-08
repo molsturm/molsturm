@@ -82,12 +82,11 @@ void run_rhf(args_type args, bool debug = false) {
   // The integral objects to be filled:
   integral_type S_bb, T_bb, V0_bb, J_bb, K_bb;
 
-  gint::Molecule molecule{{static_cast<float>(args.Z_charge), 0, 0, 0}};
   if (args.sturmian) {
     krims::GenMap intparams{
           {"basis_type", args.basis_type},
-          {"Z_charge", args.Z_charge},
-          {"structure", molecule},
+          {"Z_charge", static_cast<double>(args.molecule[0].nuclear_charge)},
+          {"structure", args.molecule},
           {"k_exponent", args.k_exp},
           {"n_max", static_cast<int>(args.n_max)},
           {"l_max", static_cast<int>(args.l_max)},
@@ -106,8 +105,7 @@ void run_rhf(args_type args, bool debug = false) {
   } else if (args.gaussian) {
     krims::GenMap intparams{
           {"basis_type", args.basis_type},
-          {"Z_charge", args.Z_charge},
-          {"structure", molecule},
+          {"structure", args.molecule},
           {"basis_set", args.basis_set},
     };
     integrals_rm_ptr.reset(new int_lookup_rm_type(std::move(intparams)));
@@ -163,7 +161,7 @@ void run_rhf(args_type args, bool debug = false) {
   if (debug) {
     std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
     auto debugout = linalgwrap::io::make_writer<linalgwrap::io::Mathematica, scalar_type>(
-          mathematicafile, 1e-12);
+          mathematicafile, 1e-20);
     debugout.write("guess", guess_solution.evectors());
     debugout.write("sbb", S_bb);
     typedef gscf::PulayDiisScfState<decltype(fock_bb), decltype(S_bb)> inner_state_type;

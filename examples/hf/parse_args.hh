@@ -1,4 +1,5 @@
 #pragma once
+#include <gint/chemistry/Molecule.hh>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -16,7 +17,7 @@ struct args_type {
   bool gaussian = false;
   std::string basis_set = "<not avail>";
 
-  double Z_charge = 4.0;
+  gint::Molecule molecule;
   size_t n_alpha = 2;
   size_t n_beta = n_alpha;
 

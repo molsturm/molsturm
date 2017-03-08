@@ -1,4 +1,5 @@
 #include "parse_args.hh"
+#include "read_xyz.hh"
 #include <algorithm>
 #include <vector>
 
@@ -8,28 +9,32 @@ std::ostream& operator<<(std::ostream& o, const args_type& args) {
   o << "basis_type:    " << args.basis_type << std::endl;
 
   if (args.sturmian) {
-    o << "k_exp:         " << args.k_exp << std::endl
-      << "n_max:         " << args.n_max << std::endl
-      << "l_max:         " << args.l_max << std::endl
-      << "m_max:         " << args.m_max << std::endl;
+    o << "k_exp:         " << args.k_exp << '\n'
+      << "n_max:         " << args.n_max << '\n'
+      << "l_max:         " << args.l_max << '\n'
+      << "m_max:         " << args.m_max << '\n';
   }
   if (args.gaussian) {
-    o << "basis_set:     " << args.basis_set << std::endl;
+    o << "basis_set:     " << args.basis_set << '\n';
   }
 
-  o << "Z_charge:      " << args.Z_charge << std::endl
-    << "n_alpha:       " << args.n_alpha << std::endl
-    << "n_beta:        " << args.n_beta << std::endl
-    << "guess_method:  " << args.guess_method << std::endl
-    << "error:         " << args.error << std::endl
-    << "max_iter       " << args.max_iter << std::endl
-    << "diis_size:     " << args.diis_size << std::endl
-    << "n_eigenpairs:  " << args.n_eigenpairs << std::endl;
+  o << "n_alpha:       " << args.n_alpha << '\n'
+    << "n_beta:        " << args.n_beta << '\n'
+    << "guess_method:  " << args.guess_method << '\n'
+    << "error:         " << args.error << '\n'
+    << "max_iter       " << args.max_iter << '\n'
+    << "diis_size:     " << args.diis_size << '\n'
+    << "n_eigenpairs:  " << args.n_eigenpairs << '\n'
+    << '\n'
+    << "molecule (distances in bohr):\n"
+    << "------------------------\n"
+    << args.molecule << "\n------------------------" << std::endl;
   return o;
 }
 
 bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_Z_charge = false;
+  bool had_xyz = false;
   bool had_alpha = false;
   bool had_beta = false;
   bool had_k_exp = false;
@@ -42,7 +47,6 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_basis_set = false;
   bool had_diis_size = false;
   bool had_n_eigenpairs = false;
-  bool had_guess_method = false;
 
   // Parsing
   for (int i = 1; i < argc; ++i) {
@@ -60,10 +64,28 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
     // Interpret argument
     if (flag == std::string("--Z_charge")) {
       had_Z_charge = true;
-      if (!str_to_type<double>(argument, parsed.Z_charge)) {
-        std::cerr << "Invalid double provided to --Z: " << argument << std::endl;
+      if (had_xyz) {
+        std::cerr << "Can only have one of --Z_charge or --xyz" << std::endl;
         return false;
       }
+      float Z;
+      if (!str_to_type<float>(argument, Z)) {
+        std::cerr << "Invalid float provided to --Z_charge: " << argument << std::endl;
+        return false;
+      }
+      parsed.molecule = gint::Molecule{{Z, 0, 0, 0}};
+    } else if (flag == std::string("--xyz")) {
+      had_xyz = true;
+      if (had_Z_charge) {
+        std::cerr << "Can only have one of --Z_charge or --xyz" << std::endl;
+        return false;
+      }
+      std::ifstream xyz(argument);
+      if (!xyz) {
+        std::cerr << "Could not open xyz file: " << argument << std::endl;
+        return false;
+      }
+      parsed.molecule = read_xyz(xyz);
     } else if (flag == std::string("--alpha")) {
       had_alpha = true;
       if (!str_to_type<size_t>(argument, parsed.n_alpha)) {
@@ -156,13 +178,12 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         return false;
       }
     } else if (flag == std::string("--guess_method")) {
-      had_guess_method = true;
       parsed.guess_method = argument;
     } else {
       std::cerr << "Unknown flag: " << flag << std::endl;
       std::cerr << "Valid are: --basis_type, --n_max, --l_max, --n_max, --kexp, "
                    "--Z_charge, --alpha, --beta, --error, --max_iter, --diis_size, "
-                   "--n_eigenpairs, --basis_set, --guess_method"
+                   "--n_eigenpairs, --basis_set, --guess_method, --xyz"
                 << std::endl;
       return false;
     }
@@ -194,10 +215,16 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
                    "number."
                 << std::endl;
     }
+    if (parsed.molecule.size() != 1) {
+      error_encountered = true;
+      std::cerr << "Need a molecule with exactly one atom for sturmian calculations."
+                << std::endl;
+    }
   }
-  if (!had_Z_charge) {
+  if (!had_xyz && !had_Z_charge) {
     error_encountered = true;
-    std::cerr << "Need flag --Z_charge <double> to supply nuclear charge." << std::endl;
+    std::cerr << "Need flag --xyz <file> to supply an xyz file or --Z_charge <double>"
+              << std::endl;
   }
   if (!had_alpha) {
     error_encountered = true;
