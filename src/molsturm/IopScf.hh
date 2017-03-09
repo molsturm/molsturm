@@ -91,13 +91,6 @@ struct IopScfState final : public gscf::ScfStateBase<ProblemMatrix, OverlapMatri
 };
 
 /** Scf Solver which should be used for integral operators.
- *
- * TODO
- * Right now this is exactly the PulayDiisScf. Later we probably want
- * something more clever, which first does some DIIS, but later
- * switches it off (or for something else) when all of a sudden
- * the errors get to small (and the linear system to be solved in the
- * DIIS becomes ill-conditioned
  */
 template <typename IntegralOperator, typename OverlapMatrix>
 class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapMatrix>> {
