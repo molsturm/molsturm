@@ -1,10 +1,13 @@
 #pragma once
+#include <gscf/FocklikeMatrix_i.hh>
 #include <linalgwrap/LazyMatrix_i.hh>
 
 namespace molsturm {
 
 template <typename StoredMatrix>
-class IntegralOperatorBase : public linalgwrap::LazyMatrix_i<StoredMatrix> {
+class IntegralOperatorBase
+      : public linalgwrap::LazyMatrix_i<StoredMatrix>,
+        public gscf::FocklikeMatrix_i<typename StoredMatrix::scalar_type> {
  public:
   typedef linalgwrap::LazyMatrix_i<StoredMatrix> base_type;
   typedef typename base_type::scalar_type scalar_type;

@@ -1,4 +1,5 @@
 #pragma once
+#include <gscf/FocklikeMatrix_i.hh>
 #include <linalgwrap/TypeUtils.hh>
 #include <linalgwrap/eigensystem.hh>
 #include <linalgwrap/rescue.hh>
@@ -22,6 +23,8 @@ namespace molsturm {
 //      Ideally Integral operator -> guess
 //      I.e. we would supply an (uninitialised) Fock matrix to compute the guess from
 //
+//      Supply the system as well?
+//
 //      Check how ORCA and Q-Chem do this and mimic their behaviour
 
 DefException1(ExcObtainingScfGuessFailed, std::string,
@@ -37,8 +40,16 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> hcore_guess(
   LazyMatrixSum<typename IntegralOperator::stored_matrix_type> hcore;
   for (const auto& term : fock_bb.terms_1e()) hcore += term;
 
+  // TODO Think this through for unrestricted
+  //      Probably better pass the system we want to solve to this guy as well!
+  const auto occa = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_ALPHA);
+  const auto occb = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_BETA);
+  const size_t n_alpha = occa.size();
+  const size_t n_beta = occb.size();
+  assert_dbg(n_alpha == n_beta, krims::ExcNotImplemented());
+  const size_t n_vectors = std::max(n_alpha, n_beta);
+
   // Solve eigensystem for smallest real eigenvalues
-  const size_t n_vectors = std::max(fock_bb.n_alpha(), fock_bb.n_beta());
   krims::GenMap params{{EigensystemSolverKeys::which, "SR"}};
   try {
     return eigensystem_hermitian(hcore, S_bb, n_vectors, params);
@@ -68,7 +79,15 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> loewdin_guess(
 
   // Solve eigensystem for largest real eigenvalues
   krims::GenMap params{{EigensystemSolverKeys::which, "LR"}};
-  const size_t n_vectors = std::max(fock_bb.n_alpha(), fock_bb.n_beta());
+
+  // TODO Think this through for unrestricted
+  //      Probably better pass the system we want to solve to this guy as well!
+  const auto occa = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_ALPHA);
+  const auto occb = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_BETA);
+  const size_t n_alpha = occa.size();
+  const size_t n_beta = occb.size();
+  assert_dbg(n_alpha == n_beta, krims::ExcNotImplemented());
+  const size_t n_vectors = std::max(n_alpha, n_beta);
 
   try {
     auto sol = eigensystem_hermitian(S_bb, n_vectors, params);

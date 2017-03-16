@@ -1,6 +1,8 @@
 #pragma once
 #include "IntegralOperatorBase.hh"
 #include "IntegralTermContainer.hh"
+#include "MolecularSystem.hh"
+#include "energy_nuclear_repulsion.hh"
 #include <functional>
 #include <linalgwrap/Constants.hh>
 #include <linalgwrap/LazyMatrixExpression.hh>
@@ -9,10 +11,14 @@
 
 namespace molsturm {
 
+// Open-shell: Have a simple specialisation of the eigensolver for now
+//             and use adl (check that adl gets used properly)
+//
+
 // TODO Have an UHF version and a Restricted OHF version as well.
 /** Class representing an restricted closed-shell integral operator */
 template <typename StoredMatrix>
-class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatrix> {
+class RestrictedClosedIntegralOperator final : public IntegralOperatorBase<StoredMatrix> {
  public:
   typedef IntegralOperatorBase<StoredMatrix> base_type;
   typedef typename base_type::scalar_type scalar_type;
@@ -53,7 +59,7 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    *                         (has to be equal to nalpha)
    */
   RestrictedClosedIntegralOperator(IntegralTermContainer<StoredMatrix> integral_terms,
-                                   size_type n_alpha, size_type n_beta);
+                                   const MolecularSystem& system);
 
   /** Return the number of rows of the matrix */
   size_type n_rows() const override { return m_operator.n_rows(); }
@@ -160,29 +166,45 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   /** Update the inner state:
    * Build the Fock matrix with the new coefficients
    */
-  void update(coefficients_ptr_type coefficients);
+  void update(const coefficients_ptr_type& coefficients);
+
+  /** Obtain the coefficients which were used to update the state of this operator,
+   *  i.e. this returns the coefficients which have been most recently passed
+   *  to this operator via update()
+   */
+  const coefficients_type& coefficients() const { return *m_coefficients_ptr; }
 
   /** Return the update key for the solver */
-  const std::string& scf_update_key() const { return m_update_key; }
+  const std::string& scf_update_key() const override { return m_update_key; }
 
-  /* \name Access to energies and individual terms */
+  /* \name Access to energies of the individual electronic terms */
   ///@{
   /** Return the map from the ids of the integral terms specified on
    *  construction time to the energy value of that corresponding
    *  term.
+   *
+   * \note The nuclear repulsion energy can be obtained using the
+   *       function call energy_nuclear_repulsion()
    */
   const std::map<gint::IntegralIdentifier, scalar_type>& energies() const {
     return m_energies;
   }
 
   /** Return the sum of the energies of all one-electron terms */
-  scalar_type energy_1e_terms() const;
+  scalar_type energy_1e_terms() const override;
 
   /** Return the sum of the energies of all two-electron terms */
-  scalar_type energy_2e_terms() const;
+  scalar_type energy_2e_terms() const override;
 
-  /** Return the total energy */
-  scalar_type energy_total() const;
+  /** Return the nuclear repulsion component */
+  scalar_type energy_nuclear_repulsion() const { return m_nuclear_repulsion_energy; }
+
+  /** Return the total energy
+   *
+   * This means the *electronic* and the *nuclear* component. */
+  scalar_type energy_total() const {
+    return energy_1e_terms() + energy_2e_terms() + energy_nuclear_repulsion();
+  }
 
   /** Return the 1e terms */
   const std::vector<int_term_type>& terms_1e() const { return m_terms_1e; }
@@ -206,25 +228,30 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   }
   ///@}
 
-  /** Get the number of alpha electrons */
-  size_type n_alpha() const { return m_n_alpha; }
-
-  // TODO being able to access the above and below here feels wrong.
-  // but we need it for the error calculation.
-
-  /** Get the number of beta electrons */
-  size_type n_beta() const { return m_n_alpha; }
+  krims::Range<size_t> indices_subspace(gscf::OrbitalSpace osp) const override {
+    using gscf::OrbitalSpace;
+    switch (osp) {
+      case OrbitalSpace::OCC_ALPHA:
+      /* intentional fall-through */
+      case OrbitalSpace::OCC_BETA:
+        return {0, m_n_alpha};
+      case OrbitalSpace::VIRT_ALPHA:
+      /* intentional fall-through */
+      case OrbitalSpace::VIRT_BETA:
+        return {m_n_alpha, n_rows()};
+    }
+  }
 
  private:
   /** Update the state of the lazy matrix operator terms and rebuild
    *  the operator m_operator from them.
    */
-  void update_operator(coefficients_ptr_type coeff_bf_ptr);
+  void update_operator(const coefficients_ptr_type& coeff_bf_ptr);
 
   /** Recompute the energies from the current state of the terms
    * (First call update_operator on an update! )
    **/
-  void update_energies(coefficients_ptr_type coeff_bf_ptr);
+  void update_energies(const coefficients_ptr_type& coeff_bf_ptr);
 
   /** Set of coefficients for the one electron integral terms */
   std::vector<scalar_type> m_coeff_1e;
@@ -255,8 +282,14 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   /** Number of alpha electrons */
   const size_type m_n_alpha;
 
-  /** The current energies */
+  /** The current electronic energies */
   std::map<gint::IntegralIdentifier, scalar_type> m_energies;
+
+  /** The nuclear repulsion energy */
+  scalar_type m_nuclear_repulsion_energy;
+
+  /** The current coefficients the fock operator is initialised to */
+  coefficients_ptr_type m_coefficients_ptr;
 
   //! Key used for updating the state.
   const std::string m_update_key = "evec_coefficients";
@@ -268,8 +301,7 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
 
 template <typename StoredMatrix>
 RestrictedClosedIntegralOperator<StoredMatrix>::RestrictedClosedIntegralOperator(
-      IntegralTermContainer<StoredMatrix> integral_terms, size_type n_alpha,
-      size_type n_beta)
+      IntegralTermContainer<StoredMatrix> integral_terms, const MolecularSystem& system)
       : m_coeff_1e{std::move(integral_terms.coefficients_1e)},
         m_terms_1e{std::move(integral_terms.integral_terms_1e)},
         m_coeff_coul{integral_terms.coefficient_coulomb},
@@ -277,12 +309,12 @@ RestrictedClosedIntegralOperator<StoredMatrix>::RestrictedClosedIntegralOperator
         m_coeff_exchge{integral_terms.coefficient_exchange},
         m_exchge{std::move(integral_terms.exchange_term)},
         m_operator{},
-        m_n_alpha{n_alpha},
+        m_n_alpha{system.n_alpha},
         m_energies{} {
   using namespace linalgwrap;
 
   // Check that alpha is equal to beta
-  assert_equal(n_beta, n_alpha);
+  assert_equal(system.n_beta, system.n_alpha);
 
   // Check that number of terms and number of coefficients agrees:
   assert_size(m_terms_1e.size(), m_coeff_1e.size());
@@ -307,9 +339,11 @@ RestrictedClosedIntegralOperator<StoredMatrix>::RestrictedClosedIntegralOperator
   assert_size(m_exchge.n_rows(), op_size);
   m_energies.insert(std::make_pair(m_exchge.id(), Constants<scalar_type>::zero));
 
+  m_nuclear_repulsion_energy = molsturm::energy_nuclear_repulsion(system.structure);
+
   // Initialise as a core hamiltonian (only 1e terms)
-  coefficients_ptr_type zero_coefficients =
-        std::make_shared<coefficients_type>(op_size, std::max(n_alpha, n_beta));
+  const coefficients_ptr_type zero_coefficients =
+        std::make_shared<coefficients_type>(op_size, m_n_alpha);
   update_operator(zero_coefficients);
 }
 
@@ -325,7 +359,11 @@ RestrictedClosedIntegralOperator<StoredMatrix>::operator()(size_type row,
 
 template <typename StoredMatrix>
 void RestrictedClosedIntegralOperator<StoredMatrix>::update(
-      coefficients_ptr_type coeff_bf_ptr) {
+      const coefficients_ptr_type& coeff_bf_ptr) {
+  // Only update if we got new coefficients:
+  if (coeff_bf_ptr == m_coefficients_ptr) return;
+  m_coefficients_ptr = coeff_bf_ptr;
+
   update_operator(coeff_bf_ptr);
   update_energies(coeff_bf_ptr);
 }
@@ -341,7 +379,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update(const krims::GenMap&
 
 template <typename StoredMatrix>
 void RestrictedClosedIntegralOperator<StoredMatrix>::update_operator(
-      coefficients_ptr_type coeff_bf_ptr) {
+      const coefficients_ptr_type& coeff_bf_ptr) {
   // Here we assume restricted closed-shell HF, since we have just one
   // type of coefficients (alpha) to do the update.
   //
@@ -379,7 +417,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_operator(
 
 template <typename StoredMatrix>
 void RestrictedClosedIntegralOperator<StoredMatrix>::update_energies(
-      coefficients_ptr_type coeff_bf_ptr) {
+      const coefficients_ptr_type& coeff_bf_ptr) {
   // Here we assume restricted closed-shell HF, since we have just one
   // type of coefficients (alpha) to do the update.
   //
@@ -453,12 +491,6 @@ template <typename StoredMatrix>
 typename RestrictedClosedIntegralOperator<StoredMatrix>::scalar_type
 RestrictedClosedIntegralOperator<StoredMatrix>::energy_2e_terms() const {
   return m_energies.at(m_coul.id()) + m_energies.at(m_exchge.id());
-}
-
-template <typename StoredMatrix>
-typename RestrictedClosedIntegralOperator<StoredMatrix>::scalar_type
-RestrictedClosedIntegralOperator<StoredMatrix>::energy_total() const {
-  return energy_1e_terms() + energy_2e_terms();
 }
 
 template <typename StoredMatrix>
