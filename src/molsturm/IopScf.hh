@@ -162,6 +162,9 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
  private:
   /** Types of the wrapped solvers */
   //@{
+  typedef detail::IopScfWrapper<gscf::TruncatedOptDampScf<detail::IopScfStateWrapper<
+        gscf::TruncatedOptDampScfState<IntegralOperator, OverlapMatrix>>>>
+        TruncODASolver;
   typedef detail::IopScfWrapper<gscf::PulayDiisScf<detail::IopScfStateWrapper<
         gscf::PulayDiisScfState<IntegralOperator, OverlapMatrix>>>>
         DiisSolver;
@@ -279,8 +282,8 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
   const real_type diis_startup_error_norm = 0.25;
   const size_t diis_startup_iter = 12;
 
-  {  // Plain
-    solve_up_to<PlainSolver>(state, diis_startup_error_norm, diis_startup_iter);
+  {  // truncated ODA
+    solve_up_to<TruncODASolver>(state, diis_startup_error_norm, diis_startup_iter);
     if (base_type::convergence_reached(state)) return;
   }
 
@@ -296,22 +299,36 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
 
   {  // DIIS
     if (print_progress) {
-      std::cout << "               ****   Turning on DIIS  ****" << std::endl;
+      std::cout << "               ****    Turning on DIIS   ****" << std::endl;
     }
     solve_up_to<DiisSolver>(state, diis_limit_max_error_norm);
     if (base_type::convergence_reached(state)) return;
     if (print_progress) {
-      std::cout << "               **** Switching off DIIS ****" << std::endl;
+      std::cout << "               ****  Switching off DIIS  ****" << std::endl;
     }
   }
 
-  {  // Plain --- TODO here we want to do SOSCF ideally ...
+  // TODO From this point we ideally want to do a SOSCF
+
+  // First experiments seem to suggest that the tODA is not good
+  // to get to extremely high accuracy due to numerical errors in the
+  // computation of the traces. Hence we cap it at an error of 1e-7
+  const real_type toda_limit_max_error_norm = 1e-7;
+
+  {  // truncated ODA SCF
+    solve_up_to<TruncODASolver>(state, toda_limit_max_error_norm);
+    if (base_type::convergence_reached(state)) return;
+  }
+
+  {  // Plain SCF
+    if (print_progress) {
+      std::cout << "               **** Removing any damping ****" << std::endl;
+    }
     solve_up_to<PlainSolver>(state, 0.);
     if (base_type::convergence_reached(state)) return;
   }
 
-  // Cannot happen since last solver should have thrown
-  // otherwise if no convergence up to here
+  // Cannot happen since last solver should have converged or thrown
   assert_dbg(false, krims::ExcInternalError());
 }
 

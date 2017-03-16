@@ -4,7 +4,6 @@
 #include "parse_args.hh"
 
 #include <gint/IntegralLookup.hh>
-#include <gint/chemistry/Molecule.hh>
 #include <gint/version.hh>
 #include <gscf/version.hh>
 #include <iostream>
@@ -32,28 +31,23 @@ template <typename State>
 void print_res(const State& res) {
   io::OstreamState oldstate(std::cout);
 
-  const std::string indt = "    ";
+  const std::string ind = "    ";
   std::cout << "Obtained Hartree-Fock orbitals: " << std::endl;
-  std::cout << indt << "a b" << std::endl;
+  std::cout << ind << "a b" << std::endl;
 
-  size_t n_alpha = res.problem_matrix().n_alpha();
-  size_t n_beta = res.problem_matrix().n_beta();
+  auto occa = res.problem_matrix().indices_subspace(gscf::OrbitalSpace::OCC_ALPHA);
+  auto occb = res.problem_matrix().indices_subspace(gscf::OrbitalSpace::OCC_BETA);
+  assert_dbg(occa == occb, krims::ExcNotImplemented());
+
   const auto& orben = res.eigensolution().evalues();
-  for (const auto& val : orben) {
-    std::cout << indt;
-    if (n_alpha > 0) {
-      --n_alpha;
-      std::cout << "* ";
-    } else {
-      std::cout << "  ";
-    }
-    if (n_beta > 0) {
-      --n_beta;
-      std::cout << "* ";
-    } else {
-      std::cout << "  ";
-    }
-    std::cout << std::right << std::setw(17) << std::setprecision(12) << val << std::endl;
+  for (size_t i = 0; i < orben.size(); ++i) {
+    std::cout << ind;
+    std::cout << (occa.contains(i) ? '*' : ' ');
+    std::cout << ' ';
+    std::cout << (occb.contains(i) ? '*' : ' ');
+    std::cout << ' ';
+    std::cout << std::right << std::setw(17) << std::setprecision(12) << orben[i]
+              << std::endl;
   }
 }
 
@@ -83,10 +77,12 @@ void run_rhf(args_type args, bool debug = false) {
   integral_type S_bb, T_bb, V0_bb, J_bb, K_bb;
 
   if (args.sturmian) {
+    assert_throw(args.system.structure.n_atoms() == 1, krims::ExcNotImplemented());
+
     krims::GenMap intparams{
           {"basis_type", args.basis_type},
-          {"Z_charge", static_cast<double>(args.molecule[0].nuclear_charge)},
-          {"structure", args.molecule},
+          {"Z_charge", args.system.structure.total_charge()},
+          {"structure", args.system.structure},
           {"k_exponent", args.k_exp},
           {"n_max", static_cast<int>(args.n_max)},
           {"l_max", static_cast<int>(args.l_max)},
@@ -100,12 +96,12 @@ void run_rhf(args_type args, bool debug = false) {
     J_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::coulomb);
     K_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::exchange);
 
-    assert_throw(2 * std::max(args.n_alpha, args.n_beta) + 2 <= S_bb.n_rows(),
-                 ExcTooSmallBasis(S_bb.n_rows()));
+    const size_t max_elec = std::max(args.system.n_alpha, args.system.n_beta);
+    assert_throw(2 * max_elec + 2 <= S_bb.n_rows(), ExcTooSmallBasis(S_bb.n_rows()));
   } else if (args.gaussian) {
     krims::GenMap intparams{
           {"basis_type", args.basis_type},
-          {"structure", args.molecule},
+          {"structure", args.system.structure},
           {"basis_set", args.basis_set},
     };
     integrals_rm_ptr.reset(new int_lookup_rm_type(std::move(intparams)));
@@ -120,31 +116,30 @@ void run_rhf(args_type args, bool debug = false) {
   //
   // Print basis info:
   //
-  std::cout << "Basis name:  " << S_bb.id().basis() << std::endl;
   std::cout << "Basis size:  " << S_bb.n_rows() << std::endl << std::endl;
 
   //
   // Problem setup
   //
-
   // Combine 1e terms:
   std::vector<integral_type> terms_1e{std::move(T_bb), std::move(V0_bb)};
 
-  assert_throw(args.n_eigenpairs >= std::max(args.n_alpha, args.n_beta),
-               krims::ExcTooLarge<size_t>(std::max(args.n_alpha, args.n_beta),
-                                          args.n_eigenpairs));
+  assert_throw(
+        args.n_eigenpairs >= std::max(args.system.n_alpha, args.system.n_beta),
+        krims::ExcTooLarge<size_t>(std::max(args.system.n_alpha, args.system.n_beta),
+                                   args.n_eigenpairs));
 
   // The term container for the fock operator matrix
   IntegralTermContainer<stored_matrix_type> integral_container(
         std::move(terms_1e), std::move(J_bb), std::move(K_bb));
 
   RestrictedClosedIntegralOperator<stored_matrix_type> fock_bb(integral_container,
-                                                               args.n_alpha, args.n_beta);
+                                                               args.system);
 
   // Update with a guess solution
+  // auto guess_solution = from_previous(fock_bb, S_bb);
   auto guess_solution =
         scf_guess(fock_bb, S_bb, {{ScfGuessKeys::method, args.guess_method}});
-  fock_bb.update(guess_solution.evectors_ptr);
 
   krims::GenMap params{
         // error
@@ -168,9 +163,12 @@ void run_rhf(args_type args, bool debug = false) {
     typedef molsturm::detail::IopScfStateWrapper<inner_state_type> state_type;
     molsturm::detail::IopScfWrapper<gscf::PulayDiisScf<state_type>> solver{params};
     ScfDebugWrapper<decltype(solver)> solwrap(debugout, solver);
+
+    fock_bb.update(guess_solution.evectors_ptr);
     auto res = solwrap.solve(fock_bb, S_bb);
     print_res(res);
   } else {
+    fock_bb.update(guess_solution.evectors_ptr);
     auto res = run_scf(fock_bb, S_bb, params, guess_solution);
     print_res(res);
   }
@@ -185,7 +183,11 @@ int main(int argc, char** argv) {
 
   args_type args;
   if (!parse_args(argc, argv, args)) return 1;
-  std::cout << "The following configuration was read:" << std::endl << args << std::endl;
+
+  const int prec = static_cast<int>(std::cout.precision());
+  std::cout << '\n'
+            << "The following configuration was read:\n"
+            << std::setprecision(15) << args << std::setprecision(prec) << std::endl;
 
   run_rhf(args, /*debug = */ false);
   return 0;
