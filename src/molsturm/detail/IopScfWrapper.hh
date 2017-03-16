@@ -169,8 +169,8 @@ typename IopScfWrapper<InnerScf>::matrix_type IopScfWrapper<InnerScf>::calculate
   // TODO: Note that this actually is an apply and should increase the apply count
 
   // Forward pulay error as the error matrix for the DIIS and other SCFs
-  return ScfErrorLibrary<probmat_type>::pulay_error(
-        s.overlap_matrix(), s.eigensolution().evectors(), s.problem_matrix());
+  return ScfErrorLibrary<probmat_type>::pulay_error(s.problem_matrix(),
+                                                    s.overlap_matrix());
 }
 
 template <typename InnerScf>
@@ -179,10 +179,9 @@ void IopScfWrapper<InnerScf>::after_iteration_step(state_type& s) const {
 
   // Update last step energy values and differences:
   s.last_1e_energy_change = std::abs(s.last_step_1e_energy - fock_bb.energy_1e_terms());
-  s.last_tot_energy_change = std::abs(s.last_step_tot_energy - fock_bb.energy_2e_terms() -
-                                      fock_bb.energy_1e_terms());
+  s.last_tot_energy_change = std::abs(s.last_step_tot_energy - fock_bb.energy_total());
   s.last_step_1e_energy = s.problem_matrix().energy_1e_terms();
-  s.last_step_tot_energy = s.problem_matrix().energy_2e_terms() + s.last_step_1e_energy;
+  s.last_step_tot_energy = s.problem_matrix().energy_total();
 
   if (have_common_bit(verbosity, ScfMsgType::IterationProcess)) {
     // scf_iter        e1e         e2e       etot        scf_error

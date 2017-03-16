@@ -2,6 +2,7 @@
 #include "detail/IopScfWrapper.hh"
 #include <gscf/PlainScf.hh>
 #include <gscf/PulayDiisScf.hh>
+#include <gscf/TruncatedOptDampScf.hh>
 
 namespace molsturm {
 
@@ -55,6 +56,9 @@ struct IopScfState final : public gscf::ScfStateBase<ProblemMatrix, OverlapMatri
 
     last_tot_energy_change = other_state.last_tot_energy_change;
     last_1e_energy_change = other_state.last_1e_energy_change;
+
+    last_step_tot_energy = other_state.last_step_tot_energy;
+    last_step_1e_energy = other_state.last_step_1e_energy;
 
     // The following is correct, since we pass the current state number on to the
     // IopScfStateWrapper as well, such that it accumulates to give the correct
@@ -239,6 +243,8 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_up_to(state_type& state,
   // Setup inner state
   typename WrappedSolver::state_type inner_state{state.problem_matrix(),
                                                  state.overlap_matrix(), state.n_iter()};
+
+  // TODO Move state here -> gets rid of a copy!
   inner_state.obtain_guess_from(state);
   inner_state.obtain_last_errors_from(state);
 
@@ -328,6 +334,7 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
   if (have_common_bit(verbosity, ScfMsgType::FinalSummary)) {
     // Indention unit:
     const std::string ind = "      ";
+    const std::string nuc_rep_label("nuclear repulsion");
 
     std::cout << std::endl
               << "Converged after  " << std::endl
@@ -337,12 +344,11 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
               << s.n_mtx_applies() << std::endl
               << "with energies" << std::endl;
 
-    // For the virial ratio we need accumulated kinetic
-    // and potential energies.
-    double kinetic_energy = 0;
-    double potential_energy = 0;
+    // For the virial ratio we need accumulated kinetic and potential energies.
+    real_type kinetic_energy = 0;
+    real_type potential_energy = fock_bb.energy_nuclear_repulsion();
 
-    size_t friendly_label_size = 0;
+    size_t friendly_label_size = nuc_rep_label.size();
     for (const auto& kv : fock_bb.energies()) {
       const auto& id = kv.first;
 
@@ -360,21 +366,29 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
     linalgwrap::io::OstreamState outstate(std::cout);
 
     // Print energy terms
+    std::cout << ind << std::left << std::setw(friendly_label_size) << nuc_rep_label
+              << " = " << std::setprecision(10) << fock_bb.energy_nuclear_repulsion()
+              << '\n';
+
     for (const auto& kv : fock_bb.energies()) {
       std::cout << ind << std::left << std::setw(friendly_label_size)
-                << kv.first.integral_friendly_name() << " = " << kv.second << std::endl;
+                << kv.first.integral_friendly_name() << " = " << kv.second << '\n';
     }
 
-    // Print 1e and 2e energies
-    std::cout << ind << std::left << std::setw(friendly_label_size) << "E_1e"
+    // Print 1e, 2e energies and total electronic energy
+    const real_type E_electronic = fock_bb.energy_1e_terms() + fock_bb.energy_2e_terms();
+    std::cout << '\n'
+              << ind << std::left << std::setw(friendly_label_size) << "E_1e"
               << " = " << std::setprecision(10) << fock_bb.energy_1e_terms() << '\n'
               << ind << std::left << std::setw(friendly_label_size) << "E_2e"
               << " = " << std::setprecision(10) << fock_bb.energy_2e_terms() << '\n'
-              << '\n';
+              << ind << std::left << std::setw(friendly_label_size) << "E electronic"
+              << " = " << std::setprecision(10) << E_electronic << '\n';
 
     // Print kinetic and potential and virial ratio
-    const double virial = -potential_energy / kinetic_energy;
-    std::cout << ind << std::left << std::setw(friendly_label_size) << "E_pot"
+    const real_type virial = -potential_energy / kinetic_energy;
+    std::cout << '\n'
+              << ind << std::left << std::setw(friendly_label_size) << "E_pot"
               << " = " << std::setprecision(10) << potential_energy << '\n'
               << ind << std::left << std::setw(friendly_label_size) << "E_kin"
               << " = " << std::setprecision(10) << kinetic_energy << '\n'
@@ -399,7 +413,7 @@ typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
   typedef IopScf<IntegralOperator, OverlapMatrix> scf;
 
   IopScfState<IntegralOperator, OverlapMatrix> state(std::move(iop), s);
-  state.obtain_guess_from(guess_solution);
+  state.obtain_guess_from(std::move(guess_solution));
 
   scf{map}.solve_state(state);
   return state;

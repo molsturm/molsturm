@@ -22,31 +22,31 @@ class ScfErrorLibrary {
    *
    * Constructs the expression S * P * F - F * P * S, where
    * S is the overlap matrix from the state, F is the Restricted operator of the
-   * state and P is the density computed from the alpha and beta values in F
-   * and the eigenvalues of the state.
+   * state and P is the density computed from the coefficients, alpha and beta
+   * values in F.
    */
   template <typename OverlapMatrix>
-  static matrix_type pulay_error(
-        const OverlapMatrix& overlap_bb,
-        const linalgwrap::MultiVector<const vector_type>& coefficients_bf,
-        const operator_type& fock_bb) {
-    const size_type n_alpha = fock_bb.n_alpha();
+  static matrix_type pulay_error(const operator_type& fock_bb,
+                                 const OverlapMatrix& overlap_bb) {
+    auto occ_a = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_ALPHA);
 #ifdef DEBUG
-    const size_type n_beta = fock_bb.n_beta();
+    auto occ_b = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_BETA);
+    assert_dbg(occ_a == occ_b, krims::ExcNotImplemented());
 #endif
-    assert_dbg(n_alpha == n_beta, krims::ExcNotImplemented());
+
     assert_dbg(overlap_bb.is_symmetric(), linalgwrap::ExcMatrixNotSymmetric());
     assert_dbg(fock_bb.is_symmetric(), linalgwrap::ExcMatrixNotSymmetric());
 
-    // Occupied coefficients
-    auto ca_bo = coefficients_bf.subview({0, n_alpha});
+    // Occupied coefficients for alpha
+    auto ca_bo = fock_bb.coefficients().subview(occ_a);
 
-    // Form first products (Factor 2 since alpha == beta)
+    // Form first products for alpha (Factor 2 since alpha == beta)
     //    -- O(2*n_bas*n_bas*n_occ)
-    auto Sca_bo = 2. * overlap_bb * ca_bo;
-    auto Fca_bo = fock_bb * ca_bo;
+    auto Sca_bo = overlap_bb * ca_bo;
+    auto Fca_bo = 2 * fock_bb * ca_bo;
 
-    // Form the antisymmetric outer product sum and return it.
+    // Form the antisymmetric outer product sum for alpha
+    //
     // The idea is
     // S * P * F - F * P * S == S * C * C^T * F - F * C * C^T * S
     //                       == (S*C) * (F*C)^T - (F*C) * (S*C)^T
