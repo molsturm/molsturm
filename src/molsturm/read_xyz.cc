@@ -19,9 +19,10 @@
 
 #include "read_xyz.hh"
 
-namespace hf {
+namespace molsturm {
 
-gint::Molecule read_xyz(std::istream& f, double angstrom_to_bohr) {
+gint::Structure read_xyz(std::istream& f, double angstrom_to_bohr) {
+  static_assert(std::is_same<gint::real_type, double>::value, "Type mismatch error");
   assert_throw(f, krims::ExcIO());
 
   size_t n_atoms;
@@ -34,7 +35,7 @@ gint::Molecule read_xyz(std::istream& f, double angstrom_to_bohr) {
   std::getline(f, comment);
 
   // Now come the atoms:
-  gint::Molecule molec;
+  gint::Structure molec;
   molec.reserve(n_atoms);
 
   for (size_t i = 0; i < n_atoms; ++i) {
@@ -46,8 +47,8 @@ gint::Molecule read_xyz(std::istream& f, double angstrom_to_bohr) {
 
     try {
       // Convert units and place into molecule
-      molec.emplace_back(symbol, x * angstrom_to_bohr, y * angstrom_to_bohr,
-                         z * angstrom_to_bohr);
+      molec.push_back(gint::Atom(symbol, {{x * angstrom_to_bohr, y * angstrom_to_bohr,
+                                           z * angstrom_to_bohr}}));
     } catch (gint::ExcUnknownElementSymbol& e) {
       assert_throw(false, ExcInvalidXyz("Error at line: Unknown element symbol \"" +
                                         symbol + "\"."));
@@ -57,4 +58,4 @@ gint::Molecule read_xyz(std::istream& f, double angstrom_to_bohr) {
   assert_dbg(n_atoms == molec.size(), krims::ExcInternalError());
   return molec;
 }
-}  // namespace hf
+}  // namespace molsturm

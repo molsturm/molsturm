@@ -5,6 +5,7 @@ set(MOLSTURM_SOURCES
 	scf_guess.cc
 	version.cc
 	IopScfKeys.cc
+	read_xyz.cc
 	MolecularSystem.cc
 )
 

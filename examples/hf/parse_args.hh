@@ -1,26 +1,29 @@
 #pragma once
-#include <gint/chemistry/Molecule.hh>
 #include <iostream>
+#include <molsturm/MolecularSystem.hh>
 #include <sstream>
 #include <string>
 
 namespace hf {
 struct args_type {
+  // The system we model
+  molsturm::MolecularSystem system;
+
+  // Basis
   std::string basis_type;
 
+  // Sturmians
   bool sturmian = false;
   double k_exp = 1.0;
   size_t n_max = 3;
   size_t l_max = 2;
   size_t m_max = 2;
 
+  // Gaussians
   bool gaussian = false;
   std::string basis_set = "<not avail>";
 
-  gint::Molecule molecule;
-  size_t n_alpha = 2;
-  size_t n_beta = n_alpha;
-
+  // Convergence
   size_t max_iter = 25;
   double error = 5e-7;
   size_t diis_size = 4;

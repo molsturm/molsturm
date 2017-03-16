@@ -1,6 +1,6 @@
 #include "parse_args.hh"
-#include "read_xyz.hh"
 #include <algorithm>
+#include <molsturm/read_xyz.hh>
 #include <vector>
 
 namespace hf {
@@ -18,35 +18,50 @@ std::ostream& operator<<(std::ostream& o, const args_type& args) {
     o << "basis_set:     " << args.basis_set << '\n';
   }
 
-  o << "n_alpha:       " << args.n_alpha << '\n'
-    << "n_beta:        " << args.n_beta << '\n'
+  o << "n_alpha:       " << args.system.n_alpha << '\n'
+    << "n_beta:        " << args.system.n_beta << '\n'
     << "guess_method:  " << args.guess_method << '\n'
     << "error:         " << args.error << '\n'
     << "max_iter       " << args.max_iter << '\n'
     << "diis_size:     " << args.diis_size << '\n'
     << "n_eigenpairs:  " << args.n_eigenpairs << '\n'
     << '\n'
-    << "molecule (distances in bohr):\n"
+    << "structure (distances in bohr):\n"
     << "------------------------\n"
-    << args.molecule << "\n------------------------" << std::endl;
+    << args.system.structure << "\n------------------------" << std::endl;
   return o;
 }
 
 bool parse_args(int argc, char** argv, args_type& parsed) {
+  // System
   bool had_Z_charge = false;
   bool had_xyz = false;
   bool had_alpha = false;
   bool had_beta = false;
+  bool had_charge = false;
+  bool had_multiplicity = false;
+  bool had_atomic_xyz = false;
+
+  // Basis
+  bool had_basis_type = false;
+  bool had_basis_set = false;
   bool had_k_exp = false;
   bool had_n_max = false;
   bool had_l_max = false;
   bool had_m_max = false;
+
+  // Convergence
   bool had_error = false;
   bool had_max_iter = false;
-  bool had_basis_type = false;
-  bool had_basis_set = false;
   bool had_diis_size = false;
   bool had_n_eigenpairs = false;
+
+  // Temporary
+  gint::Structure structure;
+  size_t n_alpha = 0;
+  size_t n_beta = 0;
+  size_t multiplicity = 0;
+  size_t charge = 0;
 
   // Parsing
   for (int i = 1; i < argc; ++i) {
@@ -73,7 +88,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         std::cerr << "Invalid float provided to --Z_charge: " << argument << std::endl;
         return false;
       }
-      parsed.molecule = gint::Molecule{{Z, 0, 0, 0}};
+      structure = gint::Structure{{Z, {{0, 0, 0}}}};
     } else if (flag == std::string("--xyz")) {
       had_xyz = true;
       if (had_Z_charge) {
@@ -85,17 +100,55 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         std::cerr << "Could not open xyz file: " << argument << std::endl;
         return false;
       }
-      parsed.molecule = read_xyz(xyz);
+      if (had_atomic_xyz) {
+        structure = molsturm::read_xyz(xyz, 1.);
+      } else {
+        structure = molsturm::read_xyz(xyz);
+      }
+    } else if (flag == std::string("--atomic_units_xyz")) {
+      had_atomic_xyz = true;
+      if (had_xyz) {
+        std::cerr << "--atomic_units_xyz needs to be specified before --xyz" << std::endl;
+        return false;
+      }
     } else if (flag == std::string("--alpha")) {
       had_alpha = true;
-      if (!str_to_type<size_t>(argument, parsed.n_alpha)) {
+      if (had_charge || had_multiplicity) {
+        std::cerr << "--charge/--multiplicity and --alpha/--beta are exclusive"
+                  << std::endl;
+      }
+      if (!str_to_type<size_t>(argument, n_alpha)) {
         std::cerr << "Invalid int provided to --alpha: " << argument << std::endl;
         return false;
       }
     } else if (flag == std::string("--beta")) {
       had_beta = true;
-      if (!str_to_type<size_t>(argument, parsed.n_beta)) {
+      if (had_charge || had_multiplicity) {
+        std::cerr << "--charge/--multiplicity and --alpha/--beta are exclusive"
+                  << std::endl;
+      }
+      if (!str_to_type<size_t>(argument, n_beta)) {
         std::cerr << "Invalid int provided to --beta: " << argument << std::endl;
+        return false;
+      }
+    } else if (flag == std::string("--charge")) {
+      had_charge = true;
+      if (had_alpha || had_beta) {
+        std::cerr << "--charge/--multiplicity and --alpha/--beta are exclusive"
+                  << std::endl;
+      }
+      if (!str_to_type<size_t>(argument, charge)) {
+        std::cerr << "Invalid int provided to --charge: " << argument << std::endl;
+        return false;
+      }
+    } else if (flag == std::string("--multiplicity")) {
+      had_multiplicity = true;
+      if (had_alpha || had_beta) {
+        std::cerr << "--charge/--multiplicity and --alpha/--beta are exclusive"
+                  << std::endl;
+      }
+      if (!str_to_type<size_t>(argument, multiplicity)) {
+        std::cerr << "Invalid int provided to --multiplicity: " << argument << std::endl;
         return false;
       }
     } else if (flag == std::string("--kexp")) {
@@ -183,16 +236,41 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
       std::cerr << "Unknown flag: " << flag << std::endl;
       std::cerr << "Valid are: --basis_type, --n_max, --l_max, --n_max, --kexp, "
                    "--Z_charge, --alpha, --beta, --error, --max_iter, --diis_size, "
-                   "--n_eigenpairs, --basis_set, --guess_method, --xyz"
+                   "--n_eigenpairs, --basis_set, --guess_method, --xyz, --charge, "
+                   "--multiplicity, --atomic_units_xyz"
                 << std::endl;
       return false;
     }
   }
 
   //
-  // Error handling
+  // Error handling and system setup
   //
   bool error_encountered = false;
+  if (!had_xyz && !had_Z_charge) {
+    error_encountered = true;
+    std::cerr << "Need flag --xyz <file> to supply an xyz file or --Z_charge <double>"
+              << std::endl;
+  }
+  if (had_alpha && !had_beta) {
+    n_beta = n_alpha;
+  }
+  if (had_beta && !had_alpha) {
+    error_encountered = true;
+    std::cerr << "Need flag --alpha <int> to supply number of alpha electrons."
+              << std::endl;
+  }
+
+  if (had_charge && !had_multiplicity) {
+    parsed.system = molsturm::MolecularSystem(std::move(structure), charge);
+  } else if (had_charge && had_multiplicity) {
+    parsed.system = molsturm::MolecularSystem(std::move(structure), charge, multiplicity);
+  } else if (had_alpha) {
+    parsed.system = molsturm::MolecularSystem(std::move(structure), {{n_alpha, n_beta}});
+  } else {
+    parsed.system = molsturm::MolecularSystem(std::move(structure));
+  }
+
   if (!had_basis_type) {
     error_encountered = true;
     std::cerr << "Need flag --basis_type <string> to supply basis type to use."
@@ -215,26 +293,11 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
                    "number."
                 << std::endl;
     }
-    if (parsed.molecule.size() != 1) {
+    if (parsed.system.structure.size() != 1) {
       error_encountered = true;
       std::cerr << "Need a molecule with exactly one atom for sturmian calculations."
                 << std::endl;
     }
-  }
-  if (!had_xyz && !had_Z_charge) {
-    error_encountered = true;
-    std::cerr << "Need flag --xyz <file> to supply an xyz file or --Z_charge <double>"
-              << std::endl;
-  }
-  if (!had_alpha) {
-    error_encountered = true;
-    std::cerr << "Need flag --alpha <int> to supply number of alpha electrons."
-              << std::endl;
-  }
-  if (!had_beta) {
-    error_encountered = true;
-    std::cerr << "Need flag --beta <int> to supply number of beta electrons."
-              << std::endl;
   }
 
   //
@@ -252,7 +315,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   }
 
   if (!had_n_eigenpairs) {
-    parsed.n_eigenpairs = 2 * std::max(parsed.n_alpha, parsed.n_beta);
+    parsed.n_eigenpairs = 2 * std::max(parsed.system.n_alpha, parsed.system.n_beta);
   }
   if (!had_l_max) {
     parsed.l_max = parsed.n_max - 1;
