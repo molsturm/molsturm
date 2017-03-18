@@ -3,6 +3,7 @@
 #
 set(MOLSTURM_TESTS_SOURCES
 	FunctionalityTest.cc
+	HfEnergyTest.cc
 	main.cc
 )
 
