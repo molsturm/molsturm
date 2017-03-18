@@ -75,7 +75,11 @@ MolecularSystem::MolecularSystem(gint::Structure structure_, double charge_,
   n_beta = n_elec_count - n_alpha;
 
   // Check that this makes sense
-  assert_dbg(2 * (n_alpha - n_beta) + 1 == multiplicity_, krims::ExcInternalError());
+  if (multiplicity_ == linalgwrap::Constants<size_t>::invalid) {
+    assert_dbg(2 * (n_alpha - n_beta) == spin_twice, krims::ExcInternalError());
+  } else {
+    assert_dbg(2 * (n_alpha - n_beta) + 1 == multiplicity_, krims::ExcInternalError());
+  }
 }
 
 }  // namespace molsturm
