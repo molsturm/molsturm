@@ -213,7 +213,7 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
  */
 template <typename IntegralOperator, typename OverlapMatrix>
 typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
-      IntegralOperator iop, const OverlapMatrix& s, krims::GenMap map) {
+      IntegralOperator iop, const OverlapMatrix& s, const krims::GenMap& map) {
   typedef IopScf<IntegralOperator, OverlapMatrix> scf;
   return scf{map}.solve(std::move(iop), s);
 }
@@ -223,9 +223,10 @@ typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
  */
 template <typename IntegralOperator, typename OverlapMatrix>
 typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
-      IntegralOperator iop, const OverlapMatrix& s, krims::GenMap map,
+      IntegralOperator iop, const OverlapMatrix& s,
       typename IopScf<IntegralOperator, OverlapMatrix>::state_type::esoln_type
-            guess_solution);
+            guess_solution,
+      const krims::GenMap& map);
 
 //
 // -----------------------------------------------------------
@@ -247,9 +248,12 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_up_to(state_type& state,
   typename WrappedSolver::state_type inner_state{state.problem_matrix(),
                                                  state.overlap_matrix(), state.n_iter()};
 
-  // TODO Move state here -> gets rid of a copy!
-  inner_state.obtain_guess_from(state);
-  inner_state.obtain_last_errors_from(state);
+  if (state.n_iter() > 1) {
+    inner_state.obtain_last_errors_from(state);
+
+    // TODO Move state here -> gets rid of a copy!
+    inner_state.obtain_guess_from(state);
+  }
 
   // Do solve
   try {
@@ -292,9 +296,6 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
   //         { {accuracy, method},
   //           {accuracy2, method2},
   //         }
-  //      or just a threshold to stop using DIIS ???
-  //
-  //   TODO   How does ORCA do it?
   const real_type diis_limit_max_error_norm = 5e-7;
 
   {  // DIIS
@@ -424,9 +425,10 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
 
 template <typename IntegralOperator, typename OverlapMatrix>
 typename IopScf<IntegralOperator, OverlapMatrix>::state_type run_scf(
-      IntegralOperator iop, const OverlapMatrix& s, krims::GenMap map,
+      IntegralOperator iop, const OverlapMatrix& s,
       typename IopScf<IntegralOperator, OverlapMatrix>::state_type::esoln_type
-            guess_solution) {
+            guess_solution,
+      const krims::GenMap& map) {
   typedef IopScf<IntegralOperator, OverlapMatrix> scf;
 
   IopScfState<IntegralOperator, OverlapMatrix> state(std::move(iop), s);

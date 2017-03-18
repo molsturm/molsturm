@@ -1,9 +1,9 @@
 #pragma once
-#include <gscf/PulayDiisScfKeys.hh>
+#include <gscf/ScfBaseKeys.hh>
 
 namespace molsturm {
 
-struct IopScfKeys : public gscf::PulayDiisScfKeys {
+struct IopScfKeys : public gscf::ScfBaseKeys {
   /** Maximal total energy change between two cycles for convergence
    * (Type: real_type) */
   static const std::string max_tot_energy_change;
