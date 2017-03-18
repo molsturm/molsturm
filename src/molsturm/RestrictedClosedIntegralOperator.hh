@@ -194,7 +194,9 @@ class RestrictedClosedIntegralOperator final : public IntegralOperatorBase<Store
   scalar_type energy_1e_terms() const override;
 
   /** Return the sum of the energies of all two-electron terms */
-  scalar_type energy_2e_terms() const override;
+  scalar_type energy_2e_terms() const override {
+    return m_energies.at(m_coul.id()) + m_energies.at(m_exchge.id());
+  }
 
   /** Return the nuclear repulsion component */
   scalar_type energy_nuclear_repulsion() const { return m_nuclear_repulsion_energy; }
@@ -207,7 +209,8 @@ class RestrictedClosedIntegralOperator final : public IntegralOperatorBase<Store
   }
 
   /** Return the 1e terms */
-  const std::vector<int_term_type>& terms_1e() const { return m_terms_1e; }
+  std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+  terms_1e() const;
 
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of alpha
@@ -323,8 +326,7 @@ RestrictedClosedIntegralOperator<StoredMatrix>::RestrictedClosedIntegralOperator
   const size_type op_size = m_coul.n_rows();
 
   auto itterm = std::begin(m_terms_1e);
-  auto itcoeff = std::begin(m_coeff_1e);
-  for (; itterm != std::end(m_terms_1e); ++itterm, ++itcoeff) {
+  for (; itterm != std::end(m_terms_1e); ++itterm) {
     assert_size(itterm->n_cols(), op_size);
     assert_size(itterm->n_rows(), op_size);
 
@@ -488,28 +490,26 @@ RestrictedClosedIntegralOperator<StoredMatrix>::energy_1e_terms() const {
 }
 
 template <typename StoredMatrix>
-typename RestrictedClosedIntegralOperator<StoredMatrix>::scalar_type
-RestrictedClosedIntegralOperator<StoredMatrix>::energy_2e_terms() const {
-  return m_energies.at(m_coul.id()) + m_energies.at(m_exchge.id());
-}
-
-template <typename StoredMatrix>
 std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
-RestrictedClosedIntegralOperator<StoredMatrix>::terms_alpha() const {
-  using namespace linalgwrap;
+RestrictedClosedIntegralOperator<StoredMatrix>::terms_1e() const {
+  using linalgwrap::LazyMatrixProduct;
   std::map<gint::IntegralIdentifier, LazyMatrixProduct<StoredMatrix>> ret;
 
-  // Insert 1e terms:
   auto itterm = std::begin(m_terms_1e);
   auto itcoeff = std::begin(m_coeff_1e);
   for (; itterm != std::end(m_terms_1e); ++itterm, ++itcoeff) {
     ret.insert(std::make_pair(itterm->id(), (*itcoeff) * (*itterm)));
   }
 
-  // Insert 2e terms:
+  return ret;
+}
+
+template <typename StoredMatrix>
+std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+RestrictedClosedIntegralOperator<StoredMatrix>::terms_alpha() const {
+  auto ret = terms_1e();
   ret.insert(std::make_pair(m_coul.id(), m_coeff_coul * m_coul));
   ret.insert(std::make_pair(m_exchge.id(), m_coeff_exchge * m_exchge));
-
   return ret;
 }
 
