@@ -13,27 +13,27 @@ enum class ScfMsgType {
   FinalSummary = 0x2,
 };
 
-ScfMsgType operator&(ScfMsgType l, ScfMsgType r) {
+inline ScfMsgType operator&(ScfMsgType l, ScfMsgType r) {
   using type = typename std::underlying_type<ScfMsgType>::type;
   return static_cast<ScfMsgType>(static_cast<type>(l) & static_cast<type>(r));
 }
 
-ScfMsgType operator|(ScfMsgType l, ScfMsgType r) {
+inline ScfMsgType operator|(ScfMsgType l, ScfMsgType r) {
   using type = typename std::underlying_type<ScfMsgType>::type;
   return static_cast<ScfMsgType>(static_cast<type>(l) | static_cast<type>(r));
 }
 
-ScfMsgType& operator&=(ScfMsgType& l, ScfMsgType r) {
+inline ScfMsgType& operator&=(ScfMsgType& l, ScfMsgType r) {
   l = l & r;
   return l;
 }
 
-ScfMsgType& operator|=(ScfMsgType& l, ScfMsgType r) {
+inline ScfMsgType& operator|=(ScfMsgType& l, ScfMsgType r) {
   l = l | r;
   return l;
 }
 
-bool have_common_bit(ScfMsgType in, ScfMsgType what) {
+inline bool have_common_bit(ScfMsgType in, ScfMsgType what) {
   return static_cast<bool>(in & what);
 }
 
