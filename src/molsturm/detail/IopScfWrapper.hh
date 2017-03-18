@@ -135,7 +135,7 @@ class IopScfWrapper /*final*/ : public InnerScf {
   }
   ///@}
 
-  IopScfWrapper(const krims::GenMap& map) : InnerScf(map) { update_control_params(map); }
+  IopScfWrapper(const krims::GenMap& map) : InnerScf() { update_control_params(map); }
 
  protected:
   matrix_type calculate_error(const state_type& s) const override;
