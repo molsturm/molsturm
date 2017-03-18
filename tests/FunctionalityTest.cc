@@ -1,7 +1,6 @@
 #include <catch.hpp>
 #include <gint/IntegralLookup.hh>
 #include <linalgwrap/TestingUtils.hh>
-#include <molsturm/GuessLibrary.hh>
 #include <molsturm/IopScf.hh>
 #include <molsturm/RestrictedClosedIntegralOperator.hh>
 
@@ -135,14 +134,14 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   IntegralTermContainer<stored_matrix_type> integral_container(std::move(terms_1e), J_bb,
                                                                K_bb);
 
-  RestrictedClosedIntegralOperator<stored_matrix_type> fock_bb(integral_container,
-                                                               n_alpha, n_beta);
+  gint::Atom at{Z, {{0, 0, 0}}};
+  molsturm::MolecularSystem sys{gint::Structure({std::move(at)}), {{n_alpha, n_beta}}};
+  RestrictedClosedIntegralOperator<stored_matrix_type> fock_bb(integral_container, sys);
   fock_bb.update(guess_bf_ptr);
 
   const krims::GenMap params{{IopScfKeys::max_iter, 15ul},
                              {IopScfKeys::n_eigenpairs, n_eigenpairs},
-                             {IopScfKeys::max_error_norm, tolerance},
-                             {IopScfKeys::n_prev_steps, size_t(4)}};
+                             {IopScfKeys::max_error_norm, tolerance}};
 
 #ifdef DEBUG
   std::cout << "Running test SCF ... please wait." << std::endl;

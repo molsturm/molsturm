@@ -117,29 +117,24 @@ void run_rhf(args_type args, bool debug = false) {
   // Print basis info:
   //
   std::cout << "Basis size:  " << S_bb.n_rows() << std::endl << std::endl;
-
-  //
-  // Problem setup
-  //
-  // Combine 1e terms:
-  std::vector<integral_type> terms_1e{std::move(T_bb), std::move(V0_bb)};
-
   assert_throw(
         args.n_eigenpairs >= std::max(args.system.n_alpha, args.system.n_beta),
         krims::ExcTooLarge<size_t>(std::max(args.system.n_alpha, args.system.n_beta),
                                    args.n_eigenpairs));
 
+  //
+  // Problem setup
+  //
   // The term container for the fock operator matrix
   IntegralTermContainer<stored_matrix_type> integral_container(
-        std::move(terms_1e), std::move(J_bb), std::move(K_bb));
+        {{std::move(T_bb), std::move(V0_bb)}}, std::move(J_bb), std::move(K_bb));
 
   RestrictedClosedIntegralOperator<stored_matrix_type> fock_bb(integral_container,
                                                                args.system);
 
-  // Update with a guess solution
-  // auto guess_solution = from_previous(fock_bb, S_bb);
-  auto guess_solution =
-        scf_guess(fock_bb, S_bb, {{ScfGuessKeys::method, args.guess_method}});
+  // Obtain an SCF guess
+  auto guess = scf_guess(args.system, fock_bb, S_bb,
+                         {{ScfGuessKeys::method, args.guess_method}});
 
   krims::GenMap params{
         // error
@@ -150,26 +145,26 @@ void run_rhf(args_type args, bool debug = false) {
         {IopScfKeys::max_iter, args.max_iter},
         {IopScfKeys::n_eigenpairs, args.n_eigenpairs},
         {IopScfKeys::verbosity, ScfMsgType::FinalSummary | ScfMsgType::IterationProcess},
-        {IopScfKeys::n_prev_steps, args.diis_size},
+        {gscf::PulayDiisScfKeys::n_prev_steps, args.diis_size},
   };
 
   if (debug) {
     std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
     auto debugout = linalgwrap::io::make_writer<linalgwrap::io::Mathematica, scalar_type>(
           mathematicafile, 1e-20);
-    debugout.write("guess", guess_solution.evectors());
+    debugout.write("guess", guess.evectors());
     debugout.write("sbb", S_bb);
     typedef gscf::PulayDiisScfState<decltype(fock_bb), decltype(S_bb)> inner_state_type;
     typedef molsturm::detail::IopScfStateWrapper<inner_state_type> state_type;
     molsturm::detail::IopScfWrapper<gscf::PulayDiisScf<state_type>> solver{params};
     ScfDebugWrapper<decltype(solver)> solwrap(debugout, solver);
 
-    fock_bb.update(guess_solution.evectors_ptr);
+    fock_bb.update(guess.evectors_ptr);
     auto res = solwrap.solve(fock_bb, S_bb);
     print_res(res);
   } else {
-    fock_bb.update(guess_solution.evectors_ptr);
-    auto res = run_scf(fock_bb, S_bb, params, guess_solution);
+    fock_bb.update(guess.evectors_ptr);
+    auto res = run_scf(fock_bb, S_bb, guess, params);
     print_res(res);
   }
 }

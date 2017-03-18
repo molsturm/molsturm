@@ -7,6 +7,8 @@ set(MOLSTURM_SOURCES
 	IopScfKeys.cc
 	read_xyz.cc
 	MolecularSystem.cc
+	GuessAlgorithms/guess_hcore.cc
+	GuessAlgorithms/GuessAlgorithmsKeysBase.cc
 )
 
 # Dump the current version as an include file.

@@ -18,17 +18,11 @@
 //
 
 #pragma once
-#include "GuessLibrary.hh"
+#include "GuessAlgorithms.hh"
 
 namespace molsturm {
 
-/** Thrown if solver parameters are wrong or inconsistent */
-DefException1(ExcInvalidScfGuessParametersEncountered, std::string,
-              << "The Scf guess could not be obtained, because the set of "
-                 "parameters passed is not valid. Details: "
-              << arg1);
-
-struct ScfGuessKeys {
+struct ScfGuessKeys : public GuessAlgorithmsKeysBase {
   /** Guess method to use (Type: string) */
   static const std::string method;
 };
@@ -38,20 +32,33 @@ struct ScfGuessKeys {
  * ## Control parameters and their default values
  * - method: The method to use for obtaining the guess.
  *   Avalable are:
- *      - "loewdin":  Diagonalise S and use the eigenvectors
+ *      - "atomic_super":  Superposition of atomic densities
+ *      - "extended_hueckel": Extended hueckel guess
+ *      - "from_archived": Try to re-use an archived scf solution.
  *      - "hcore":    Diagonalise core hamiltonian
+ *      - "loewdin":  Diagonalise S and use the eigenvectors
  *    (Default: hcore)
+ * - eigensolver: Parameters for the eigensolver which is used.
+ *
+ * Some methods support even more parameters. See their
+ * Keys object or their function documentation for details.
  */
 template <typename IntegralOperator, typename OverlapMatrix>
 linalgwrap::EigensolutionTypeFor<true, IntegralOperator> scf_guess(
-      const IntegralOperator& fock_bb, const OverlapMatrix& s_bb,
-      const krims::GenMap& params) {
+      const MolecularSystem& system, const IntegralOperator& fock_bb,
+      const OverlapMatrix& S_bb, const krims::GenMap& params = krims::GenMap{}) {
   const std::string method = params.at<std::string>(ScfGuessKeys::method, "hcore");
 
-  if (method == std::string("loewdin")) {
-    return loewdin_guess(fock_bb, s_bb);
+  if (method == std::string("atomic_super")) {
+    return guess_atomic_super(system, fock_bb, S_bb, params);
+  } else if (method == std::string("extended_hueckel")) {
+    return guess_extended_hueckel(system, fock_bb, S_bb, params);
+  } else if (method == std::string("from_archived")) {
+    return guess_from_archived(system, fock_bb, S_bb, params);
   } else if (method == std::string("hcore")) {
-    return hcore_guess(fock_bb, s_bb);
+    return guess_hcore(system, fock_bb, S_bb, params);
+  } else if (method == std::string("loewdin")) {
+    return guess_loewdin(system, fock_bb, S_bb, params);
   } else {
     assert_throw(false, ExcInvalidScfGuessParametersEncountered(
                               "The method '" + method +
