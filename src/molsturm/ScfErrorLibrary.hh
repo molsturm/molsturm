@@ -32,10 +32,12 @@ class ScfErrorLibrary {
 #ifdef DEBUG
     auto occ_b = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_BETA);
     assert_dbg(occ_a == occ_b, krims::ExcNotImplemented());
-#endif
 
-    assert_dbg(overlap_bb.is_symmetric(), linalgwrap::ExcMatrixNotSymmetric());
-    assert_dbg(fock_bb.is_symmetric(), linalgwrap::ExcMatrixNotSymmetric());
+    typedef typename OverlapMatrix::real_type real_type;
+    const real_type tol = 100 * linalgwrap::Constants<real_type>::default_tolerance;
+    assert_dbg(overlap_bb.is_symmetric(tol), linalgwrap::ExcMatrixNotSymmetric());
+    assert_dbg(fock_bb.is_symmetric(tol), linalgwrap::ExcMatrixNotSymmetric());
+#endif
 
     // Occupied coefficients for alpha
     auto ca_bo = fock_bb.coefficients().subview(occ_a);
