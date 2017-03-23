@@ -182,8 +182,8 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
     } else if (flag == std::string("--basis_type")) {
       had_basis_type = true;
 
-      const std::vector<std::string> valid_atomic_basis{"cs_static14", "cs_dummy",
-                                                        "cs_naive"};
+      const std::vector<std::string> valid_atomic_basis{
+            "cs_static14", "cs_dummy", "cs_naive", "cs_reference", "cs_reference_pc"};
       const std::vector<std::string> valid_gaussian_basis{"libint"};
       const auto res_atomic = std::find(std::begin(valid_atomic_basis),
                                         std::end(valid_atomic_basis), argument);
