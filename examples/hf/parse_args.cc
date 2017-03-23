@@ -24,6 +24,7 @@ std::ostream& operator<<(std::ostream& o, const args_type& args) {
     << "error:         " << args.error << '\n'
     << "max_iter       " << args.max_iter << '\n'
     << "diis_size:     " << args.diis_size << '\n'
+    << "eigensolver    " << args.eigensolver << '\n'
     << "n_eigenpairs:  " << args.n_eigenpairs << '\n'
     << '\n'
     << "structure (distances in bohr):\n"
@@ -230,6 +231,8 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
                   << std::endl;
         return false;
       }
+    } else if (flag == std::string("--eigensolver")) {
+      parsed.eigensolver = argument;
     } else if (flag == std::string("--guess_method")) {
       parsed.guess_method = argument;
     } else {
@@ -237,7 +240,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
       std::cerr << "Valid are: --basis_type, --n_max, --l_max, --n_max, --kexp, "
                    "--Z_charge, --alpha, --beta, --error, --max_iter, --diis_size, "
                    "--n_eigenpairs, --basis_set, --guess_method, --xyz, --charge, "
-                   "--multiplicity, --atomic_units_xyz"
+                   "--multiplicity, --atomic_units_xyz, --eigensolver"
                 << std::endl;
       return false;
     }

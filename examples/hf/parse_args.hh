@@ -28,6 +28,7 @@ struct args_type {
   double error = 5e-7;
   size_t diis_size = 4;
   size_t n_eigenpairs = 0;
+  std::string eigensolver = "auto";
   std::string guess_method = "hcore";
 };
 

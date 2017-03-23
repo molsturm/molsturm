@@ -147,6 +147,8 @@ void run_rhf(args_type args, bool debug = false) {
         {IopScfKeys::verbosity, ScfMsgType::FinalSummary | ScfMsgType::IterationProcess},
         {gscf::PulayDiisScfKeys::n_prev_steps, args.diis_size},
   };
+  params.update(IopScfKeys::eigensolver_params,
+                {{EigensystemSolverKeys::method, args.eigensolver}});
 
   if (debug) {
     std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
