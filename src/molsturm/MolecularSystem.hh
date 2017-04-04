@@ -18,7 +18,7 @@
 //
 
 #pragma once
-#include <gint/chemistry/Structure.hh>
+#include <gint/Structure.hh>
 #include <linalgwrap/Constants.hh>
 
 namespace molsturm {

@@ -4,6 +4,7 @@
 #include "parse_args.hh"
 
 #include <gint/IntegralLookup.hh>
+#include <gint/OrbitalType.hh>
 #include <gint/version.hh>
 #include <gscf/version.hh>
 #include <iostream>
@@ -61,62 +62,54 @@ void run_rhf(args_type args, bool debug = false) {
   // Types of scalar and matrix
   typedef double scalar_type;
   typedef SmallMatrix<scalar_type> stored_matrix_type;
-  typedef gint::Integral<stored_matrix_type> integral_type;
-
-  // The lookup class type to get the actual integrals
-  // TODO This whole handling would be much easier if the orbital type was not in there!
-  typedef gint::IntegralLookup<gint::OrbitalType::COMPLEX_ATOMIC> int_lookup_ca_type;
-  typedef gint::IntegralLookup<gint::OrbitalType::REAL_MOLECULAR> int_lookup_rm_type;
-  std::unique_ptr<int_lookup_ca_type> integrals_ca_ptr;
-  std::unique_ptr<int_lookup_rm_type> integrals_rm_ptr;
+  typedef gint::IntegralLookup<stored_matrix_type> integral_lookup_type;
 
   //
   // Lookup integral terms
   //
-  // The integral objects to be filled:
-  integral_type S_bb, T_bb, V0_bb, J_bb, K_bb;
+  krims::GenMap intparams;
 
   if (args.sturmian) {
     assert_throw(args.system.structure.n_atoms() == 1, krims::ExcNotImplemented());
-
-    krims::GenMap intparams{
+    intparams.update({
           {"basis_type", args.basis_type},
-          {"Z_charge", args.system.structure.total_charge()},
-          {"structure", args.system.structure},
+          {"orbital_type", gint::OrbitalType::COMPLEX_ATOMIC},
+          //
           {"k_exponent", args.k_exp},
           {"n_max", static_cast<int>(args.n_max)},
           {"l_max", static_cast<int>(args.l_max)},
           {"m_max", static_cast<int>(args.m_max)},
-    };
-    integrals_ca_ptr.reset(new int_lookup_ca_type(std::move(intparams)));
-
-    S_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::overlap);
-    T_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::kinetic);
-    V0_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::nuclear_attraction);
-    J_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::coulomb);
-    K_bb = integrals_ca_ptr->lookup_integral(IntegralTypeKeys::exchange);
-
-    const size_t max_elec = std::max(args.system.n_alpha, args.system.n_beta);
-    assert_throw(2 * max_elec + 2 <= S_bb.n_rows(), ExcTooSmallBasis(S_bb.n_rows()));
-  } else if (args.gaussian) {
-    krims::GenMap intparams{
-          {"basis_type", args.basis_type},
+          //
           {"structure", args.system.structure},
+          {"Z_charge", args.system.structure.total_charge()},
+    });
+  } else if (args.gaussian) {
+    intparams.update({
+          {"basis_type", args.basis_type},
+          {"orbital_type", gint::OrbitalType::REAL_MOLECULAR},
           {"basis_set", args.basis_set},
-    };
-    integrals_rm_ptr.reset(new int_lookup_rm_type(std::move(intparams)));
-
-    S_bb = integrals_rm_ptr->lookup_integral(IntegralTypeKeys::overlap);
-    T_bb = integrals_rm_ptr->lookup_integral(IntegralTypeKeys::kinetic);
-    V0_bb = integrals_rm_ptr->lookup_integral(IntegralTypeKeys::nuclear_attraction);
-    J_bb = integrals_rm_ptr->lookup_integral(IntegralTypeKeys::coulomb);
-    K_bb = integrals_rm_ptr->lookup_integral(IntegralTypeKeys::exchange);
+          //
+          {"structure", args.system.structure},
+    });
+  } else {
+    assert_throw(false, krims::ExcNotImplemented());
   }
 
+  integral_lookup_type integrals(std::move(intparams));
+  auto S_bb = integrals.lookup_integral(IntegralTypeKeys::overlap);
+  auto T_bb = integrals.lookup_integral(IntegralTypeKeys::kinetic);
+  auto V0_bb = integrals.lookup_integral(IntegralTypeKeys::nuclear_attraction);
+  auto J_bb = integrals.lookup_integral(IntegralTypeKeys::coulomb);
+  auto K_bb = integrals.lookup_integral(IntegralTypeKeys::exchange);
+
   //
-  // Print basis info:
+  // Checks about basis size:
   //
+  const size_t max_elec = std::max(args.system.n_alpha, args.system.n_beta);
+  assert_throw(max_elec + 2 <= S_bb.n_rows(), ExcTooSmallBasis(S_bb.n_rows()));
+
   std::cout << "Basis size:  " << S_bb.n_rows() << std::endl << std::endl;
+
   assert_throw(
         args.n_eigenpairs >= std::max(args.system.n_alpha, args.system.n_beta),
         krims::ExcTooLarge<size_t>(std::max(args.system.n_alpha, args.system.n_beta),
@@ -133,8 +126,10 @@ void run_rhf(args_type args, bool debug = false) {
                                                                args.system);
 
   // Obtain an SCF guess
-  auto guess = scf_guess(args.system, fock_bb, S_bb,
-                         {{ScfGuessKeys::method, args.guess_method}});
+  krims::GenMap guess_params{{ScfGuessKeys::method, args.guess_method}};
+  guess_params.update(ScfGuessKeys::eigensolver_params,
+                      {{EigensystemSolverKeys::method, args.eigensolver}});
+  auto guess = scf_guess(args.system, fock_bb, S_bb, guess_params);
 
   krims::GenMap params{
         // error

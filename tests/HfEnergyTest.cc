@@ -19,6 +19,7 @@
 
 #include <catch.hpp>
 #include <gint/IntegralLookup.hh>
+#include <gint/OrbitalType.hh>
 #include <linalgwrap/TestingUtils.hh>
 #include <molsturm/IopScf.hh>
 #include <molsturm/RestrictedClosedIntegralOperator.hh>
@@ -36,6 +37,7 @@ typedef double scalar_type;
 typedef SmallMatrix<scalar_type> stored_matrix_type;
 typedef stored_matrix_type::vector_type vector_type;
 typedef gint::Integral<stored_matrix_type> integral_type;
+typedef gint::IntegralLookup<stored_matrix_type> int_lookup_type;
 
 namespace hf_energy_test {
 
@@ -52,12 +54,9 @@ void run_testscf(const MolecularSystem& sys, const GenMap& intparams,
                  const GenMap& scfparams, const ReferenceData& reference) {
   using gint::IntegralTypeKeys;
 
-  // Types:
-  const gint::OrbitalType otype = gint::OrbitalType::REAL_MOLECULAR;
-  typedef gint::IntegralLookup<otype> int_lookup_type;
-
   // Update integral parameters:
   intparams.insert_default("structure", sys.structure);
+  intparams.insert_default("orbital_type", gint::OrbitalType::REAL_MOLECULAR);
 
   // Get the integrals:
   int_lookup_type integrals{intparams};

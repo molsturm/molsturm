@@ -4,6 +4,7 @@
 #include "MolecularSystem.hh"
 #include "energy_nuclear_repulsion.hh"
 #include <functional>
+#include <gint/IntegralUpdateKeys.hh>
 #include <linalgwrap/Constants.hh>
 #include <linalgwrap/LazyMatrixExpression.hh>
 #include <linalgwrap/LazyMatrix_i.hh>
@@ -392,7 +393,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_operator(
   // Build multivector of occupied alpha orbitals
   auto ca_bo_ptr = std::make_shared<const linalgwrap::MultiVector<const vector_type>>(
         coeff_bf_ptr->subview({0, m_n_alpha}));
-  krims::GenMap occa_map{{int_term_type::update_key_coefficients, ca_bo_ptr}};
+  krims::GenMap occa_map{{gint::IntegralUpdateKeys::coefficients_occupied, ca_bo_ptr}};
 
   // Initialise an empty operator
   m_operator = linalgwrap::LazyMatrixSum<StoredMatrix>();
@@ -431,7 +432,6 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_energies(
   auto ca_bo_ptr = std::make_shared<const linalgwrap::MultiVector<const vector_type>>(
         coeff_bf_ptr->subview({0, m_n_alpha}));
   const auto& ca_bo = *ca_bo_ptr;
-  krims::GenMap occa_map{{int_term_type::update_key_coefficients, ca_bo_ptr}};
 
   // Calculate the energies of the 1e terms:
   //

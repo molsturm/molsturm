@@ -19,7 +19,7 @@
 
 #pragma once
 #include "molsturm/units.hh"
-#include <gint/chemistry/Structure.hh>
+#include <gint/Structure.hh>
 #include <iostream>
 #include <krims/ExceptionSystem.hh>
 

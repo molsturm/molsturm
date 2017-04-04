@@ -1,5 +1,6 @@
 #include <catch.hpp>
 #include <gint/IntegralLookup.hh>
+#include <gint/OrbitalType.hh>
 #include <linalgwrap/TestingUtils.hh>
 #include <molsturm/IopScf.hh>
 #include <molsturm/RestrictedClosedIntegralOperator.hh>
@@ -23,6 +24,8 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   int l_max = 2;
   size_t n_eigenpairs = 4;
   const double tolerance = 1e-9;
+  const std::string basis_type = "atomic/cs_naive";
+  const gint::OrbitalType otype = gint::OrbitalType::COMPLEX_ATOMIC;
 
   //
   // Types to use
@@ -32,11 +35,8 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   typedef SmallMatrix<scalar_type> stored_matrix_type;
   typedef stored_matrix_type::vector_type vector_type;
 
-  // Types of the integrals we use:
-  const gint::OrbitalType otype = gint::OrbitalType::COMPLEX_ATOMIC;
-
   // The lookup class type to get the actual integrals
-  typedef gint::IntegralLookup<otype> int_lookup_type;
+  typedef gint::IntegralLookup<stored_matrix_type> int_lookup_type;
 
   // The type of the integral terms:
   typedef typename int_lookup_type::integral_type integral_type;
@@ -93,7 +93,8 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   //
   // Setup integrals
   //
-  krims::GenMap intparams{{"basis_type", "atomic/cs_naive"},
+  krims::GenMap intparams{{"basis_type", basis_type},
+                          {"orbital_type", otype},
                           {"k_exponent", k_exp},
                           {"Z_charge", Z},
                           {"n_max", n_max},

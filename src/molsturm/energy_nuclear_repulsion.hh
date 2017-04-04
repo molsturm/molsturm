@@ -18,12 +18,15 @@
 //
 
 #pragma once
-#include <gint/chemistry/Structure.hh>
+#include <gint/Structure.hh>
 
 namespace molsturm {
 
 template <typename Scalar = double>
 Scalar energy_nuclear_repulsion(const gint::Structure& st) {
+  // TODO
+  // Some data structure for small vectors (e.g. points)
+  // would make this easier to code.
   Scalar ret{0};
   for (auto itA = std::begin(st); itA != std::end(st); ++itA) {
     for (auto itB = itA + 1; itB != std::end(st); ++itB) {
