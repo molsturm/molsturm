@@ -6,26 +6,27 @@
 namespace hf {
 
 std::ostream& operator<<(std::ostream& o, const args_type& args) {
-  o << "basis_type:    " << args.basis_type << std::endl;
+  o << "basis_type:     " << args.basis_type << std::endl;
 
   if (args.sturmian) {
-    o << "k_exp:         " << args.k_exp << '\n'
-      << "n_max:         " << args.n_max << '\n'
-      << "l_max:         " << args.l_max << '\n'
-      << "m_max:         " << args.m_max << '\n';
+    o << "k_exp:          " << args.k_exp << '\n'
+      << "n_max:          " << args.n_max << '\n'
+      << "l_max:          " << args.l_max << '\n'
+      << "m_max:          " << args.m_max << '\n';
   }
   if (args.gaussian) {
-    o << "basis_set:     " << args.basis_set << '\n';
+    o << "basis_set:      " << args.basis_set << '\n';
   }
 
-  o << "n_alpha:       " << args.system.n_alpha << '\n'
-    << "n_beta:        " << args.system.n_beta << '\n'
-    << "guess_method:  " << args.guess_method << '\n'
-    << "error:         " << args.error << '\n'
-    << "max_iter       " << args.max_iter << '\n'
-    << "diis_size:     " << args.diis_size << '\n'
-    << "eigensolver    " << args.eigensolver << '\n'
-    << "n_eigenpairs:  " << args.n_eigenpairs << '\n'
+  o << "n_alpha:        " << args.system.n_alpha << '\n'
+    << "n_beta:         " << args.system.n_beta << '\n'
+    << "guess_method:   " << args.guess_method << '\n'
+    << "guess_esolver:  " << args.guess_esolver << '\n'
+    << "error:          " << args.error << '\n'
+    << "max_iter        " << args.max_iter << '\n'
+    << "diis_size:      " << args.diis_size << '\n'
+    << "eigensolver     " << args.eigensolver << '\n'
+    << "n_eigenpairs:   " << args.n_eigenpairs << '\n'
     << '\n'
     << "structure (distances in bohr):\n"
     << "------------------------\n"
@@ -235,12 +236,14 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
       parsed.eigensolver = argument;
     } else if (flag == std::string("--guess_method")) {
       parsed.guess_method = argument;
+    } else if (flag == std::string("--guess_esolver")) {
+      parsed.guess_esolver = argument;
     } else {
       std::cerr << "Unknown flag: " << flag << std::endl;
       std::cerr << "Valid are: --basis_type, --n_max, --l_max, --n_max, --kexp, "
                    "--Z_charge, --alpha, --beta, --error, --max_iter, --diis_size, "
                    "--n_eigenpairs, --basis_set, --guess_method, --xyz, --charge, "
-                   "--multiplicity, --atomic_units_xyz, --eigensolver"
+                   "--multiplicity, --atomic_units_xyz, --eigensolver, --guess_esolver"
                 << std::endl;
       return false;
     }

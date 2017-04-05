@@ -128,7 +128,7 @@ void run_rhf(args_type args, bool debug = false) {
   // Obtain an SCF guess
   krims::GenMap guess_params{{ScfGuessKeys::method, args.guess_method}};
   guess_params.update(ScfGuessKeys::eigensolver_params,
-                      {{EigensystemSolverKeys::method, args.eigensolver}});
+                      {{EigensystemSolverKeys::method, args.guess_esolver}});
   auto guess = scf_guess(args.system, fock_bb, S_bb, guess_params);
 
   krims::GenMap params{
