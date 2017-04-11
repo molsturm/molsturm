@@ -18,6 +18,7 @@
 //
 
 #include "read_xyz.hh"
+#include "gint/Element.hh"
 
 namespace molsturm {
 
@@ -45,11 +46,11 @@ gint::Structure read_xyz(std::istream& f, double angstrom_to_bohr) {
     assert_throw(f, ExcInvalidXyz("Error at line " + std::to_string(2 + i) + " of atom " +
                                   symbol + "."));
 
-    try {
+    if (gint::is_element_symbol(symbol)) {
       // Convert units and place into molecule
       molec.push_back(gint::Atom(symbol, {{x * angstrom_to_bohr, y * angstrom_to_bohr,
                                            z * angstrom_to_bohr}}));
-    } catch (gint::ExcUnknownElementSymbol& e) {
+    } else {
       assert_throw(false, ExcInvalidXyz("Error at line: Unknown element symbol \"" +
                                         symbol + "\"."));
     }
