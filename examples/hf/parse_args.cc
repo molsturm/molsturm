@@ -9,10 +9,15 @@ std::ostream& operator<<(std::ostream& o, const args_type& args) {
   o << "basis_type:     " << args.basis_type << std::endl;
 
   if (args.sturmian) {
-    o << "k_exp:          " << args.k_exp << '\n'
-      << "n_max:          " << args.n_max << '\n'
-      << "l_max:          " << args.l_max << '\n'
-      << "m_max:          " << args.m_max << '\n';
+    o << "k_exp:          " << args.k_exp << '\n';
+
+    if (args.nlm_basis.empty()) {
+      o << "n_max:          " << args.n_max << '\n'
+        << "l_max:          " << args.l_max << '\n'
+        << "m_max:          " << args.m_max << '\n';
+    } else {
+      o << "nlm_basis:      " << args.nlm_basis << '\n';
+    }
   }
   if (args.gaussian) {
     o << "basis_set:      " << args.basis_set << '\n';
@@ -30,8 +35,132 @@ std::ostream& operator<<(std::ostream& o, const args_type& args) {
     << '\n'
     << "structure (distances in bohr):\n"
     << "------------------------\n"
-    << args.system.structure << "\n------------------------" << std::endl;
+    << args.system.structure << '\n'
+    << "------------------------" << std::endl;
   return o;
+}
+
+/** Parse an nlm_basis string.
+ *
+ * Two formats are recognised:
+ *    a) tuple format:
+ *        (n,l,m)  (n,l,m), ...
+ *    b) compressed format:
+ *        - Words separated by spaces, first word gives lmax for n=1,
+ *          second word for n=2, third for n=3, ..
+ *        - Each word consists of an angular momentum letter (s,p,d, ...)
+ *          and optionally a count, e.g. 3*s, 2*p, d
+ *        - If a count is specified this many shells of increasing nmax,
+ *          but of the same lmax are inserted.
+ *        - E.g. 3*d 2*p s results in
+ *            (n=1, lmax=2), (n=2, lmax=2), (n=3, lmax=2), (n=3, lmax=1),
+ *            (n=4, lmax=1), (n=5, lmax=0)
+ *          i.e. in the nlm tuples
+ *            (1,0,0), (2,0,0), (2,1,-1),(2,1,0), (2,1,1),
+ *            (3,0,0), (3,1,-1),(3,1,0), (3,1,1),
+ *            (3,2,-2), (3,2,-1),(3,2,0), (3,2,1),(3,2,2),
+ *            (4,0,0), (4,1,-1),(4,1,0), (4,1,1),
+ *            (5,0,0)
+ */
+bool parse_nlm_basis(const std::string& str, NlmBasis& basis) {
+  using gint::sturmian::atomic::Nlm;
+  const std::vector<char> amletters = {'s', 'p', 'd', 'f', 'g', 'h', 'i',
+                                       'j', 'k', 'l', 'm', 'n', 'o'};
+  auto letter_to_am = [&amletters](char& c) {
+    for (size_t l = 0; l < amletters.size(); ++l) {
+      if (c == amletters[l]) return static_cast<int>(l);
+    }
+    return -1;
+  };
+
+  basis.clear();
+  if (str.find('(') == std::string::npos) {
+    // compressed format
+    std::stringstream ss(str);
+    std::string word;
+    while (ss >> word) {
+      if (word.size() == 1) {
+        const int l = letter_to_am(word[0]);
+        if (l == -1) {
+          std::cerr << "parse_nlm_basis: Unknown am letter: " << word << std::endl;
+          return false;
+        }
+        basis.add_shell(l);
+      } else if (word.find('*') == std::string::npos) {
+        std::cerr << "parse_nlm_basis: Unrecognised word: " << word << std::endl;
+        return false;
+      } else {
+        const size_t starpos = word.find('*');
+        if (starpos > word.size() - 1) {
+          std::cerr << "parse_nlm_basis: Nothing follows a star: " << word << std::endl;
+          return false;
+        }
+        const int l = letter_to_am(word[starpos + 1]);
+
+        size_t times;
+        std::stringstream st(word.substr(0, starpos));
+        if (!(st >> times)) {
+          std::cerr << "parse_nlm_basis: Invalid number before star: " << word
+                    << std::endl;
+          return false;
+        }
+
+        for (size_t i = 0; i < times; ++i) basis.add_shell(l);
+      }
+    }
+
+    return true;
+  }
+
+  // Tuple format
+  for (size_t pos = 0; pos < str.size(); ++pos) {
+    if (str[pos] != '(') continue;
+    const size_t start = pos;
+    const size_t sep1 = str.find(',', start);
+    const size_t sep2 = str.find(',', sep1);
+    const size_t end = str.find(')', sep2);
+    const size_t nextopen = str.find('(', sep1);
+
+    // Errors
+    if (sep1 == std::string::npos || sep2 == std::string::npos) {
+      std::cerr << "parse_nlm_basis: Opening bracket does not start tuple." << std::endl;
+      return false;
+    }
+    if (end == std::string::npos || end > nextopen) {
+      std::cerr << "parse_nlm_basis: No closing bracket found." << std::endl;
+      return false;
+    }
+    if (start == sep1 || sep1 == sep2 || sep2 == end) {
+      std::cerr << "parse_nlm_basis: One tuple element is empty." << std::endl;
+      return false;
+    }
+
+    // Parse nlm
+    Nlm nlm;
+    std::stringstream ssn(str.substr(start + 1, sep1 - start - 1));
+    if (!(ssn >> nlm.n)) {
+      std::cerr << "parse_nlm_basis: Invalid number for first tuple element."
+                << std::endl;
+      return false;
+    }
+    std::stringstream ssl(str.substr(sep1 + 1, sep2 - sep1 - 1));
+    if (!(ssl >> nlm.l)) {
+      std::cerr << "parse_nlm_basis: Invalid number for second tuple element."
+                << std::endl;
+      return false;
+    }
+    std::stringstream ssm(str.substr(sep2 + 1, end - sep2 - 1));
+    if (!(ssm >> nlm.m)) {
+      std::cerr << "parse_nlm_basis: Invalid number for third tuple element."
+                << std::endl;
+      return false;
+    }
+    basis.push_back(std::move(nlm));
+
+    pos = end;  // Update string position
+  }
+
+  return true;
 }
 
 bool parse_args(int argc, char** argv, args_type& parsed) {
@@ -51,6 +180,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_n_max = false;
   bool had_l_max = false;
   bool had_m_max = false;
+  bool had_nlm_basis = false;
 
   // Convergence
   bool had_error = false;
@@ -85,12 +215,12 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         std::cerr << "Can only have one of --Z_charge or --xyz" << std::endl;
         return false;
       }
-      float Z;
-      if (!str_to_type<float>(argument, Z)) {
+      double Z;
+      if (!str_to_type<double>(argument, Z)) {
         std::cerr << "Invalid float provided to --Z_charge: " << argument << std::endl;
         return false;
       }
-      structure = gint::Structure{{Z, {{0, 0, 0}}}};
+      structure = gint::Structure{{static_cast<unsigned int>(Z), {{0, 0, 0}}}};
     } else if (flag == std::string("--xyz")) {
       had_xyz = true;
       if (had_Z_charge) {
@@ -160,21 +290,50 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         return false;
       }
     } else if (flag == std::string("--n_max")) {
+      if (had_nlm_basis) {
+        std::cerr << "--n_max, --l_max, --m_max and --nlm_basis are exclusive."
+                  << std::endl;
+        return false;
+      }
       had_n_max = true;
-      if (!str_to_type<size_t>(argument, parsed.n_max)) {
+      if (!str_to_type<int>(argument, parsed.n_max)) {
         std::cerr << "Invalid int provided to --n_max: " << argument << std::endl;
         return false;
       }
     } else if (flag == std::string("--l_max")) {
+      if (had_nlm_basis) {
+        std::cerr << "--n_max, --l_max, --m_max and --nlm_basis are exclusive."
+                  << std::endl;
+        return false;
+      }
       had_l_max = true;
-      if (!str_to_type<size_t>(argument, parsed.l_max)) {
+      if (!str_to_type<int>(argument, parsed.l_max)) {
         std::cerr << "Invalid int provided to --l_max: " << argument << std::endl;
         return false;
       }
     } else if (flag == std::string("--m_max")) {
+      if (had_nlm_basis) {
+        std::cerr << "--n_max, --l_max, --m_max and --nlm_basis are exclusive."
+                  << std::endl;
+        return false;
+      }
       had_m_max = true;
-      if (!str_to_type<size_t>(argument, parsed.m_max)) {
+      if (!str_to_type<int>(argument, parsed.m_max)) {
         std::cerr << "Invalid int provided to --m_max: " << argument << std::endl;
+        return false;
+      }
+    } else if (flag == std::string("--nlm_basis")) {
+      if (had_n_max || had_l_max || had_m_max) {
+        std::cerr << "--n_max, --l_max, --m_max and --nlm_basis are exclusive."
+                  << std::endl;
+        return false;
+      }
+      had_nlm_basis = true;
+
+      const bool res = parse_nlm_basis(argument, parsed.nlm_basis);
+      if (!res) {
+        std::cerr << "Error when parsing argument string given to --nlm_basis."
+                  << std::endl;
         return false;
       }
     } else if (flag == std::string("--basis_set")) {
@@ -243,7 +402,8 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
       std::cerr << "Valid are: --basis_type, --n_max, --l_max, --n_max, --kexp, "
                    "--Z_charge, --alpha, --beta, --error, --max_iter, --diis_size, "
                    "--n_eigenpairs, --basis_set, --guess_method, --xyz, --charge, "
-                   "--multiplicity, --atomic_units_xyz, --eigensolver, --guess_esolver"
+                   "--multiplicity, --atomic_units_xyz, --eigensolver, --guess_esolver, "
+                   "--nlm_basis"
                 << std::endl;
       return false;
     }
@@ -293,11 +453,11 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
       error_encountered = true;
       std::cerr << "Need flag --kexp <double> to supply k exponent." << std::endl;
     }
-    if (!had_n_max) {
+    if (!had_n_max && !had_nlm_basis) {
       error_encountered = true;
-      std::cerr << "Need flag --n_max <int> to supply maximal principle quantum "
-                   "number."
-                << std::endl;
+      std::cerr
+            << "Need flag --n_max <int> or --nlm_basis <basisstring> to supply a basis."
+            << std::endl;
     }
     if (parsed.system.structure.size() != 1) {
       error_encountered = true;
@@ -323,10 +483,11 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   if (!had_n_eigenpairs) {
     parsed.n_eigenpairs = 2 * std::max(parsed.system.n_alpha, parsed.system.n_beta);
   }
-  if (!had_l_max) {
+
+  if (!had_l_max && !had_nlm_basis) {
     parsed.l_max = parsed.n_max - 1;
   }
-  if (!had_m_max) {
+  if (!had_m_max && !had_nlm_basis) {
     parsed.m_max = parsed.l_max;
   }
 

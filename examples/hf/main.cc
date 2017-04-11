@@ -76,13 +76,20 @@ void run_rhf(args_type args, bool debug = false) {
           {"orbital_type", gint::OrbitalType::COMPLEX_ATOMIC},
           //
           {"k_exponent", args.k_exp},
-          {"n_max", static_cast<int>(args.n_max)},
-          {"l_max", static_cast<int>(args.l_max)},
-          {"m_max", static_cast<int>(args.m_max)},
           //
           {"structure", args.system.structure},
           {"Z_charge", args.system.structure.total_charge()},
     });
+
+    if (args.nlm_basis.size() > 0) {
+      intparams.update("nlm_basis", args.nlm_basis);
+    } else {
+      intparams.update({
+            {"n_max", static_cast<int>(args.n_max)},
+            {"l_max", static_cast<int>(args.l_max)},
+            {"m_max", static_cast<int>(args.m_max)},
+      });
+    }
   } else if (args.gaussian) {
     intparams.update({
           {"basis_type", args.basis_type},

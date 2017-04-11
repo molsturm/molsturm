@@ -1,10 +1,13 @@
 #pragma once
+#include <gint/sturmian/atomic/NlmBasis.hh>
 #include <iostream>
 #include <molsturm/MolecularSystem.hh>
 #include <sstream>
 #include <string>
 
 namespace hf {
+using gint::sturmian::atomic::NlmBasis;
+
 struct args_type {
   // The system we model
   molsturm::MolecularSystem system;
@@ -15,9 +18,10 @@ struct args_type {
   // Sturmians
   bool sturmian = false;
   double k_exp = 1.0;
-  size_t n_max = 3;
-  size_t l_max = 2;
-  size_t m_max = 2;
+  int n_max = 0;
+  int l_max = 0;
+  int m_max = 0;
+  NlmBasis nlm_basis;
 
   // Gaussians
   bool gaussian = false;
