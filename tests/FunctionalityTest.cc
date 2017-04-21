@@ -1,8 +1,10 @@
 #include <catch.hpp>
 #include <gint/IntegralLookup.hh>
+#include <gint/IntegralLookupKeys.hh>
 #include <gint/OrbitalType.hh>
 #include <linalgwrap/TestingUtils.hh>
 #include <molsturm/IopScf.hh>
+#include <molsturm/MolecularSystem.hh>
 #include <molsturm/RestrictedClosedIntegralOperator.hh>
 
 namespace molsturm {
@@ -16,10 +18,12 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   //
   // Parameters of the test problem
   //
-  unsigned int Z = 4;  // Be atom
+  MolecularSystem sys(
+        {
+              {"Be", {{0, 0, 0}}},
+        },
+        /* charge */ 0);
   double k_exp = 1.;
-  size_t n_alpha = 2;
-  size_t n_beta = 2;
   int n_max = 3;
   int l_max = 2;
   size_t n_eigenpairs = 4;
@@ -93,10 +97,10 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   //
   // Setup integrals
   //
-  krims::GenMap intparams{{"basis_type", basis_type},
-                          {"orbital_type", otype},
+  krims::GenMap intparams{{IntegralLookupKeys::basis_type, basis_type},
+                          {IntegralLookupKeys::orbital_type, otype},
                           {"k_exponent", k_exp},
-                          {"Z_charge", static_cast<double>(Z)},
+                          {IntegralLookupKeys::structure, sys.structure},
                           {"n_max", n_max},
                           {"l_max", l_max},
                           {"m_max", l_max}};
@@ -135,8 +139,6 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   IntegralTermContainer<stored_matrix_type> integral_container(std::move(terms_1e), J_bb,
                                                                K_bb);
 
-  gint::Atom at{Z, {{0, 0, 0}}};
-  molsturm::MolecularSystem sys{gint::Structure({std::move(at)}), {{n_alpha, n_beta}}};
   RestrictedClosedIntegralOperator<stored_matrix_type> fock_bb(integral_container, sys);
   fock_bb.update(guess_bf_ptr);
 
@@ -163,7 +165,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   const auto& evectors = res.orbital_coeff();
   // TODO For comparing all of them one needs to take rotations
   //      inside degenerate subspaces into account
-  for (size_t i = 0; i < n_alpha; ++i) {
+  for (size_t i = 0; i < sys.n_alpha; ++i) {
     linalgwrap::adjust_phase(evectors[i], evec_expected[i]);
     CHECK(evectors[i] == numcomp(evec_expected[i]).tolerance(100. * tolerance));
   }

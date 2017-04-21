@@ -4,6 +4,7 @@
 #include "parse_args.hh"
 
 #include <gint/IntegralLookup.hh>
+#include <gint/IntegralLookupKeys.hh>
 #include <gint/OrbitalType.hh>
 #include <gint/version.hh>
 #include <gscf/version.hh>
@@ -55,6 +56,7 @@ void print_res(const State& res) {
 /** Run an SCF */
 void run_rhf(args_type args, bool debug = false) {
   using gint::IntegralTypeKeys;
+  using gint::IntegralLookupKeys;
 
   //
   // Types and settings
@@ -72,13 +74,12 @@ void run_rhf(args_type args, bool debug = false) {
   if (args.sturmian) {
     assert_throw(args.system.structure.n_atoms() == 1, krims::ExcNotImplemented());
     intparams.update({
-          {"basis_type", args.basis_type},
-          {"orbital_type", gint::OrbitalType::COMPLEX_ATOMIC},
+          {IntegralLookupKeys::basis_type, args.basis_type},
+          {IntegralLookupKeys::orbital_type, gint::OrbitalType::COMPLEX_ATOMIC},
           //
           {"k_exponent", args.k_exp},
           //
-          {"structure", args.system.structure},
-          {"Z_charge", args.system.structure.total_charge()},
+          {IntegralLookupKeys::structure, args.system.structure},
     });
 
     if (args.nlm_basis.size() > 0) {
@@ -92,11 +93,11 @@ void run_rhf(args_type args, bool debug = false) {
     }
   } else if (args.gaussian) {
     intparams.update({
-          {"basis_type", args.basis_type},
-          {"orbital_type", gint::OrbitalType::REAL_MOLECULAR},
+          {IntegralLookupKeys::basis_type, args.basis_type},
+          {IntegralLookupKeys::orbital_type, gint::OrbitalType::REAL_MOLECULAR},
           {"basis_set", args.basis_set},
           //
-          {"structure", args.system.structure},
+          {IntegralLookupKeys::structure, args.system.structure},
     });
   } else {
     assert_throw(false, krims::ExcNotImplemented());
