@@ -16,7 +16,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   //
   // Parameters of the test problem
   //
-  double Z = 4.;  // Be atom
+  unsigned int Z = 4;  // Be atom
   double k_exp = 1.;
   size_t n_alpha = 2;
   size_t n_beta = 2;
@@ -96,7 +96,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   krims::GenMap intparams{{"basis_type", basis_type},
                           {"orbital_type", otype},
                           {"k_exponent", k_exp},
-                          {"Z_charge", Z},
+                          {"Z_charge", static_cast<double>(Z)},
                           {"n_max", n_max},
                           {"l_max", l_max},
                           {"m_max", l_max}};
