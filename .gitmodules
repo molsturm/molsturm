@@ -6,7 +6,7 @@
 	url = git@github.com:linalgwrap/linalgwrap.git
 [submodule "modules/gscf"]
 	path = modules/gscf
-	url = ssh://gitte@ccsvn.iwr.uni-heidelberg.de:42022/gscf.git
+	url = git@github.com:molsturm/gscf.git
 [submodule "modules/gint"]
 	path = modules/gint
 	url = ssh://gitte@ccsvn.iwr.uni-heidelberg.de:42022/gint.git
