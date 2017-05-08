@@ -113,15 +113,13 @@ void run_rhf(args_type args, bool debug = false) {
   //
   // Checks about basis size:
   //
-  const size_t max_elec = std::max(args.system.n_alpha, args.system.n_beta);
-  assert_throw(max_elec + 2 <= S_bb.n_rows(), ExcTooSmallBasis(S_bb.n_rows()));
-
   std::cout << "Basis size:  " << S_bb.n_rows() << std::endl << std::endl;
 
-  assert_throw(
-        args.n_eigenpairs >= std::max(args.system.n_alpha, args.system.n_beta),
-        krims::ExcTooLarge<size_t>(std::max(args.system.n_alpha, args.system.n_beta),
-                                   args.n_eigenpairs));
+  const size_t max_elec = std::max(args.system.n_alpha, args.system.n_beta);
+  assert_throw(max_elec < S_bb.n_rows(), ExcTooSmallBasis(S_bb.n_rows()));
+
+  assert_throw(args.n_eigenpairs >= std::max(args.system.n_alpha, args.system.n_beta),
+               krims::ExcTooLarge<size_t>(max_elec, args.n_eigenpairs));
 
   //
   // Problem setup
