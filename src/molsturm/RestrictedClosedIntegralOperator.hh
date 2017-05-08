@@ -243,6 +243,8 @@ class RestrictedClosedIntegralOperator final : public IntegralOperatorBase<Store
       /* intentional fall-through */
       case OrbitalSpace::VIRT_BETA:
         return {m_n_alpha, n_rows()};
+      default:
+	return {0,0};
     }
   }
 
