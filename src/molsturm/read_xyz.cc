@@ -56,7 +56,10 @@ gint::Structure read_xyz(std::istream& f, double angstrom_to_bohr) {
     }
   }
 
-  assert_dbg(n_atoms == molec.size(), krims::ExcInternalError());
+  assert_throw(
+        n_atoms == molec.size(),
+        ExcInvalidXyz(
+              "Numbor of atoms read and number of atoms to be read does not agree."));
   return molec;
 }
 }  // namespace molsturm

@@ -29,10 +29,10 @@ class ScfErrorLibrary {
   static matrix_type pulay_error(const operator_type& fock_bb,
                                  const OverlapMatrix& overlap_bb) {
     auto occ_a = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_ALPHA);
-#ifdef DEBUG
     auto occ_b = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_BETA);
-    assert_dbg(occ_a == occ_b, krims::ExcNotImplemented());
+    assert_implemented(occ_a == occ_b);
 
+#ifdef DEBUG
     typedef typename OverlapMatrix::real_type real_type;
     const real_type tol = 100 * linalgwrap::Constants<real_type>::default_tolerance;
     assert_dbg(overlap_bb.is_symmetric(tol), linalgwrap::ExcMatrixNotSymmetric());

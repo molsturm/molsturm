@@ -330,7 +330,7 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
   }
 
   // Cannot happen since last solver should have converged or thrown
-  assert_dbg(false, krims::ExcInternalError());
+  assert_internal(false);
 }
 
 template <typename IntegralOperator, typename OverlapMatrix>

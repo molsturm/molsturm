@@ -59,7 +59,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_loewdin(
   const auto occb = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_BETA);
   const size_t n_alpha = occa.size();
   const size_t n_beta = occb.size();
-  assert_dbg(n_alpha == n_beta, krims::ExcNotImplemented());
+  assert_implemented(n_alpha == n_beta);
   const size_t n_vectors = std::max(n_alpha, n_beta);
 
   try {
@@ -69,8 +69,8 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_loewdin(
     auto& evectors = sol.evectors();
     auto& evalues = sol.evalues();
 
-    assert_dbg(evectors.n_vectors() == n_vectors, krims::ExcInternalError());
-    assert_dbg(evectors.n_elem() == S_bb.n_cols(), krims::ExcInternalError());
+    assert_internal(evectors.n_vectors() == n_vectors);
+    assert_internal(evectors.n_elem() == S_bb.n_cols());
 
     for (size_t i = 0; i < evectors.n_vectors(); ++i) {
       evectors[i] *= 1. / sqrt(evalues[i]);

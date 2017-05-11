@@ -216,7 +216,7 @@ RestrictedIntegralOperator<StoredMatrix>::RestrictedIntegralOperator(
     m_operator += view::scale(m_coul, 2. * m_coeff_coul);
   } else {
     // TODO Restricted open shell --> not implemented.
-    assert_dbg(false, ExcNotImplemented());
+    assert_implemented(false);
   }
   m_energies.insert(m_coul.id(), Constants<scalar_type>::zero);
 
@@ -225,7 +225,7 @@ RestrictedIntegralOperator<StoredMatrix>::RestrictedIntegralOperator(
     m_operator += view::scale(m_exchge, m_coeff_exchge);
   } else {
     // TODO Do not know the RO-HF case atm
-    assert_dbg(false, ExcNotImplemented());
+    assert_implemented(false);
   }
   m_energies.insert(m_exchge.id(), Constants<scalar_type>::zero);
 
@@ -313,7 +313,7 @@ void RestrictedIntegralOperator<StoredMatrix>::update_state_and_energies(
   // Update 1e part, J and K == Update the operator.
   //
   // TODO Do not know the RO-HF case atm
-  assert_dbg(m_n_beta == m_n_alpha, ExcNotImplemented());
+  assert_implemented(m_n_beta == m_n_alpha);
 
   // Here we assume resticted closed-shell HF, since we have just one
   // type of coefficients (alpha) to do the update.
@@ -330,7 +330,7 @@ void RestrictedIntegralOperator<StoredMatrix>::update_state_and_energies(
   auto itcoeff = std::begin(m_coeff_1e);
   for (; itterm != std::end(m_terms_1e); ++itterm, ++itcoeff) {
     // TODO Do not know the RO-HF case atm
-    assert_dbg(m_n_beta == m_n_alpha, ExcNotImplemented());
+    assert_implemented(m_n_beta == m_n_alpha);
 
     // Calculate energy. Factor 2 because of alpha == beta
     scalar_type energy = 2. * (view::transpose(ca_bo) * (*itterm) * ca_bo).trace();
@@ -344,7 +344,7 @@ void RestrictedIntegralOperator<StoredMatrix>::update_state_and_energies(
   //
   {
     // TODO Do not know the RO-HF case atm
-    assert_dbg(m_n_beta == m_n_alpha, ExcNotImplemented());
+    assert_implemented(m_n_beta == m_n_alpha);
 
     // Coulomb: Factor 2 because of alpha == beta
     scalar_type energy_coul = 2. * (view::transpose(ca_bo) * m_coul * ca_bo).trace();
@@ -393,7 +393,7 @@ std::map<std::string,
 RestrictedIntegralOperator<StoredMatrix>::terms_alpha() const {
   using namespace linalgwrap;
 
-  assert_dbg(m_n_beta == m_n_alpha, linalgwrap::ExcNotImplemented());
+  assert_implemented(m_n_beta == m_n_alpha);
 
   std::map<std::string, scaled_int_term_type> ret;
 
@@ -415,7 +415,7 @@ template <typename StoredMatrix>
 std::map<std::string,
          typename RestrictedIntegralOperator<StoredMatrix>::scaled_int_term_type>
 RestrictedIntegralOperator<StoredMatrix>::terms_beta() const {
-  assert_dbg(m_n_beta == m_n_alpha, linalgwrap::ExcNotImplemented());
+  assert_implemented(m_n_beta == m_n_alpha);
   return terms_alpha();
 }
 
