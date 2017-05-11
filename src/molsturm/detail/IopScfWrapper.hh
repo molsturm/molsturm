@@ -184,11 +184,13 @@ void IopScfWrapper<InnerScf>::after_iteration_step(state_type& s) const {
   s.last_step_tot_energy = s.problem_matrix().energy_total();
 
   if (have_common_bit(verbosity, ScfMsgType::IterationProcess)) {
+    std::cout.unsetf(std::ios::floatfield);  // Unset floatfield flags
+
     // scf_iter        e1e         e2e       etot        scf_error
-    std::cout << " " << std::setw(4) << std::right << s.n_iter() << std::setw(12)
-              << fock_bb.energy_1e_terms() << std::setw(12) << fock_bb.energy_2e_terms()
-              << std::setw(12) << fock_bb.energy_total() << std::setw(14)
-              << s.last_error_norm << std::right << std::setw(12)
+    std::cout << std::setprecision(7) << " " << std::setw(4) << std::right << s.n_iter()
+              << std::setw(12) << fock_bb.energy_1e_terms() << std::setw(12)
+              << fock_bb.energy_2e_terms() << std::setw(12) << fock_bb.energy_total()
+              << std::setw(16) << s.last_error_norm << std::right << std::setw(12)
               << s.eigenproblem_stats().n_iter() << std::endl;
   }
 }

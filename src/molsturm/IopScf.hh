@@ -277,9 +277,11 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
 
   // Print table header if user wishes an iteration progress:
   if (print_progress) {
-    std::cout << std::setw(5) << std::right << "iter" << std::setw(12) << "e1e"
-              << std::setw(12) << "e2e" << std::setw(12) << "etot" << std::setw(14)
-              << "scf_error" << std::right << std::setw(12) << "n_eprob_it" << std::endl;
+    std::cout.unsetf(std::ios::floatfield);  // Unset floatfield flags
+    std::cout << std::setprecision(7) << std::setw(5) << std::right << "iter"
+              << std::setw(12) << "e1e" << std::setw(12) << "e2e" << std::setw(12)
+              << "etot" << std::setw(16) << "scf_error" << std::right << std::setw(12)
+              << "n_eprob_it" << std::endl;
   }
 
   // TODO make this configurable
@@ -300,12 +302,13 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
 
   {  // DIIS
     if (print_progress) {
-      std::cout << "               ****    Turning on DIIS   ****" << std::endl;
+      // TODO It would be nice to have a function to do this printing here
+      std::cout << "                  ****    Turning on DIIS   ****" << std::endl;
     }
     solve_up_to<DiisSolver>(state, diis_limit_max_error_norm);
     if (base_type::convergence_reached(state)) return;
     if (print_progress) {
-      std::cout << "               ****  Switching off DIIS  ****" << std::endl;
+      std::cout << "                  ****  Switching off DIIS  ****" << std::endl;
     }
   }
 
@@ -323,7 +326,7 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
 
   {  // Plain SCF
     if (print_progress) {
-      std::cout << "               **** Removing any damping ****" << std::endl;
+      std::cout << "                  **** Removing any damping ****" << std::endl;
     }
     solve_up_to<PlainSolver>(state, 0.);
     if (base_type::convergence_reached(state)) return;
@@ -354,6 +357,7 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
     const std::string ind = "      ";
     const std::string nuc_rep_label("nuclear repulsion");
 
+    std::cout.unsetf(std::ios::floatfield);  // Unset floatfield flags
     std::cout << std::endl
               << "Converged after  " << std::endl
               << ind << "SCF iterations:    " << std::right << std::setw(7) << s.n_iter()
