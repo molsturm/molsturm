@@ -11,9 +11,8 @@ set(MOLSTURM_SOURCES
 	GuessAlgorithms/GuessAlgorithmsKeysBase.cc
 )
 
-# Dump the current version as an include file.
-include(WriteVersionHeader)
-write_version_header("${molsturm_BINARY_DIR}/src/molsturm/version_defs.hh")
+# Write the config file config.hh (into the binary dir)
+configure_file("config.hh.in" "config.hh")
 
 # Add the libraries for Debug and Release builds:
 drb_add_library(molsturm

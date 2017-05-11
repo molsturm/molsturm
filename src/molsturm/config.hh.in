@@ -1,0 +1,26 @@
+#pragma once
+/* clang-format off */
+@SCALAR_TYPES_HEADERS@
+
+namespace molsturm {
+//
+// Real and complex types
+//
+/** The real type used throughout molsturm */
+using real_type = @SCALAR_TYPES_REAL@;
+
+/** The complex type used throughout molsturm */
+using complex_type = @SCALAR_TYPES_COMPLEX@;
+
+//
+// Detail namespace
+//
+namespace detail {
+// Version:
+constexpr int version_major {@PROJECT_VERSION_MAJOR@};
+constexpr int version_minor {@PROJECT_VERSION_MINOR@};
+constexpr int version_patch {@PROJECT_VERSION_PATCH@};
+}  // namespace detail
+
+  /* clang-format on */
+}  // namespace molsturm

@@ -57,6 +57,14 @@ was requested, but only version ${${LIBRARY}_VERSION} was found. Maybe a \
 	endforeach()
 endmacro(add_submodule_dependency)
 
+###############
+#--  Types  --#
+###############
+# Determine scalar types we want to use here:
+include(ScalarTypes)
+setup_scalar_types()
+set(MOLSTURM_DEPENDENCIES_ ${MOLSTURM_DEPENDENCIES} ${SCALAR_TYPES_LIBRARIES})
+
 ############################
 #-- rapidcheck and catch --#
 ############################
