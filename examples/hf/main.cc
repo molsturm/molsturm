@@ -39,7 +39,7 @@ void print_res(const State& res) {
 
   auto occa = res.problem_matrix().indices_subspace(gscf::OrbitalSpace::OCC_ALPHA);
   auto occb = res.problem_matrix().indices_subspace(gscf::OrbitalSpace::OCC_BETA);
-  assert_dbg(occa == occb, krims::ExcNotImplemented());
+  assert_implemented(occa == occb);
 
   const auto& orben = res.eigensolution().evalues();
   for (size_t i = 0; i < orben.size(); ++i) {
@@ -72,7 +72,7 @@ void run_rhf(args_type args, bool debug = false) {
   krims::GenMap intparams;
 
   if (args.sturmian) {
-    assert_throw(args.system.structure.n_atoms() == 1, krims::ExcNotImplemented());
+    assert_implemented(args.system.structure.n_atoms() == 1);
     intparams.update({
           {IntegralLookupKeys::basis_type, args.basis_type},
           {IntegralLookupKeys::orbital_type, gint::OrbitalType::COMPLEX_ATOMIC},
@@ -100,7 +100,7 @@ void run_rhf(args_type args, bool debug = false) {
           {IntegralLookupKeys::structure, args.system.structure},
     });
   } else {
-    assert_throw(false, krims::ExcNotImplemented());
+    assert_implemented(false);
   }
 
   integral_lookup_type integrals(std::move(intparams));

@@ -4,7 +4,6 @@
 
 #define CATCH_CONFIG_RUNNER
 #include <catch.hpp>
-#include <krims/ExceptionSystem.hh>
 #include <krims/NumComp.hh>
 
 int main(int argc, char* const argv[]) {
