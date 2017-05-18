@@ -1,1 +1,2 @@
 add_subdirectory(molsturm)
+add_subdirectory(molsturm_iface)
