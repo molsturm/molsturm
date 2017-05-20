@@ -41,6 +41,9 @@ __params_transform_maps = {
   "nlm_basis": __np_to_nlm,
 }
 
+"""The list of keys understood by the hartree_fock function"""
+hartree_fock_keys = [ k for k in dir(__iface.Parameters) if k[0] != "_" ]
+
 def hartree_fock(**kwargs):
   # The list of valid keys is the list of keys
   # with the special ones (starting with __) removed.
@@ -74,43 +77,50 @@ def hartree_fock(**kwargs):
 
   return out
 
-def print_mo_occupation(out, indention=""):
+def print_mo_occupation(hfres, indention=""):
   """
   Print the MO occupation number and MO energies of the
   calculation results obtained with the function hartree_fock
   above.
   """
-
   fstr = indention
-  if out["restricted"]:
+  if hfres["restricted"]:
     fstr+="{aocc:1s}  {ena:20}  {bocc:1s}"
   else:
     fstr+="{aocc:1s}  {ena:20}  |  {enb:20}  {bocc:1s}"
   print(fstr.format(aocc="a",bocc="b",enb="",ena=""))
 
-  for i in range(max(out["n_orbs_alpha"],out["n_orbs_beta"])):
+  for i in range(max(hfres["n_orbs_alpha"],hfres["n_orbs_beta"])):
     kw = {
-      "aocc": "*" if i < out["n_alpha"] else " ",
-      "bocc": "*" if i < out["n_beta"]  else " ",
+      "aocc": "*" if i < hfres["n_alpha"] else " ",
+      "bocc": "*" if i < hfres["n_beta"]  else " ",
       "ena": "",
       "enb": "",
     }
-    if i < out["n_orbs_alpha"]:
-      kw["ena"] = out["orbital_energies_f"][i]
-    if i < out["n_orbs_beta"]:
-      kw["enb"] = out["orbital_energies_f"][i+out["n_orbs_alpha"]]
+    if i < hfres["n_orbs_alpha"]:
+      kw["ena"] = hfres["orbital_energies_f"][i]
+    if i < hfres["n_orbs_beta"]:
+      kw["enb"] = hfres["orbital_energies_f"][i+hfres["n_orbs_alpha"]]
     print(fstr.format(**kw))
 
-def print_energies(out, indention=""):
+def print_energies(hfres, indention=""):
   """
   Print the energies of a calculation obtained with the
   hartree_fock function above.
   """
-
-  energies = [ k for k in out if k.startswith("energy_") ]
+  energies = [ k for k in hfres if k.startswith("energy_") ]
   maxlen = max([ len(k) for k in energies ])
   fstr=indention + "{key:"+str(maxlen)+"s} = " + "{val:20}"
 
   for k in energies:
-    print(fstr.format(key=k, val=out[k]))
+    print(fstr.format(key=k, val=hfres[k]))
 
+def build_pyadc_input(hfres):
+  """
+  Take the results dictionary from a hf calculation and build
+  the input dictionary for a pyadc run out of it.
+  """
+  params = { k:hfres[k] for k in hfres
+             if not k in [ "n_bas", "energy_total" ] }
+  params["energy_scf"] = hfres["energy_total"]
+  return params
