@@ -20,6 +20,7 @@
 #include "hartree_fock.hh"
 #include <gint/IntegralLookup.hh>
 #include <gint/IntegralLookupKeys.hh>
+#include <gint/IntegralType.hh>
 #include <gint/OrbitalType.hh>
 #include <gint/Structure.hh>
 #include <gint/sturmian/atomic/NlmBasis.hh>
@@ -171,6 +172,26 @@ HfResults build_restricted_hf_results(const krims::GenMap& scf_params,
   ret.n_orbs_beta = n_orbs_alpha;
 
   ret.threshold = scf_params.at<double>(IopScfKeys::max_error_norm);
+
+  // Energies:
+  for (const auto& kv : fbb.energies()) {
+    switch (kv.first.integral_type()) {
+      case gint::IntegralType::kinetic:
+        ret.energy_kinetic = kv.second;
+        break;
+      case gint::IntegralType::coulomb:
+        ret.energy_coulomb = kv.second;
+        break;
+      case gint::IntegralType::exchange:
+        ret.energy_exchange = kv.second;
+        break;
+      case gint::IntegralType::nuclear_attraction:
+        ret.energy_nuclear_attraction = kv.second;
+        break;
+      default:
+        continue;
+    }
+  }
   ret.energy_total = fbb.energy_total();
   ret.energy_nuclear_repulsion = fbb.energy_nuclear_repulsion();
 

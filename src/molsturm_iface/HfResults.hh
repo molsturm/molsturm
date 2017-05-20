@@ -34,10 +34,12 @@ struct HfResults {
   //! SCF convergence threshold
   double threshold = 0;
 
-  // TODO ideals
+  //! Restricted calculation or not
+  bool restricted;
+
+  // TODO ideas
   //       - number of iterations
   //       - final error
-  //       - more energies
 
   //! Total SCF energy
   double energy_total;
@@ -45,8 +47,17 @@ struct HfResults {
   //! Nuclear repulsion energy
   double energy_nuclear_repulsion;
 
-  //! Restricted calculation or not
-  bool restricted;
+  //! Electron-Nuclei attraction energy
+  double energy_nuclear_attraction;
+
+  //! Coulomb part of the  electron-electron interaction energy
+  double energy_coulomb;
+
+  //! Exchange part of the  electron-electron interaction energy
+  double energy_exchange;
+
+  //! Kinetic energy of the electron
+  double energy_kinetic;
 
   std::vector<double> coeff_fb;
   std::vector<double> orbital_energies_f;

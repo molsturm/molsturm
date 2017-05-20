@@ -108,12 +108,49 @@ def print_energies(hfres, indention=""):
   Print the energies of a calculation obtained with the
   hartree_fock function above.
   """
-  energies = [ k for k in hfres if k.startswith("energy_") ]
+  # Prefix all energy keys use:
+  prefix = "energy_"
+
+  # Classify the different keys:
+  zeroElectron = [ "nuclear_repulsion" ]    # No electrons involved
+  twoElectron = [ "coulomb", "exchange" ]   # 2 electron terms
+
+  # Keys with special treatment
+  special = zeroElectron + twoElectron + [ "total" ]
+  oneElectron = sorted([ k[len(prefix):] for k in hfres
+                         if k.startswith(prefix) and \
+                           not k[len(prefix):] in special
+                       ])
+
+  # All energy terms:
+  energies = zeroElectron + oneElectron + twoElectron
+
+  # Build print format
   maxlen = max([ len(k) for k in energies ])
-  fstr=indention + "{key:"+str(maxlen)+"s} = " + "{val:20}"
+  fstr=indention + "{key:"+str(maxlen)+"s} = {val:15.10g}"
+
+  # Derived quantities:
+  E1e = sum([ hfres[prefix+ene] for ene in oneElectron ])
+  E2e = sum([ hfres[prefix+ene] for ene in twoElectron ])
+  Eelec = E1e+E2e
+
+  # Compute virial ratio:
+  Epot = sum([ hfres[prefix+ene] for ene in energies if not ene in [ "kinetic" ] ])
+  virial = - Epot / hfres[prefix+"kinetic"]
 
   for k in energies:
-    print(fstr.format(key=k, val=hfres[k]))
+    print(fstr.format(key=k, val=hfres[prefix+k]))
+  print()
+  print(fstr.format(key="E_1e", val=E1e))
+  print(fstr.format(key="E_2e", val=E2e))
+  print(fstr.format(key="E electronic", val=Eelec))
+  print()
+  print(fstr.format(key="E_pot", val=Epot))
+  print(fstr.format(key="E_kin", val=hfres[prefix+"kinetic"]))
+  print(fstr.format(key="virial ratio", val=virial))
+  print()
+  print((indention+"{key:"+str(maxlen)+"s} = {val:20.15g}") \
+        .format(key="E_total", val=hfres[prefix+"total"]))
 
 def build_pyadc_input(hfres):
   """
