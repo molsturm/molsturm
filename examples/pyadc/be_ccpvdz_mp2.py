@@ -26,3 +26,5 @@ params_adc = molsturm.build_pyadc_input(res)
 res_adc = pyadc.adc(**params_adc, max_memory=32*1024*1024)
 print("MP2 energy", res_adc["energy_mp2"])
 print("tot energy", res_adc["energy_ground_state"])
+
+molsturm.print_quote(res)

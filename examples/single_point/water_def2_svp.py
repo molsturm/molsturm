@@ -19,3 +19,5 @@ molsturm.print_energies(res, indention=6*" ")
 
 print("\nOrbital occupation:")
 molsturm.print_mo_occupation(res,indention=6*" ")
+
+molsturm.print_quote(res)

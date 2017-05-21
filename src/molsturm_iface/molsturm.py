@@ -152,6 +152,21 @@ def print_energies(hfres, indention=""):
   print((indention+"{key:"+str(maxlen)+"s} = {val:20.15g}") \
         .format(key="E_total", val=hfres[prefix+"total"]))
 
+def print_quote(hfres):
+  # A list of dull Angus MacGyver quotes
+  quotes = [ "Lord Cyril Cleeve: [rummaging through the scrolls] Where's the treasure?\n" \
+             "Angus MacGyver:    I think you're looking at it.",
+             "Atticus: [to MacGyver] You were always my brightest student!",
+           ]
+  quote = quotes[np.random.randint(0,len(quotes))]
+
+  phrase="molsturm out   ...   and now for something completely different"
+  width=max([len(phrase)+8] + [ len(line)+2 for line in quote.split("\n") ])
+  print(width*"=")
+  print( ((width-len(phrase))//2)*" " + phrase)
+  print(width*"=")
+  print(quote)
+
 def build_pyadc_input(hfres):
   """
   Take the results dictionary from a hf calculation and build
