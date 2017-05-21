@@ -1,10 +1,11 @@
 import molsturm_iface as __iface
 import numpy as np
+import sys
 
 def __np_to_coords(arr):
   ret = __iface.CoordVector()
   for c in arr:
-    if (len(c) != 3):
+    if len(c) != 3:
       raise ValueError("All items of the coordinates array need have exactly 3 items.")
 
     new = __iface.Coord()
@@ -77,18 +78,42 @@ def hartree_fock(**kwargs):
 
   return out
 
-def print_mo_occupation(hfres, indention=""):
+#
+# Functions to help with printing nicely formatted output
+# of the results obtained
+#
+
+def print_convergence_summary(hfres,out=sys.stdout, indention=6*" "):
+  out.write("\nSCF converged after\n")
+  out.write(indention+"{0:5d}  iterations".format(hfres["n_iter"])+"\n")
+  out.write(indention+"{0:5d}  matrix applies".format(hfres["n_mtx_applies"])+"\n")
+
+  label_key_map = {
+    "Pulay error norm": "final_error_norm",
+    "Final ΔE_1e":      "final_1e_energy_change",
+    "Final ΔE_total":   "final_tot_energy_change",
+  }
+  maxlen = max([ len(k) for k in label_key_map ])
+  fstr = indention+"{0:"+str(maxlen)+"s}  =  {1:10.8g}\n"
+
+  out.write("\nFinal SCF errors:\n")
+  for k in label_key_map:
+    out.write(fstr.format(k,hfres[label_key_map[k]]))
+
+def print_mo_occupation(hfres, out=sys.stdout, indention=6*" ", title="Orbital occupation:"):
   """
   Print the MO occupation number and MO energies of the
   calculation results obtained with the function hartree_fock
   above.
   """
+  out.write("\n" + title+"\n")
+
   fstr = indention
   if hfres["restricted"]:
-    fstr+="{aocc:1s}  {ena:20}  {bocc:1s}"
+    fstr+="{aocc:1s}  {ena:20}  {bocc:1s}\n"
   else:
-    fstr+="{aocc:1s}  {ena:20}  |  {enb:20}  {bocc:1s}"
-  print(fstr.format(aocc="a",bocc="b",enb="",ena=""))
+    fstr+="{aocc:1s}  {ena:20}  |  {enb:20}  {bocc:1s}\n"
+  out.write(fstr.format(aocc="a",bocc="b",enb="",ena=""))
 
   for i in range(max(hfres["n_orbs_alpha"],hfres["n_orbs_beta"])):
     kw = {
@@ -101,9 +126,9 @@ def print_mo_occupation(hfres, indention=""):
       kw["ena"] = hfres["orbital_energies_f"][i]
     if i < hfres["n_orbs_beta"]:
       kw["enb"] = hfres["orbital_energies_f"][i+hfres["n_orbs_alpha"]]
-    print(fstr.format(**kw))
+    out.write(fstr.format(**kw))
 
-def print_energies(hfres, indention=""):
+def print_energies(hfres,out=sys.stdout, indention=6*" ", title="Final energies:"):
   """
   Print the energies of a calculation obtained with the
   hartree_fock function above.
@@ -126,8 +151,8 @@ def print_energies(hfres, indention=""):
   energies = zeroElectron + oneElectron + twoElectron
 
   # Build print format
-  maxlen = max([ len(k) for k in energies ])
-  fstr=indention + "{key:"+str(maxlen)+"s} = {val:15.10g}"
+  maxlen = max([ len(k) for k in energies ])+1
+  fstr=indention + "{key:"+str(maxlen)+"s} = {val:15.10g}\n"
 
   # Derived quantities:
   E1e = sum([ hfres[prefix+ene] for ene in oneElectron ])
@@ -138,21 +163,22 @@ def print_energies(hfres, indention=""):
   Epot = sum([ hfres[prefix+ene] for ene in energies if not ene in [ "kinetic" ] ])
   virial = - Epot / hfres[prefix+"kinetic"]
 
-  for k in energies:
-    print(fstr.format(key=k, val=hfres[prefix+k]))
-  print()
-  print(fstr.format(key="E_1e", val=E1e))
-  print(fstr.format(key="E_2e", val=E2e))
-  print(fstr.format(key="E electronic", val=Eelec))
-  print()
-  print(fstr.format(key="E_pot", val=Epot))
-  print(fstr.format(key="E_kin", val=hfres[prefix+"kinetic"]))
-  print(fstr.format(key="virial ratio", val=virial))
-  print()
-  print((indention+"{key:"+str(maxlen)+"s} = {val:20.15g}") \
-        .format(key="E_total", val=hfres[prefix+"total"]))
+  lines = [ "\n" + title + "\n" ]
+  lines += [ fstr.format(key=k, val=hfres[prefix+k]) for k in energies ]
+  lines.append("")
+  lines.append(fstr.format(key="E_1e", val=E1e))
+  lines.append(fstr.format(key="E_2e", val=E2e))
+  lines.append(fstr.format(key="E electronic", val=Eelec))
+  lines.append("")
+  lines.append(fstr.format(key="E_pot", val=Epot))
+  lines.append(fstr.format(key="E_kin", val=hfres[prefix+"kinetic"]))
+  lines.append(fstr.format(key="virial ratio", val=virial))
+  lines.append("")
+  lines.append((indention+"{key:"+str(maxlen)+"s} = {val:20.15g}") \
+               .format(key="E_total", val=hfres[prefix+"total"])+"\n")
+  out.writelines(lines)
 
-def print_quote(hfres):
+def print_quote(hfres, out=sys.stdout):
   # A list of dull Angus MacGyver quotes
   quotes = [ "Lord Cyril Cleeve: [rummaging through the scrolls] Where's the treasure?\n" \
              "Angus MacGyver:    I think you're looking at it.",
@@ -162,17 +188,20 @@ def print_quote(hfres):
 
   phrase="molsturm out   ...   and now for something completely different"
   width=max([len(phrase)+8] + [ len(line)+2 for line in quote.split("\n") ])
-  print(width*"=")
-  print( ((width-len(phrase))//2)*" " + phrase)
-  print(width*"=")
-  print(quote)
+  out.write((width*"="+"\n"))
+  out.write( ((width-len(phrase))//2)*" " + phrase + "\n")
+  out.write((width*"="+"\n"))
+  out.write(quote+"\n")
 
 def build_pyadc_input(hfres):
   """
   Take the results dictionary from a hf calculation and build
   the input dictionary for a pyadc run out of it.
   """
-  params = { k:hfres[k] for k in hfres
-             if not k in [ "n_bas", "energy_total" ] }
+  exclude=[ "n_bas", "energy_total", "n_iter", "n_mtx_applies",
+             "final_error_norm", "final_1e_energy_change",
+             "final_tot_energy_change" ]
+  params = { k:hfres[k] for k in hfres if not k in exclude }
   params["energy_scf"] = hfres["energy_total"]
   return params
+

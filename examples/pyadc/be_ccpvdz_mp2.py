@@ -15,12 +15,9 @@ params = {
 }
 
 res = molsturm.hartree_fock(**params)
-
-print("\nFinal energies:")
-molsturm.print_energies(res, indention=6*" ")
-
-print("\nOrbital occupation:")
-molsturm.print_mo_occupation(res,indention=6*" ")
+molsturm.print_convergence_summary(res)
+molsturm.print_energies(res)
+molsturm.print_mo_occupation(res)
 
 params_adc = molsturm.build_pyadc_input(res)
 res_adc = pyadc.adc(**params_adc, max_memory=32*1024*1024)

@@ -37,10 +37,27 @@ struct HfResults {
   //! Restricted calculation or not
   bool restricted;
 
-  // TODO ideas
-  //       - number of iterations
-  //       - final error
+  /** \name SCF results */
+  //@{
+  //! Number of iterations the SCF took
+  unsigned int n_iter = 0;
 
+  //! Number of matrix applies needed
+  unsigned int n_mtx_applies = 0;
+
+  /** Frobenius norm of the final Pulay error matrix
+   *  in the last step (which lead to convergence) */
+  double final_error_norm = 0;
+
+  /** Final change in total energy */
+  double final_tot_energy_change = 0;
+
+  /** Final change in one electron energy */
+  double final_1e_energy_change = 0;
+  //@}
+
+  /** \name Energies */
+  //@{
   //! Total SCF energy
   double energy_total;
 
@@ -58,6 +75,7 @@ struct HfResults {
 
   //! Kinetic energy of the electron
   double energy_kinetic;
+  //@}
 
   std::vector<double> coeff_fb;
   std::vector<double> orbital_energies_f;

@@ -173,6 +173,13 @@ HfResults build_restricted_hf_results(const krims::GenMap& scf_params,
 
   ret.threshold = scf_params.at<double>(IopScfKeys::max_error_norm);
 
+  // SCF results
+  ret.n_iter = state.n_iter();
+  ret.n_mtx_applies = state.n_mtx_applies();
+  ret.final_error_norm = state.last_error_norm;
+  ret.final_tot_energy_change = state.last_tot_energy_change;
+  ret.final_1e_energy_change = state.last_1e_energy_change;
+
   // Energies:
   for (const auto& kv : fbb.energies()) {
     switch (kv.first.integral_type()) {

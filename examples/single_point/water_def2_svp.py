@@ -14,10 +14,7 @@ params = {
 }
 res = molsturm.hartree_fock(**params)
 
-print("\nFinal energies:")
-molsturm.print_energies(res, indention=6*" ")
-
-print("\nOrbital occupation:")
-molsturm.print_mo_occupation(res,indention=6*" ")
-
+molsturm.print_convergence_summary(res)
+molsturm.print_energies(res)
+molsturm.print_mo_occupation(res)
 molsturm.print_quote(res)
