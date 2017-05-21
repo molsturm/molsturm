@@ -5,6 +5,7 @@
 #include "molsturm/ScfMsgType.hh"
 #include <iostream>
 #include <iterator>
+#include <linalgwrap/Constants.hh>
 
 namespace molsturm {
 namespace detail {
@@ -104,12 +105,10 @@ class IopScfWrapper /*final*/ : public InnerScf {
 
   /** Run until this iteration count has been reached but no further.
    *
-   * This is needed to switch to a different solver sensibly once
-   * we have reached a certain iteration number. The special value
-   * 0 indicates to never switch to another solver and finish
+   * All indicates to never switch to another solver and finish
    * the SCF with the one which is currently running.
    **/
-  size_t run_until_iter = 0;
+  size_t run_until_iter = linalgwrap::Constants<size_t>::all;
 
   /** Check convergence */
   bool is_converged(const state_type& state) const override;
