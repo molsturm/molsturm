@@ -26,6 +26,8 @@ namespace molsturm {
 namespace iface {
 
 struct Parameters {
+  static const int all;
+
   // The system we model
   int charge = 0;
   size_t multiplicity = 0;
@@ -38,8 +40,8 @@ struct Parameters {
   // Sturmians
   double k_exp = 1.0;
   int n_max = 0;
-  int l_max = 0;
-  int m_max = 0;
+  int l_max = all;
+  int m_max = all;
   std::vector<std::array<int, 3>> nlm_basis;
 
   // Gaussians
@@ -56,7 +58,7 @@ struct Parameters {
 
   // Printing
   bool print_iterations = false;
-  bool print_scf_summary = false;
+  bool print_scf_summary = false;  // TODO Remove this option?
 };
 
 }  // namespace iface

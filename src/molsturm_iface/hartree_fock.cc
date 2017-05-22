@@ -81,10 +81,12 @@ krims::GenMap build_int_params_sturmian(const Parameters& params,
 
     intparams.update("nlm_basis", std::move(nlm_basis_conv));
   } else {
+    const int n_max = params.n_max;
+    const int l_max = params.l_max == Parameters::all ? n_max - 1 : params.l_max;
+    const int m_max = params.m_max == Parameters::all ? l_max : params.m_max;
+
     intparams.update({
-          {"n_max", static_cast<int>(params.n_max)},
-          {"l_max", static_cast<int>(params.l_max)},
-          {"m_max", static_cast<int>(params.m_max)},
+          {"n_max", n_max}, {"l_max", l_max}, {"m_max", m_max},
     });
   }
   return intparams;
@@ -320,6 +322,7 @@ HfResults hartree_fock(const Parameters& params) {
   // Run solver
   auto guess = scf_guess(system, fock_bb, S_bb, guess_params);
   fock_bb.update(guess.evectors_ptr);
+
   auto result = run_scf(fock_bb, S_bb, guess, scf_params);
 
   return build_restricted_hf_results(scf_params, integrals.eri_tensor(), result);

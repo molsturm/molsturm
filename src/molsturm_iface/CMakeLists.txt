@@ -1,5 +1,6 @@
 set(SRC
 	hartree_fock.cc
+	Parameters.cc
 )
 
 #
@@ -24,7 +25,7 @@ endif()
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
 
-find_package(PythonLibs)
+find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_PATH})
 
 #
