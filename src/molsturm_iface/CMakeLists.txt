@@ -25,6 +25,7 @@ endif()
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
 
+set(Python_ADDITIONAL_VERSIONS 3)
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_PATH})
 

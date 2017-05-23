@@ -36,6 +36,7 @@ ENDFOREACH()
 # Add the python test script
 #
 
+set(Python_ADDITIONAL_VERSIONS 3)
 find_package(PythonInterp REQUIRED)
 add_test(NAME molsturm_iface_tests
 	COMMAND ${PYTHON_EXECUTABLE} -m unittest discover
