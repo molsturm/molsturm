@@ -59,6 +59,8 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> scf_guess(
     return guess_hcore(system, fock_bb, S_bb, params);
   } else if (method == std::string("loewdin")) {
     return guess_loewdin(system, fock_bb, S_bb, params);
+  } else if (method == std::string("random")) {
+    return guess_random(system, fock_bb, S_bb, params);
   } else {
     assert_throw(false, ExcInvalidScfGuessParametersEncountered(
                               "The method '" + method +

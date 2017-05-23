@@ -2,6 +2,7 @@
 
 #include "GuessAlgorithms/guess_hcore.hh"
 #include "GuessAlgorithms/guess_loewdin.hh"
+#include "GuessAlgorithms/guess_random.hh"
 
 // TODO These are just stubs atm:
 #include "GuessAlgorithms/guess_atomic_super.hh"
