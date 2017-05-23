@@ -48,8 +48,11 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_hcore(
   using namespace linalgwrap;
   typedef typename OverlapMatrix::scalar_type scalar_type;
 
+  // TODO We had some trouble when choosing the factor different from 1.0,
+  //      where the SCF all of a sudden started to converge to a wrong
+  //      ground state, so this is changed back to 1.0 for now.
   const scalar_type nuc_attr_fac =
-        params.at<scalar_type>(GuessHcoreKeys::nuclear_attraction_factor, 0.9);
+        params.at<scalar_type>(GuessHcoreKeys::nuclear_attraction_factor, 1.0);
 
   krims::GenMap eigensolver_params = params.submap(GuessHcoreKeys::eigensolver_params);
   eigensolver_params.insert_default(EigensystemSolverKeys::which, "SR");
