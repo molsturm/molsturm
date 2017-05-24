@@ -34,7 +34,7 @@ include_directories(${PYTHON_INCLUDE_PATH})
 # (Note, that swig makes heavy use of old-style casts)
 #
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${module_BUILD_TYPE}} \
--Wno-old-style-cast -Wno-sign-compare")
+-Wno-old-style-cast -Wno-sign-compare -Wno-deprecated-register -Wno-missing-field-initializers")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #

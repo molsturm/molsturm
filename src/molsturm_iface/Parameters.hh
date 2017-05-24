@@ -18,7 +18,6 @@
 //
 
 #pragma once
-#include <array>
 #include <string>
 #include <vector>
 
@@ -31,8 +30,14 @@ struct Parameters {
   // The system we model
   int charge = 0;
   size_t multiplicity = 0;
-  std::vector<std::array<double, 3>> coords = {};
-  std::vector<unsigned int> atom_numbers = {};
+
+  /** The coordinates of the atoms, transferred as
+   *  a linearised array, i.e. the elements have the
+   *  meaning
+   *  [x1,y1,z1,x2,y2,z2, ... ]
+   */
+  std::vector<double> coords = {};
+  std::vector<int> atom_numbers = {};
 
   // Basis
   std::string basis_type = "";
@@ -42,7 +47,11 @@ struct Parameters {
   int n_max = 0;
   int l_max = all;
   int m_max = all;
-  std::vector<std::array<int, 3>> nlm_basis;
+
+  /** Transferred as a linearised array, i.e.
+   *  (n1,l1,m1,n2,l2,m2, ... )
+   */
+  std::vector<int> nlm_basis = {};
 
   // Gaussians
   std::string basis_set = "";

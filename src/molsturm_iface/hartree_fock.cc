@@ -37,18 +37,25 @@ typedef double scalar_type;
 typedef linalgwrap::SmallMatrix<scalar_type> matrix_type;
 
 MolecularSystem build_molecular_system(const Parameters& params) {
-  assert_throw(params.coords.size() == params.atom_numbers.size(),
-               ExcInvalidParameters("Sizes of the atomic numbers array and of the "
-                                    "coordinates array need to agree."));
+  assert_throw(params.coords.size() == 3 * params.atom_numbers.size(),
+               ExcInvalidParameters("Sizes of the atomic numbers vector and of the "
+                                    "coordinates vector need to agree."));
+  assert_throw(
+        params.coords.size() % 3 == 0,
+        ExcInvalidParameters("Size of the coords vector needs to be divisible by 3."));
   assert_throw(params.coords.size() > 0,
                ExcInvalidParameters("Need at least one atom to do a calculation."));
 
   gint::Structure s;
-  std::transform(params.coords.begin(), params.coords.end(), params.atom_numbers.begin(),
-                 std::back_inserter(s),
-                 [](const std::array<double, 3>& coord, unsigned int atom_number) {
-                   return gint::Atom{atom_number, coord};
-                 });
+  s.reserve(params.atom_numbers.size());
+  for (size_t i = 0; i < params.atom_numbers.size(); ++i) {
+    assert_throw(params.atom_numbers[i] > 0,
+                 ExcInvalidParameters("Atomic numbers need to be larger than zero."));
+    unsigned int atnum = static_cast<unsigned int>(params.atom_numbers[i]);
+    std::array<double, 3> coord{
+          {params.coords[3 * i], params.coords[3 * i + 1], params.coords[3 * i + 2]}};
+    s.push_back(gint::Atom{atnum, std::move(coord)});
+  }
 
   if (params.multiplicity > 0) {
     return MolecularSystem(s, params.charge, params.multiplicity);
@@ -73,12 +80,17 @@ krims::GenMap build_int_params_sturmian(const Parameters& params,
     using gint::sturmian::atomic::Nlm;
     using gint::sturmian::atomic::NlmBasis;
 
-    NlmBasis nlm_basis_conv;
-    std::transform(params.nlm_basis.begin(), params.nlm_basis.end(),
-                   std::back_inserter(nlm_basis_conv), [](std::array<int, 3> in) {
-                     return Nlm{in[0], in[1], in[2]};
-                   });
+    assert_throw(
+          params.nlm_basis.size() % 3 == 0,
+          ExcInvalidParameters(
+                "The size of the nlm_basis array needs to be exactly divisible by 3"));
 
+    NlmBasis nlm_basis_conv;
+    nlm_basis_conv.reserve(params.nlm_basis.size() / 3);
+    for (size_t i = 0; i < params.nlm_basis.size() / 3; ++i) {
+      const auto& nlmbas = params.nlm_basis;
+      nlm_basis_conv.push_back(Nlm{nlmbas[3 * i], nlmbas[3 * i + 1], nlmbas[3 * i + 2]});
+    }
     intparams.update("nlm_basis", std::move(nlm_basis_conv));
   } else {
     const int n_max = params.n_max;

@@ -11,16 +11,11 @@
 
 %include "std_vector.i"
 %include "std_string.i"
-%include "std_array.i"
 
 // Instantiate what is needed
 namespace std {
-  %template(DoubleVector)        vector<double>;
-  %template(Coord)               array<double,3>;
-  %template(CoordVector)         vector<array<double,3>>;
-  %template(AtomicNumberVector)  vector<unsigned int>;
-  %template(Nlm)                 array<int,3>;
-  %template(NlmBasis)            vector<array<int, 3>>;
+  %template(DoubleVector)  vector<double>;
+  %template(IntVector)     vector<int>;
 }
 
 // TODO Extremely rudimentary exception handling

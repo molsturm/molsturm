@@ -25,35 +25,27 @@ import numpy as np
 import sys
 
 def __np_to_coords(arr):
-  ret = __iface.CoordVector()
+  ret = __iface.DoubleVector()
   for c in arr:
     if len(c) != 3:
       raise ValueError("All items of the coordinates array need have exactly 3 items.")
-
-    new = __iface.Coord()
-    new[0] = c[0]
-    new[1] = c[1]
-    new[2] = c[2]
-    ret.push_back(new)
+    for i in range(3):
+      ret.push_back(c[i])
   return ret
 
 def __np_to_atnum(li):
-  ret = __iface.AtomicNumberVector()
+  ret = __iface.IntVector()
   for n in li:
     ret.push_back(n)
   return ret
 
 def __np_to_nlm(arr):
-  if len(arr.shape) != 2 or arr.shape[1] != 3:
-    raise ValueError("Nlm array needs to be of shape n times 3")
-
-  ret = __iface.NlmBasis()
-  for b in arr:
-    new = __iface.Nlm()
-    new[0] = b[0]
-    new[1] = b[1]
-    new[2] = b[2]
-    ret.push_back(new)
+  ret = __iface.IntVector()
+  for c in arr:
+    if len(c) != 3:
+      raise ValueError("Nlm array needs to be of shape n times 3")
+    for i in range(3):
+      ret.push_back(c[i])
   return ret
 
 # Special input parameters for which the above conversion functions need
