@@ -161,7 +161,7 @@ TEST_CASE("Test HF energies and MOs compared to ORCA", "[hf energies]") {
   //
   SECTION("he aug-cc-pvdz") {
     ReferenceData d;
-    d.max_iter = 8;
+    d.max_iter = 9;
     d.energy_total = -2.855704667706;
     d.energy_1e = -3.87716137;
     d.energy_2e = 1.02145670;
