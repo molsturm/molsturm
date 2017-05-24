@@ -29,6 +29,10 @@ set(CMAKE_CXX_FLAGS_STORED_TMP ${CMAKE_CXX_FLAGS})
 set(CMAKE_CXX_FLAGS "")
 #enable_if_compiles(CMAKE_CXX_FLAGS "-Wno-gnu-zero-variadic-macro-arguments")
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	enable_if_compiles(CMAKE_CXX_FLAGS "-stdlib=${DRB_CXX_STANDARD_LIBRARY}")
+endif()
+
 # Add the rapidcheck subdirectory and configure its built.
 message(STATUS "Configuring rapidcheck in dir ${rapidcheck_DIR}")
 add_subdirectory(${rapidcheck_DIR})
