@@ -26,8 +26,8 @@ import molsturm
 import water
 
 params = {
-  "atom_numbers": water.atom_numbers,
-  "coords":       water.coords,
+  "atoms":   water.atoms,
+  "coords":  water.coords,
   #
   "basis_type":   "gaussian/libint",
   "basis_set":    "sto-3g",

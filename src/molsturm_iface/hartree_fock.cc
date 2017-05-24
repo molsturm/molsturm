@@ -36,31 +36,46 @@ namespace iface {
 typedef double scalar_type;
 typedef linalgwrap::SmallMatrix<scalar_type> matrix_type;
 
-MolecularSystem build_molecular_system(const Parameters& params) {
-  assert_throw(params.coords.size() == 3 * params.atom_numbers.size(),
-               ExcInvalidParameters("Sizes of the atomic numbers vector and of the "
-                                    "coordinates vector need to agree."));
-  assert_throw(
-        params.coords.size() % 3 == 0,
-        ExcInvalidParameters("Size of the coords vector needs to be divisible by 3."));
-  assert_throw(params.coords.size() > 0,
-               ExcInvalidParameters("Need at least one atom to do a calculation."));
+gint::Structure build_structure(const Parameters& params) {
+  assert_throw(params.atom_numbers.size() > 0 || params.atoms.size() > 0,
+               ExcInvalidParameters(
+                     "At least one of atom_numbers, atoms needs to contain an entry."));
+  assert_throw(params.atom_numbers.size() == 0 || params.atoms.size() == 0,
+               ExcInvalidParameters(
+                     "Exactly one of atom_numbers, atoms may contain atom definitions."));
+
+  size_t n_atoms = std::max(params.atom_numbers.size(), params.atoms.size());
+  assert_throw(params.coords.size() == 3 * n_atoms,
+               ExcInvalidParameters("We expect the size of the coords vector to be "
+                                    "exactly three times the number of atoms, i.e. " +
+                                    std::to_string(3 * n_atoms) +
+                                    " entries. But instead we got only " +
+                                    std::to_string(params.coords.size()) + " entries."));
 
   gint::Structure s;
-  s.reserve(params.atom_numbers.size());
-  for (size_t i = 0; i < params.atom_numbers.size(); ++i) {
-    assert_throw(params.atom_numbers[i] > 0,
-                 ExcInvalidParameters("Atomic numbers need to be larger than zero."));
-    unsigned int atnum = static_cast<unsigned int>(params.atom_numbers[i]);
-    std::array<double, 3> coord{
+  s.reserve(n_atoms);
+  for (size_t i = 0; i < n_atoms; ++i) {
+    const std::array<double, 3> coord{
           {params.coords[3 * i], params.coords[3 * i + 1], params.coords[3 * i + 2]}};
-    s.push_back(gint::Atom{atnum, std::move(coord)});
-  }
 
+    if (params.atom_numbers.size() > 0) {
+      assert_throw(params.atom_numbers[i] > 0,
+                   ExcInvalidParameters("Atomic numbers need to be larger than zero."));
+      unsigned int atnum = static_cast<unsigned int>(params.atom_numbers[i]);
+      s.emplace_back(atnum, std::move(coord));
+    } else {
+      s.emplace_back(params.atoms[i], std::move(coord));
+    }
+  }
+  return s;
+}
+
+MolecularSystem build_molecular_system(const Parameters& params) {
+  const gint::Structure s = build_structure(params);
   if (params.multiplicity > 0) {
-    return MolecularSystem(s, params.charge, params.multiplicity);
+    return MolecularSystem(std::move(s), params.charge, params.multiplicity);
   } else {
-    return MolecularSystem(s, params.charge);
+    return MolecularSystem(std::move(s), params.charge);
   }
 }
 

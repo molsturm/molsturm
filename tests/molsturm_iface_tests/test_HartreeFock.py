@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -20,12 +21,12 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-import unittest
+from NumCompTestCase import NumCompTestCase
 import molsturm
-import numpy as np
 import data_cs_be as data
+import numpy as np
 
-class TestHartreeFock(unittest.TestCase):
+class TestHartreeFock(NumCompTestCase):
   """This test should ensure, that we get exactly the same data
      through the python interface as we get without it by directly
      invoking the library via a C++ program.
@@ -33,24 +34,6 @@ class TestHartreeFock(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
     cls._hf_result = molsturm.hartree_fock(**data.params)
-
-  def assertAlmostEqual(self,lhs,rhs,tol,prefix=""):
-    self.assertTrue(np.isclose(lhs,rhs,rtol=tol,atol=tol),
-                    msg=prefix + "lhs ("+str(lhs) + ") not equal to rhs ("+str(rhs)+")"
-                    " (tolerance == " + str(tol) + ")")
-
-  def assertArrayAlmostEqual(self,lhs,rhs,tol,prefix=""):
-    self.assertEqual(lhs.shape,rhs.shape,
-                     msg=prefix+"lhs shape ("+str(lhs.shape)+") different from "
-                     "rhs shape ("+str(rhs.shape)+").")
-
-    rhsf = rhs.flatten()
-    lhsf = lhs.flatten()
-    for i in range(len(rhsf)):
-      self.assertTrue(np.isclose(lhsf[i],rhsf[i],rtol=tol,atol=tol),
-                      msg=prefix + "element "+str(i) +" of lhs and lhs differ:\n"+\
-                      str(lhsf[i]) + " != " + str(rhsf[i]) + " (tolerance: " + str(tol) +\
-                      "). lhs array:\n" + str(lhs) + "\nrhs array:\n"+str(rhs))
 
   def test_energies(self):
     for ene in data.ref_energies:

@@ -35,9 +35,16 @@ struct Parameters {
    *  a linearised array, i.e. the elements have the
    *  meaning
    *  [x1,y1,z1,x2,y2,z2, ... ]
+   *
+   *  Atomic units are assumed.
    */
   std::vector<double> coords = {};
+
+  /** The atomic numbers of the atoms */
   std::vector<int> atom_numbers = {};
+
+  /** The atom labels */
+  std::vector<std::string> atoms = {};
 
   // Basis
   std::string basis_type = "";

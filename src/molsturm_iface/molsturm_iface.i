@@ -16,6 +16,7 @@
 namespace std {
   %template(DoubleVector)  vector<double>;
   %template(IntVector)     vector<int>;
+  %template(StringVector)  vector<string>;
 }
 
 // TODO Extremely rudimentary exception handling

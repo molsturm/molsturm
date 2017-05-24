@@ -21,22 +21,6 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
+from ._print import *
+from ._hartree_fock import hartree_fock, hartree_fock_keys
 
-import molsturm
-import water
-
-params = {
-  "atoms":    water.atoms,
-  "coords":   water.coords,
-  #
-  "basis_type":   "gaussian/libint",
-  "basis_set":    "def2-svp",
-  #
-  "print_iterations": True,
-}
-res = molsturm.hartree_fock(**params)
-
-molsturm.print_convergence_summary(res)
-molsturm.print_energies(res)
-molsturm.print_mo_occupation(res)
-molsturm.print_quote(res)

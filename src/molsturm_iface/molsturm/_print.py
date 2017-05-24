@@ -20,78 +20,7 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-import molsturm_iface as __iface
-import numpy as np
 import sys
-
-def __np_to_coords(arr):
-  ret = __iface.DoubleVector()
-  for c in arr:
-    if len(c) != 3:
-      raise ValueError("All items of the coordinates array need have exactly 3 items.")
-    for i in range(3):
-      ret.push_back(c[i])
-  return ret
-
-def __np_to_atnum(li):
-  ret = __iface.IntVector()
-  for n in li:
-    ret.push_back(n)
-  return ret
-
-def __np_to_nlm(arr):
-  ret = __iface.IntVector()
-  for c in arr:
-    if len(c) != 3:
-      raise ValueError("Nlm array needs to be of shape n times 3")
-    for i in range(3):
-      ret.push_back(c[i])
-  return ret
-
-# Special input parameters for which the above conversion functions need
-# to be used before assignment
-__params_transform_maps = {
-  "coords": __np_to_coords,
-  "atom_numbers": __np_to_atnum,
-  "nlm_basis": __np_to_nlm,
-}
-
-"""The list of keys understood by the hartree_fock function"""
-hartree_fock_keys = [ k for k in dir(__iface.Parameters) if k[0] != "_" ]
-
-def hartree_fock(**kwargs):
-  # The list of valid keys is the list of keys
-  # with the special ones (starting with __) removed.
-  params_keys = [ k for k in dir(__iface.Parameters) if k[0] != "_" ]
-  res_keys = [ k for k in dir(__iface.HfResults) if k[0] != "_" ]
-
-  # Build params and run:
-  params = __iface.Parameters()
-  for key in kwargs:
-    if not key in params_keys:
-      raise ValueError("Keyword " + key + " is unknown to hartree_fock")
-    elif key in __params_transform_maps:
-      setattr(params,key,__params_transform_maps[key](kwargs[key]))
-    else:
-      setattr(params,key,kwargs[key])
-  res = __iface.hartree_fock(params)
-
-  # Build output dictionary:
-  out_arrays = [ "coeff_fb", "fock_ff", "orbital_energies_f",
-                 "repulsion_integrals_ffff"]
-  shape_lookup = { "f": res.n_orbs_alpha + res.n_orbs_beta,
-                   "b": res.n_bas }
-
-  out = { k :getattr(res,k) for k in res_keys if not k in out_arrays }
-  for k in out_arrays:
-    # Build the shape to cast the numpy arrays into from the
-    # suffixes (e.g. _ffff, _bf) and the shape lookup object
-    # we created above
-    target_shape = tuple( shape_lookup[c] for c in k[k.rfind("_")+1:] )
-    out[k] = np.array(getattr(res,k)).reshape(target_shape)
-
-  return out
-
 #
 # Functions to help with printing nicely formatted output
 # of the results obtained
@@ -193,12 +122,14 @@ def print_energies(hfres,out=sys.stdout, indention=6*" ", title="Final energies:
   out.writelines(lines)
 
 def print_quote(hfres, out=sys.stdout):
+  from numpy.random import randint
+
   # A list of dull Angus MacGyver quotes
   quotes = [ "Lord Cyril Cleeve: [rummaging through the scrolls] Where's the treasure?\n" \
              "Angus MacGyver:    I think you're looking at it.",
              "Atticus: [to MacGyver] You were always my brightest student!",
            ]
-  quote = quotes[np.random.randint(0,len(quotes))]
+  quote = quotes[randint(0,len(quotes))]
 
   phrase="molsturm out   ...   and now for something completely different"
   width=max([len(phrase)+8] + [ len(line)+2 for line in quote.split("\n") ])
