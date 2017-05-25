@@ -35,8 +35,8 @@ params = {
 }
 
 def run(**extra):
-  extra.update(params)
-  res = molsturm.hartree_fock(**extra)
+  params.update(extra)
+  res = molsturm.hartree_fock(**params)
   molsturm.print_convergence_summary(res)
   molsturm.print_energies(res)
   molsturm.print_mo_occupation(res)
@@ -44,4 +44,4 @@ def run(**extra):
   return res
 
 if __name__ == "__main__":
-  run(n_max=4,l_max=1)
+  run()

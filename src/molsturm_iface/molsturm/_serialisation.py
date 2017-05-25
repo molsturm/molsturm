@@ -21,7 +21,10 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from ._print import *
-from ._hartree_fock import hartree_fock, hartree_fock_keys
-from ._serialisation import *
+def dump_yaml(hfres, stream=None):
+  import yaml
+  res=dict(hfres)
+  for k in [ "orbital_energies_f", "repulsion_integrals_ffff", "fock_ff", "coeff_fb" ]:
+    res[k] = [ float(v) for v in res[k].flatten() ]
+  return yaml.safe_dump(res,stream)
 

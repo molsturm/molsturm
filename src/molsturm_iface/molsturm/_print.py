@@ -137,16 +137,3 @@ def print_quote(hfres, out=sys.stdout):
   out.write( ((width-len(phrase))//2)*" " + phrase + "\n")
   out.write((width*"="+"\n"))
   out.write(quote+"\n")
-
-def build_pyadc_input(hfres):
-  """
-  Take the results dictionary from a hf calculation and build
-  the input dictionary for a pyadc run out of it.
-  """
-  exclude=[ "n_bas", "energy_total", "n_iter", "n_mtx_applies",
-             "final_error_norm", "final_1e_energy_change",
-             "final_tot_energy_change" ]
-  params = { k:hfres[k] for k in hfres if not k in exclude }
-  params["energy_scf"] = hfres["energy_total"]
-  return params
-

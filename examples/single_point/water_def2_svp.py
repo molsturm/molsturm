@@ -31,12 +31,16 @@ params = {
   #
   "basis_type":   "gaussian/libint",
   "basis_set":    "def2-svp",
-  #
-  "print_iterations": True,
 }
-res = molsturm.hartree_fock(**params)
 
-molsturm.print_convergence_summary(res)
-molsturm.print_energies(res)
-molsturm.print_mo_occupation(res)
-molsturm.print_quote(res)
+def run(**extra):
+  params.update(extra)
+  res = molsturm.hartree_fock(**params)
+  molsturm.print_convergence_summary(res)
+  molsturm.print_energies(res)
+  molsturm.print_mo_occupation(res)
+  molsturm.print_quote(res)
+  return res
+
+if __name__ == "__main__":
+  run(print_iterations=True)

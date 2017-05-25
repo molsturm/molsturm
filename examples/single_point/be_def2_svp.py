@@ -21,7 +21,27 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from ._print import *
-from ._hartree_fock import hartree_fock, hartree_fock_keys
-from ._serialisation import *
+import molsturm
 
+params = {
+  "atom_numbers": [4],
+  "coords":       [[0,0,0]],
+  #
+  "basis_type":   "gaussian/libint",
+  "basis_set":    "def2-svp",
+  #
+  "eigensolver":   "lapack",
+  "guess_esolver": "lapack",
+}
+
+def run(**extra):
+  params.update(extra)
+  res = molsturm.hartree_fock(**params)
+  molsturm.print_convergence_summary(res)
+  molsturm.print_energies(res)
+  molsturm.print_mo_occupation(res)
+  molsturm.print_quote(res)
+  return res
+
+if __name__ == "__main__":
+  run()
