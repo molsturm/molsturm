@@ -108,15 +108,15 @@ def print_energies(hfres,out=sys.stdout, indention=6*" ", title="Final energies:
 
   lines = [ "\n" + title + "\n" ]
   lines += [ fstr.format(key=k, val=hfres[prefix+k]) for k in energies ]
-  lines.append("")
+  lines.append("\n")
   lines.append(fstr.format(key="E_1e", val=E1e))
   lines.append(fstr.format(key="E_2e", val=E2e))
   lines.append(fstr.format(key="E electronic", val=Eelec))
-  lines.append("")
+  lines.append("\n")
   lines.append(fstr.format(key="E_pot", val=Epot))
   lines.append(fstr.format(key="E_kin", val=hfres[prefix+"kinetic"]))
   lines.append(fstr.format(key="virial ratio", val=virial))
-  lines.append("")
+  lines.append("\n")
   lines.append((indention+"{key:"+str(maxlen)+"s} = {val:20.15g}") \
                .format(key="E_total", val=hfres[prefix+"total"])+"\n")
   out.writelines(lines)
