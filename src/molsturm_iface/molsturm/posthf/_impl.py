@@ -39,11 +39,11 @@ def generate_pyadc_input(hfres):
   Take the results dictionary from a hf calculation and build
   the input dictionary for a pyadc calculation out of it.
   """
-  include_keys = [ "n_alpha", "n_beta", "n_orbs_alpha", "n_orbs_beta", 
-                   "restricted", "threshold", 
+  include_keys = [ "n_alpha", "n_beta", "n_orbs_alpha", "n_orbs_beta",
+                   "n_bas", "restricted", "threshold",
                    #
-                   "repulsion_integrals_ffff", "fock_ff", 
-                   "coeff_fb", "orbital_energies_f", 
+                   "repulsion_integrals_ffff", "fock_ff",
+                   "coeff_fb", "orbital_energies_f",
                    #
                    "energy_nuclear_repulsion", "energy_nuclear_attraction",
                    "energy_coulomb", "energy_exchange", "energy_kinetic",
