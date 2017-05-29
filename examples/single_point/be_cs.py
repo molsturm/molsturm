@@ -44,4 +44,4 @@ def run(**extra):
   return res
 
 if __name__ == "__main__":
-  run()
+  run(n_max=4,l_max=1)
