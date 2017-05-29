@@ -33,8 +33,12 @@ include_directories(${PYTHON_INCLUDE_PATH})
 # Setup cpp flags and includes for swig
 # (Note, that swig makes heavy use of old-style casts)
 #
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${module_BUILD_TYPE}} \
--Wno-old-style-cast -Wno-sign-compare -Wno-deprecated-register -Wno-missing-field-initializers")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${module_BUILD_TYPE}}")
+enable_if_compiles(CMAKE_CXX_FLAGS -Wno-missing-field-initializers)
+enable_if_compiles(CMAKE_CXX_FLAGS -Wno-pedantic)
+enable_if_compiles(CMAKE_CXX_FLAGS -Wno-old-style-cast)
+enable_if_compiles(CMAKE_CXX_FLAGS -Wno-sign-compare)
+enable_if_compiles(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #
