@@ -35,7 +35,6 @@ ENDFOREACH()
 #
 # Add the python test script
 #
-
 set(Python_ADDITIONAL_VERSIONS 3)
 find_package(PythonInterp REQUIRED)
 add_test(NAME molsturm_iface_tests
@@ -45,6 +44,6 @@ add_test(NAME molsturm_iface_tests
 set_tests_properties(molsturm_iface_tests
 	PROPERTIES
 	ENVIRONMENT "PYTHONPATH=${molsturm_SOURCE_DIR}/src/molsturm_iface:\
-${molsturm_BINARY_DIR}/src/molsturm_iface:${CMAKE_CURRENT_LIST_DIR}"
+${molsturm_BINARY_DIR}/src/molsturm_iface"
 	TIMEOUT 300
 )

@@ -39,6 +39,8 @@ enable_if_compiles(CMAKE_CXX_FLAGS -Wno-pedantic)
 enable_if_compiles(CMAKE_CXX_FLAGS -Wno-old-style-cast)
 enable_if_compiles(CMAKE_CXX_FLAGS -Wno-sign-compare)
 enable_if_compiles(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
+enable_if_compiles(CMAKE_CXX_FLAGS -Wno-deprecated)
+enable_if_compiles(CMAKE_CXX_FLAGS -Wno-error)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #
