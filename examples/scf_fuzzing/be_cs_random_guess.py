@@ -58,7 +58,9 @@ except NotImplementedError:
 # Function which runs molsturm and sends the total energy
 # and the number of iterations to the main process
 def run_molsturm(x):
-  res = molsturm.hartree_fock(**params, guess_method="random")
+  amended = dict(params)
+  amended["guess_method"] = "random"
+  res = molsturm.hartree_fock(**amended)
   return (res["energy_total"], res["n_iter"])
 
 # Use tqdm to keep track of the progress if it is installed.
