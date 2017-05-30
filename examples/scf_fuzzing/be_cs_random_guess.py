@@ -44,7 +44,7 @@ params = {
   "eigensolver":   "lapack",
   "guess_esolver": "lapack",
   #
-  "max_iter":     100,
+  "max_iter":     200,
   "error":        error,
 }
 # ----------------------------------------------------
@@ -56,41 +56,44 @@ except NotImplementedError:
   nproc = 2 # arbitrary default
 
 # Function which runs molsturm and sends the total energy
+
 # and the number of iterations to the main process
 def run_molsturm(x):
   amended = dict(params)
   amended["guess_method"] = "random"
   res = molsturm.hartree_fock(**amended)
-  return (res["energy_total"], res["n_iter"])
+  return (res["n_iter"], res["energy_total"])
 
 # Use tqdm to keep track of the progress if it is installed.
 try:
   from tqdm  import tqdm
 except ImportError:
-  def tqdm(it):
+  def tqdm(it,**kwargs):
     return it
 
 # Run SCF in parallel and extract the values we care about:
 print("Running SCF with",n_points,"random guesses on ",nproc," processes.",flush=True)
 with multiprocessing.Pool(processes=nproc) as pool:
-  results = tqdm(pool.imap_unordered(run_molsturm,range(n_points)),total=n_points)
+  results = [ (res[0], res[1], np.round(res[1],decimals=-int(np.log10(error))))
+              for res in tqdm(pool.imap_unordered(run_molsturm,range(n_points)),
+                              total=n_points)
+            ]
 
-  # Separate the data by kind:
-  results = [ i for i in zip(*results) ]
-  energy = np.array(results[0])
-  n_iter = np.array(results[1])
+# Extract raw energy values and bin the results we obtained.
+energies = np.array([ res[1] for res in results ])
+binning = dict()
+for r in results:
+  element = (r[0],r[2])
+  try:
+    binning[element] += 1
+  except KeyError:
+    binning[element] = 1
 
-# Bin the energy into unique values under the error we used above
-unique_values = np.unique(energy.round(decimals=-int(np.log10(error))))
-binning = [ (val, np.sum( abs(energy - val) < error ))
-            for val in unique_values ]
 
+fmt="    {0:5}  {1:5}  {2}"
+print(fmt.format("count","niter","energy"))
+for b in sorted(binning,key=lambda x: x[1]):
+  print(fmt.format(binning[b], b[0],b[1]))
 print()
-print("Mean energy:      ",np.average(energy), "  stddev ",
-      np.sqrt(np.var(energy)))
-print("Mean number of iterations:   ", np.average(n_iter), " stddev ",
-      np.sqrt(np.var(n_iter)))
-print()
-print("Unique energy values:")
-for b in binning:
-  print("    ",b)
+print("Mean energy:      ",np.average(energies), "  stddev ",
+      np.sqrt(np.var(energies)))
