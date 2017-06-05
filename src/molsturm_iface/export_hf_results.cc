@@ -171,7 +171,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
                           gint::Integral<matrix_type>>& state,   \
         const gint::ERITensor_i<scalar_type>& eri, const ExportParameters&)
 
-INSTANTIATE(RestrictionType::Unrestricted);
+// INSTANTIATE(RestrictionType::Unrestricted);
 INSTANTIATE(RestrictionType::RestrictedClosed);
 
 #undef INSTANTIATE

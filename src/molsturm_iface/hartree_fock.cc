@@ -71,7 +71,8 @@ HfResults hartree_fock(const Parameters& params) {
   if (restricted) {
     return hartree_fock_inner<RestrictionType::RestrictedClosed>(params, system);
   } else {
-    return hartree_fock_inner<RestrictionType::Unrestricted>(params, system);
+    assert_implemented(false);
+    return HfResults();
   }
 }
 

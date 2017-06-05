@@ -19,7 +19,6 @@
 
 #pragma once
 #include "RestrictedClosedIntegralOperator.hh"
-#include "UnrestrictedIntegralOperator.hh"
 #include <gint/IntegralLookup.hh>
 #include <gint/IntegralType.hh>
 #include <krims/TypeUtils/UsingLibrary.hh>
