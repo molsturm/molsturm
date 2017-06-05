@@ -72,15 +72,22 @@ def hartree_fock(**kwargs):
   params_keys = [ k for k in dir(iface.Parameters) if k[0] != "_" ]
   res_keys = [ k for k in dir(iface.HfResults) if k[0] != "_" ]
 
+  # These keys exist in the Parameters struct, but should not be exposed further up.
+  exclude_keys = [ "restricted_set_by_user" ]
+
   # Build params and run:
   params = iface.Parameters()
   for key in kwargs:
-    if not key in params_keys:
+    if not key in params_keys or key in exclude_keys:
       raise ValueError("Keyword " + key + " is unknown to hartree_fock")
     elif key in __params_transform_maps:
       setattr(params,key,__params_transform_maps[key](kwargs[key]))
     else:
       setattr(params,key,kwargs[key])
+
+  # Make a note that the user specified the restricted keyword
+  if "restricted" in kwargs: params.restricted_set_by_user = True
+
   res = iface.hartree_fock(params)
 
   # Build output dictionary:

@@ -18,22 +18,30 @@
 //
 
 #pragma once
-#include "HfResults.hh"
 #include "Parameters.hh"
-#include <krims/ExceptionSystem.hh>
+#include "molsturm/MolecularSystem.hh"
+#include <gint/Structure.hh>
+#include <krims/GenMap.hh>
 
 namespace molsturm {
 namespace iface {
 
-#ifndef SWIG
-DefException2(ExcTooSmallBasis, size_t, size_t,
-              << "A basis of size " << arg1
-              << " is too small to incorporate max(alpha,beta) = " << arg2
-              << " electrons. Choose a larger basis.");
+/** Exception used if invalid parameters are encountered */
+DefException1(ExcInvalidParameters, std::string,
+              << "Invalid parameters passed to molsturm: " << arg1);
 
-#endif  // SWIG
+/** Build the molecular system object from the parameters */
+MolecularSystem build_molecular_system(const Parameters& params);
 
-HfResults hartree_fock(const Parameters& p);
+/** Build the integral lookup parameters from the input parameters and the molecular
+ * system */
+krims::GenMap build_int_params(const Parameters& params, const MolecularSystem& system);
+
+/** Build the parameters for obtaining the scf guess */
+krims::GenMap build_guess_params(const Parameters& params);
+
+/** Build the parameters for running the scf */
+krims::GenMap build_scf_params(const Parameters& params);
 
 }  // namespace iface
 }  // namespace molsturm

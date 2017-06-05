@@ -18,22 +18,16 @@
 //
 
 #pragma once
-#include "HfResults.hh"
-#include "Parameters.hh"
-#include <krims/ExceptionSystem.hh>
+#include <linalgwrap/SmallMatrix.hh>
+
+// TODO Temporary config file to instantiate types.
+//      This file should become configurable and a part of molsturm per se.
 
 namespace molsturm {
 namespace iface {
 
-#ifndef SWIG
-DefException2(ExcTooSmallBasis, size_t, size_t,
-              << "A basis of size " << arg1
-              << " is too small to incorporate max(alpha,beta) = " << arg2
-              << " electrons. Choose a larger basis.");
-
-#endif  // SWIG
-
-HfResults hartree_fock(const Parameters& p);
+typedef double scalar_type;
+typedef linalgwrap::SmallMatrix<scalar_type> matrix_type;
 
 }  // namespace iface
 }  // namespace molsturm

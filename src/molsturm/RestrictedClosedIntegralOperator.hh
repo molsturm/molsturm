@@ -8,9 +8,8 @@ namespace molsturm {
 
 /** Class representing an restricted closed-shell integral operator */
 template <typename StoredMatrix>
-class RestrictedClosedIntegralOperator final
-      : public IntegralOperatorBase<StoredMatrix>,
-        public linalgwrap::LazyMatrix_i<StoredMatrix> {
+class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatrix>,
+                                         public linalgwrap::LazyMatrix_i<StoredMatrix> {
  public:
   typedef IntegralOperatorBase<StoredMatrix> base_type;
   typedef typename base_type::coefficients_ptr_type coefficients_ptr_type;
@@ -148,13 +147,13 @@ class RestrictedClosedIntegralOperator final
    * references to the lazy matrix objects, which represent the terms of alpha
    * spin. */
   std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
-  terms_alpha() const override;
+  terms_alpha() const override final;
 
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of beta
    * spin. */
   std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
-  terms_beta() const override {
+  terms_beta() const override final {
     return terms_alpha();
   }
   ///@}

@@ -19,21 +19,20 @@
 
 #pragma once
 #include "HfResults.hh"
-#include "Parameters.hh"
-#include <krims/ExceptionSystem.hh>
+#include "config.hh"
+#include "gint/ERITensor_i.hh"
 
 namespace molsturm {
 namespace iface {
 
-#ifndef SWIG
-DefException2(ExcTooSmallBasis, size_t, size_t,
-              << "A basis of size " << arg1
-              << " is too small to incorporate max(alpha,beta) = " << arg2
-              << " electrons. Choose a larger basis.");
+struct ExportParameters {
+  double error = 0;
+  bool enable_repulsion_integrals = true;
+};
 
-#endif  // SWIG
-
-HfResults hartree_fock(const Parameters& p);
+template <typename State>
+HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_type>& eri,
+                            const ExportParameters& params);
 
 }  // namespace iface
 }  // namespace molsturm

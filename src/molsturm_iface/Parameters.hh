@@ -46,6 +46,13 @@ struct Parameters {
   /** The atom labels */
   std::vector<std::string> atoms = {};
 
+  /** Use restricted or unrestricted fock operator
+   * Note: This parameter is only used if restricted_set
+   * is also set to true.
+   * */
+  bool restricted = false;
+  bool restricted_set_by_user = false;
+
   // Basis
   std::string basis_type = "";
 
@@ -74,7 +81,13 @@ struct Parameters {
 
   // Printing
   bool print_iterations = false;
-  bool print_scf_summary = false;  // TODO Remove this option?
+
+  //
+  // Influence on what is computed
+  //
+  // Compute the repulsion integrals as a full tensor in the molecular orbital basis.
+  // The underlying ao2mo transformation is rather slow.
+  bool enable_repulsion_integrals = true;
 };
 
 }  // namespace iface

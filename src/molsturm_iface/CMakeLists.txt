@@ -1,4 +1,6 @@
 set(SRC
+	parse_parameters.cc
+	export_hf_results.cc
 	hartree_fock.cc
 	Parameters.cc
 )

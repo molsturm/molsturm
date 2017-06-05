@@ -37,7 +37,7 @@ class IntegralOperatorBase
   const coefficients_type& coefficients() const { return *m_coefficients_ptr; }
 
   /** Return the update key for the solver */
-  const std::string& scf_update_key() const override { return m_update_key; }
+  const std::string& scf_update_key() const override final { return m_update_key; }
 
   /** Update the inner state:
    * Build the Fock matrix with the new coefficients
@@ -66,10 +66,10 @@ class IntegralOperatorBase
   }
 
   /** Return the sum of the energies of all one-electron terms */
-  scalar_type energy_1e_terms() const override;
+  scalar_type energy_1e_terms() const override final;
 
   /** Return the sum of the energies of all two-electron terms */
-  scalar_type energy_2e_terms() const override {
+  scalar_type energy_2e_terms() const override final {
     return m_energies.at(m_coul_adens.id()) + m_energies.at(m_exchge_adens.id());
   }
 
@@ -189,7 +189,7 @@ template <typename StoredMatrix>
 IntegralOperatorBase<StoredMatrix>::IntegralOperatorBase(
       IntegralTermContainer<StoredMatrix> integral_terms, const MolecularSystem& system)
       : m_coeff_1e{std::move(integral_terms.coefficients_1e)},
-        m_terms_1e{std::move(integral_terms.integral_terms_1e)},
+        m_terms_1e{integral_terms.integral_terms_1e},
         m_coeff_coul{integral_terms.coefficient_coulomb},
         m_coul_adens{integral_terms.coulomb_term},
         m_coeff_exchge{integral_terms.coefficient_exchange},
