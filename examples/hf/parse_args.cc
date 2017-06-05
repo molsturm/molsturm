@@ -25,6 +25,7 @@ std::ostream& operator<<(std::ostream& o, const args_type& args) {
 
   o << "n_alpha:        " << args.system.n_alpha << '\n'
     << "n_beta:         " << args.system.n_beta << '\n'
+    << "restricted      " << std::boolalpha << args.restricted << '\n'
     << "guess_method:   " << args.guess_method << '\n'
     << "guess_esolver:  " << args.guess_esolver << '\n'
     << "error:          " << args.error << '\n'
@@ -172,6 +173,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   bool had_charge = false;
   bool had_multiplicity = false;
   bool had_atomic_xyz = false;
+  bool had_restricted = false;
 
   // Basis
   bool had_basis_type = false;
@@ -241,6 +243,16 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
       had_atomic_xyz = true;
       if (had_xyz) {
         std::cerr << "--atomic_units_xyz needs to be specified before --xyz" << std::endl;
+        return false;
+      }
+    } else if (flag == std::string("--restricted")) {
+      had_restricted = true;
+      if (argument == "true") {
+        parsed.restricted = true;
+      } else if (argument == "false") {
+        parsed.restricted = false;
+      } else {
+        std::cerr << "--restricted only allows true or false as arguments" << std::endl;
         return false;
       }
     } else if (flag == std::string("--alpha")) {
@@ -403,7 +415,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
                    "--Z_charge, --alpha, --beta, --error, --max_iter, --diis_size, "
                    "--n_eigenpairs, --basis_set, --guess_method, --xyz, --charge, "
                    "--multiplicity, --atomic_units_xyz, --eigensolver, --guess_esolver, "
-                   "--nlm_basis"
+                   "--nlm_basis, --restricted"
                 << std::endl;
       return false;
     }
@@ -489,6 +501,14 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
   }
   if (!had_m_max && !had_nlm_basis) {
     parsed.m_max = parsed.l_max;
+  }
+
+  if (!had_restricted) {
+    if (parsed.system.n_alpha == parsed.system.n_beta) {
+      parsed.restricted = true;
+    } else {
+      parsed.restricted = false;
+    }
   }
 
   return !error_encountered;

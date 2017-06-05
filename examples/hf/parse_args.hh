@@ -11,6 +11,7 @@ using gint::sturmian::atomic::NlmBasis;
 struct args_type {
   // The system we model
   molsturm::MolecularSystem system;
+  bool restricted = true;
 
   // Basis
   std::string basis_type;

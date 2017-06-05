@@ -12,9 +12,9 @@
 #include <linalgwrap/SmallMatrix.hh>
 #include <linalgwrap/io.hh>
 #include <linalgwrap/version.hh>
+#include <molsturm/FockOperator.hh>
 #include <molsturm/IopScf.hh>
 #include <molsturm/IopScfKeys.hh>
-#include <molsturm/RestrictedClosedIntegralOperator.hh>
 #include <molsturm/ScfDebugWrapper.hh>
 #include <molsturm/Version.hh>
 #include <molsturm/scf_guess.hh>
@@ -55,7 +55,8 @@ void print_res(const State& res) {
 }
 
 /** Run an SCF */
-void run_rhf(args_type args, bool debug = false) {
+template <RestrictionType restricted>
+void run_hf(args_type args, bool debug = false) {
   using gint::IntegralTypeKeys;
   using gint::IntegralLookupKeys;
 
@@ -106,10 +107,6 @@ void run_rhf(args_type args, bool debug = false) {
 
   integral_lookup_type integrals(std::move(intparams));
   auto S_bb = integrals.lookup_integral(IntegralTypeKeys::overlap);
-  auto T_bb = integrals.lookup_integral(IntegralTypeKeys::kinetic);
-  auto V0_bb = integrals.lookup_integral(IntegralTypeKeys::nuclear_attraction);
-  auto J_bb = integrals.lookup_integral(IntegralTypeKeys::coulomb);
-  auto K_bb = integrals.lookup_integral(IntegralTypeKeys::exchange);
 
   //
   // Checks about basis size:
@@ -125,12 +122,7 @@ void run_rhf(args_type args, bool debug = false) {
   //
   // Problem setup
   //
-  // The term container for the fock operator matrix
-  IntegralTermContainer<stored_matrix_type> integral_container(
-        {{std::move(T_bb), std::move(V0_bb)}}, std::move(J_bb), std::move(K_bb));
-
-  RestrictedClosedIntegralOperator<stored_matrix_type> fock_bb(integral_container,
-                                                               args.system);
+  FockOperator<stored_matrix_type, restricted> fock_bb(integrals, args.system);
 
   // Obtain an SCF guess
   krims::GenMap guess_params{{ScfGuessKeys::method, args.guess_method}};
@@ -188,7 +180,12 @@ int main(int argc, char** argv) {
             << "The following configuration was read:\n"
             << std::setprecision(15) << args << std::setprecision(prec) << std::endl;
 
-  run_rhf(args, /*debug = */ false);
+  const bool debug = false;
+  if (args.restricted) {
+    run_hf<RestrictionType::RestrictedClosed>(args, debug);
+  } else {
+    run_hf<RestrictionType::Unrestricted>(args, debug);
+  }
   return 0;
 }
 
