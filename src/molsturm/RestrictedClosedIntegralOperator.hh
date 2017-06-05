@@ -45,11 +45,12 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
     // Check that alpha is equal to beta
     assert_equal(system.n_beta, system.n_alpha);
 
-    // Initialise as a core Hamiltonian (only 1e terms)
-    const size_t op_size = base_type::m_coul_adens.n_rows();
-    const coefficients_ptr_type zero_coefficients =
-          std::make_shared<coefficients_type>(op_size, base_type::m_n_alpha);
-    update_operator(zero_coefficients);
+    // Use only zero coefficients
+    const size_t n_bas = base_type::m_coul_adens.n_rows();
+    coefficients_ptr_type zeros = std::make_shared<coefficients_type>(
+          n_bas, base_type::m_n_alpha + base_type::m_n_beta);
+    base_type::m_coefficients_ptr = zeros;
+    update_state(zeros, /* include_energies= */ false);
   }
 
   /** Return the number of rows of the matrix */
@@ -170,15 +171,25 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   using base_type::update;
 
  private:
+  //@{
+  /** Types used to pass occupied coefficients to the exchange and coulomb parts */
+  typedef const linalgwrap::MultiVector<const vector_type> cocc_type;
+  typedef std::shared_ptr<const linalgwrap::MultiVector<const vector_type>> cocc_ptr_type;
+  //@}
+
+  /** Instruction to update energies and operator. Called by update in the base class */
+  void update_state(const coefficients_ptr_type& coeff_bf_ptr,
+                    bool include_energies) override final;
+
   /** Update the state of the lazy matrix operator terms and rebuild
    *  the operator m_operator from them.
    */
-  void update_operator(const coefficients_ptr_type& coeff_bf_ptr) override;
+  void update_operator(const cocc_ptr_type& ca_bo_ptr);
 
   /** Recompute the energies from the current state of the terms
    * (First call update_operator on an update! )
    **/
-  void update_energies(const coefficients_ptr_type& coeff_bf_ptr) override;
+  void update_energies(const cocc_ptr_type& ca_bo_ptr);
 
   /** The actual Operator matrix object as a LazyMatrixSum
    *
@@ -215,23 +226,30 @@ krims::Range<size_t> RestrictedClosedIntegralOperator<StoredMatrix>::indices_orb
 }
 
 template <typename StoredMatrix>
+void RestrictedClosedIntegralOperator<StoredMatrix>::update_state(
+      const coefficients_ptr_type& coeff_bf_ptr, bool include_energies) {
+  auto ca_bo_ptr = std::make_shared<const linalgwrap::MultiVector<const vector_type>>(
+        coeff_bf_ptr->subview({0, base_type::m_n_alpha}));
+  update_operator(ca_bo_ptr);
+
+  if (include_energies) {
+    update_energies(ca_bo_ptr);
+  }
+}
+
+template <typename StoredMatrix>
 void RestrictedClosedIntegralOperator<StoredMatrix>::update_operator(
-      const coefficients_ptr_type& coeff_bf_ptr) {
+      const cocc_ptr_type& ca_bo_ptr) {
   // Here we assume restricted closed-shell HF, since we have just one
   // type of coefficients (alpha) to do the update.
   //
   // In fact we hence have twice the density represented by these coefficients
   // for the Coulomb terms. This is dealt with in the construction of the
   // operator below, where we provide an extra factor of 2 for the Coulomb term.
-
-  // Build multivector of occupied alpha orbitals
-  auto ca_bo_ptr = std::make_shared<const linalgwrap::MultiVector<const vector_type>>(
-        coeff_bf_ptr->subview({0, base_type::m_n_alpha}));
   krims::GenMap occa_map{{gint::IntegralUpdateKeys::coefficients_occupied, ca_bo_ptr}};
 
   // Empty the operator:
-  m_operator = linalgwrap::LazyMatrixSum<StoredMatrix>();
-  // TODO once subclass: m_operator.clear();
+  m_operator = linalgwrap::LazyMatrixSum<StoredMatrix>{};
 
   // Set up one-electron terms of m_fock:
   auto itterm = std::begin(base_type::m_terms_1e);
@@ -253,19 +271,35 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_operator(
 }
 
 template <typename StoredMatrix>
+std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+RestrictedClosedIntegralOperator<StoredMatrix>::terms_alpha() const {
+  // Note the factor 2 in front of the coulomb term once again comes from the fact
+  // that we are closed-shell and hence only ever use the alpha density, but the
+  // coulomb interaction is to both alpha and beta electrons.
+
+  auto ret = base_type::terms_1e();
+  ret.insert(std::make_pair(base_type::m_coul_adens.id(),
+                            2. * base_type::m_coeff_coul * base_type::m_coul_adens));
+  ret.insert(std::make_pair(base_type::m_exchge_adens.id(),
+                            base_type::m_coeff_exchge * base_type::m_exchge_adens));
+  return ret;
+}
+
+template <typename StoredMatrix>
 void RestrictedClosedIntegralOperator<StoredMatrix>::update_energies(
-      const coefficients_ptr_type& coeff_bf_ptr) {
+      const cocc_ptr_type& ca_bo_ptr) {
+  auto& coeff_coul = base_type::m_coeff_coul;
+  auto& coul_adens = base_type::m_coul_adens;  // Coulomb from alpha density
+  auto& coeff_exchge = base_type::m_coeff_exchge;
+  auto& exchge_adens = base_type::m_exchge_adens;  // Exchange from alpha density
+  auto& ca_bo = *ca_bo_ptr;
+
   // Here we assume restricted closed-shell HF, since we have just one
   // type of coefficients (alpha) to do the update.
   //
   // In fact we hence have twice the density represented by these coefficients
   // for the Coulomb terms. This is dealt with in the construction of the
   // operator above, where we provide an extra factor of 2 for the Coulomb term.
-
-  // Build multivector of occupied alpha orbitals
-  auto ca_bo_ptr = std::make_shared<const linalgwrap::MultiVector<const vector_type>>(
-        coeff_bf_ptr->subview({0, base_type::m_n_alpha}));
-  const auto& ca_bo = *ca_bo_ptr;
 
   // Calculate the energies of the 1e terms:
   //
@@ -290,41 +324,25 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_energies(
   // Calculate the energies of the 2e terms:
   {
     // Coulomb energy:  Let J[P] be the Coulomb matrix build from the density P
-    //     energy =   tr( P^{total} J[P^{total}] )
+    // both J[P] and P are block-diagonal, hence
+    //     energy =   tr( P^\alpha J[P^{total}] ) + tr( P^\beta J[P^{total}] )
     //            =   tr( ( P^\alpha + P^\beta ) J[P^\alpha + P^beta] )
     //            = 2*tr( P^\alpha  2*J[P^\alpha] )
     //            = 4*tr( P^\alpha J[P^\alpha] )
-    const scalar_type energy_coul =
-          4. * trace(outer_prod_sum(base_type::m_coul_adens * ca_bo, ca_bo));
+    const scalar_type energy_coul = 4. * trace(outer_prod_sum(coul_adens * ca_bo, ca_bo));
 
     // Exchange energy:  Let K[P] be the Exchange matrix build from the density P
+    // Again K[P] and P are block-diagonal
     //     energy =   tr( P^\alpha K[P^\alpha] ) + tr( P^\beta K[P^\beta] )
     //            = 2 tr (P^\alpha K[P^\alpha] )
     const scalar_type energy_exchge =
-          2. * trace(outer_prod_sum(base_type::m_exchge_adens * ca_bo, ca_bo));
+          2. * trace(outer_prod_sum(exchge_adens * ca_bo, ca_bo));
 
     // Scale energy appropriately and set it in map:
     // 0.5 because those are 2e term and we need to avoid double counting.
-    base_type::m_energies[base_type::m_coul_adens.id()] =
-          0.5 * base_type::m_coeff_coul * energy_coul;
-    base_type::m_energies[base_type::m_exchge_adens.id()] =
-          0.5 * base_type::m_coeff_exchge * energy_exchge;
+    base_type::m_energies[coul_adens.id()] = 0.5 * coeff_coul * energy_coul;
+    base_type::m_energies[exchge_adens.id()] = 0.5 * coeff_exchge * energy_exchge;
   }
-}
-
-template <typename StoredMatrix>
-std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
-RestrictedClosedIntegralOperator<StoredMatrix>::terms_alpha() const {
-  // Note the factor 2 in front of the coulomb term once again comes from the fact
-  // that we are closed-shell and hence only ever use the alpha density, but the
-  // coulomb interaction is to both alpha and beta electrons.
-
-  auto ret = base_type::terms_1e();
-  ret.insert(std::make_pair(base_type::m_coul_adens.id(),
-                            2. * base_type::m_coeff_coul * base_type::m_coul_adens));
-  ret.insert(std::make_pair(base_type::m_exchge_adens.id(),
-                            base_type::m_coeff_exchge * base_type::m_exchge_adens));
-  return ret;
 }
 
 }  // namespace molsturm

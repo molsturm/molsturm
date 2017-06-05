@@ -108,13 +108,13 @@ class IntegralOperatorBase
   terms_beta() const = 0;
 
  protected:
-  /** Update the state of the lazy matrix operator terms and rebuild
-   *  the operator m_operator from them.    */
-  virtual void update_operator(const coefficients_ptr_type& coeff_bf_ptr) = 0;
-
-  /** Recompute the energies from the current state of the terms
-   * (First call update_operator on an update! )    */
-  virtual void update_energies(const coefficients_ptr_type& coeff_bf_ptr) = 0;
+  /** Update the state of the lazy matrix operator terms
+   *
+   *
+   * \param include_energies  Also update the energies
+   * */
+  virtual void update_state(const coefficients_ptr_type& coeff_bf_ptr,
+                            bool include_energies = true) = 0;
 
   //
 
@@ -198,34 +198,29 @@ IntegralOperatorBase<StoredMatrix>::IntegralOperatorBase(
         m_nuclear_repulsion_energy{molsturm::energy_nuclear_repulsion(system.structure)},
         m_n_alpha{system.n_alpha},
         m_n_beta{system.n_beta} {
-  using namespace linalgwrap;
-
-  // Check that alpha is equal to beta
-  assert_equal(system.n_beta, system.n_alpha);
-
   // Check that number of terms and number of coefficients agrees:
   assert_size(m_terms_1e.size(), m_coeff_1e.size());
 
 #ifdef DEBUG
   // Check operator size and zero energy terms
-  const size_t op_size = m_coul_adens.n_rows();
+  const size_t n_bas = m_coul_adens.n_rows();
 #endif
 
   auto itterm = std::begin(m_terms_1e);
   for (; itterm != std::end(m_terms_1e); ++itterm) {
-    assert_size(itterm->n_cols(), op_size);
-    assert_size(itterm->n_rows(), op_size);
+    assert_size(itterm->n_cols(), n_bas);
+    assert_size(itterm->n_rows(), n_bas);
 
-    m_energies.insert(std::make_pair(itterm->id(), Constants<scalar_type>::zero));
+    m_energies.insert(std::make_pair(itterm->id(), scalar_type{0}));
   }
 
-  assert_size(m_coul_adens.n_cols(), op_size);
-  assert_size(m_coul_adens.n_rows(), op_size);
-  m_energies.insert(std::make_pair(m_coul_adens.id(), Constants<scalar_type>::zero));
+  assert_size(m_coul_adens.n_cols(), n_bas);
+  assert_size(m_coul_adens.n_rows(), n_bas);
+  m_energies.insert(std::make_pair(m_coul_adens.id(), scalar_type{0}));
 
-  assert_size(m_exchge_adens.n_cols(), op_size);
-  assert_size(m_exchge_adens.n_rows(), op_size);
-  m_energies.insert(std::make_pair(m_exchge_adens.id(), Constants<scalar_type>::zero));
+  assert_size(m_exchge_adens.n_cols(), n_bas);
+  assert_size(m_exchge_adens.n_rows(), n_bas);
+  m_energies.insert(std::make_pair(m_exchge_adens.id(), scalar_type{0}));
 
   m_nuclear_repulsion_energy = molsturm::energy_nuclear_repulsion(system.structure);
 }
@@ -245,9 +240,7 @@ void IntegralOperatorBase<StoredMatrix>::update(
   // Only update if we got new coefficients:
   if (coeff_bf_ptr == m_coefficients_ptr) return;
   m_coefficients_ptr = coeff_bf_ptr;
-
-  update_operator(coeff_bf_ptr);
-  update_energies(coeff_bf_ptr);
+  update_state(coeff_bf_ptr, true);
 }
 
 template <typename StoredMatrix>
