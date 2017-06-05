@@ -6,7 +6,7 @@
 #include "Parameters.hh"
 #include "HfResults.hh"
 #include "hartree_fock.hh"
-#include <krims/ExceptionSystem/Exceptions.hh>
+#include "ExcInvalidParameters.hh"
 #include <molsturm/Version.hh>
 %}
 

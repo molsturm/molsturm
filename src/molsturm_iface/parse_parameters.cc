@@ -90,6 +90,18 @@ MolecularSystem build_molecular_system(const Parameters& params) {
   }
 }
 
+bool parse_restricted(const Parameters& params, const MolecularSystem& system) {
+  // Adjust value for restricted => Use automatically determined value
+  // if the user did not override this.
+  const bool restricted = params.restricted_set_by_user ? params.restricted
+                                                        : system.n_alpha == system.n_beta;
+  assert_throw(!restricted || system.n_alpha == system.n_beta,
+               ExcInvalidParameters("Only systems with even electron count can be "
+                                    "treated using restricted calculations. Use an "
+                                    "unrestricted treatment for the other systems."));
+  return restricted;
+}
+
 krims::GenMap build_int_params_sturmian(const Parameters& params,
                                         const MolecularSystem& system) {
   using gint::IntegralLookupKeys;
@@ -118,14 +130,23 @@ krims::GenMap build_int_params_sturmian(const Parameters& params,
       nlm_basis_conv.push_back(Nlm{nlmbas[3 * i], nlmbas[3 * i + 1], nlmbas[3 * i + 2]});
     }
     intparams.update("nlm_basis", std::move(nlm_basis_conv));
-  } else {
+  } else if (params.n_max > 0) {
     const int n_max = params.n_max;
     const int l_max = params.l_max == Parameters::all ? n_max - 1 : params.l_max;
     const int m_max = params.m_max == Parameters::all ? l_max : params.m_max;
 
+    assert_throw(l_max < n_max,
+                 ExcInvalidParameters("l_max needs to be smaller than n_max"));
+    assert_throw(m_max <= l_max,
+                 ExcInvalidParameters("m_max cannot be larger than l_max"));
+
     intparams.update({
           {"n_max", n_max}, {"l_max", l_max}, {"m_max", m_max},
     });
+  } else {
+    assert_throw(false,
+                 ExcInvalidParameters("You need to provide either n_max or nlm_basis if "
+                                      "you are using a sturmian basis set."));
   }
   return intparams;
 }
@@ -158,7 +179,8 @@ krims::GenMap build_int_params(const Parameters& params, const MolecularSystem& 
   return intparams;
 }
 
-krims::GenMap build_guess_params(const Parameters& params) {
+krims::GenMap build_guess_params(const Parameters& params,
+                                 const MolecularSystem& /*system*/) {
   using linalgwrap::EigensystemSolverKeys;
 
   krims::GenMap guess_params{{ScfGuessKeys::method, params.guess_method}};
@@ -167,9 +189,9 @@ krims::GenMap build_guess_params(const Parameters& params) {
   return guess_params;
 }
 
-krims::GenMap build_scf_params(const Parameters& params) {
+krims::GenMap build_scf_params(const Parameters& params, const MolecularSystem& system) {
   using linalgwrap::EigensystemSolverKeys;
-  const bool restricted = false;
+  const bool restricted = parse_restricted(params, system);
 
   assert_throw(
         params.n_eigenpairs % 2 == 0,

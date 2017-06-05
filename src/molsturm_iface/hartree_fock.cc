@@ -35,14 +35,15 @@ template <RestrictionType restrict>
 HfResults hartree_fock_inner(const Parameters& params, const MolecularSystem& system) {
   // Parse parameters
   const krims::GenMap int_params = build_int_params(params, system);
-  const krims::GenMap guess_params = build_guess_params(params);
-  const krims::GenMap scf_params = build_scf_params(params);
+  const krims::GenMap guess_params = build_guess_params(params, system);
+  const krims::GenMap scf_params = build_scf_params(params, system);
 
   // Lookup integral terms
   gint::IntegralLookup<matrix_type> integrals(int_params);
   auto Sa_bb = integrals.lookup_integral(gint::IntegralTypeKeys::overlap);
 
   // Checks about basis size:
+  const size_t n_bas = Sa_bb.n_rows();
   const size_t max_elec = std::max(system.n_alpha, system.n_beta);
   assert_throw(
         max_elec < n_bas,
@@ -72,10 +73,8 @@ HfResults hartree_fock_inner(const Parameters& params, const MolecularSystem& sy
 
 HfResults hartree_fock(const Parameters& params) {
   const MolecularSystem system = build_molecular_system(params);
+  const bool restricted = parse_restricted(params, system);
 
-  // Use user value if set, else use value determined according to alpha == beta.
-  const bool restricted = params.restricted_set_by_user ? params.restricted
-                                                        : system.n_alpha == system.n_beta;
   if (restricted) {
     return hartree_fock_inner<RestrictionType::RestrictedClosed>(params, system);
   } else {

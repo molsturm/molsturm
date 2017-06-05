@@ -18,6 +18,7 @@
 //
 
 #pragma once
+#include "ExcInvalidParameters.hh"
 #include "Parameters.hh"
 #include "molsturm/MolecularSystem.hh"
 #include <gint/Structure.hh>
@@ -26,22 +27,22 @@
 namespace molsturm {
 namespace iface {
 
-/** Exception used if invalid parameters are encountered */
-DefException1(ExcInvalidParameters, std::string,
-              << "Invalid parameters passed to molsturm: " << arg1);
-
 /** Build the molecular system object from the parameters */
 MolecularSystem build_molecular_system(const Parameters& params);
+
+/** Examine the parameters and determine whether a restricted calculation
+ *  shall be attempted or not */
+bool parse_restricted(const Parameters& params, const MolecularSystem& system);
 
 /** Build the integral lookup parameters from the input parameters and the molecular
  * system */
 krims::GenMap build_int_params(const Parameters& params, const MolecularSystem& system);
 
 /** Build the parameters for obtaining the scf guess */
-krims::GenMap build_guess_params(const Parameters& params);
+krims::GenMap build_guess_params(const Parameters& params, const MolecularSystem& system);
 
 /** Build the parameters for running the scf */
-krims::GenMap build_scf_params(const Parameters& params);
+krims::GenMap build_scf_params(const Parameters& params, const MolecularSystem& system);
 
 }  // namespace iface
 }  // namespace molsturm

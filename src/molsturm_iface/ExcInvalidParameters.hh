@@ -18,14 +18,14 @@
 //
 
 #pragma once
-#include "HfResults.hh"
-#include "Parameters.hh"
 #include <krims/ExceptionSystem.hh>
 
 namespace molsturm {
 namespace iface {
 
-HfResults hartree_fock(const Parameters& p);
+/** Exception used if invalid parameters are encountered */
+DefException1(ExcInvalidParameters, std::string,
+              << "Invalid parameters passed to molsturm: " << arg1);
 
 }  // namespace iface
 }  // namespace molsturm
