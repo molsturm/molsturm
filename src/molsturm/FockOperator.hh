@@ -60,19 +60,22 @@ enum class RestrictionType {
 
 /** Class representing a fock operator */
 template <typename StoredMatrix, RestrictionType restriction>
-class FockOperator final : public RestrictedClosedIntegralOperator<StoredMatrix> {
+class FockOperator final
+      : public krims::conditional_t<restriction == RestrictionType::RestrictedClosed,
+                                    RestrictedClosedIntegralOperator<StoredMatrix>,
+                                    UnrestrictedIntegralOperator<StoredMatrix>> {
  public:
   static_assert(restriction != RestrictionType::RestrictedOpen,
                 "RestrictedOpen is not implemented yet.");
-  static_assert(restriction != RestrictionType::Unrestricted,
-                "Unrestricted is not implemented yet.");
 
   static constexpr bool restricted() {
     return restriction == RestrictionType::RestrictedClosed ||
            restriction == RestrictionType::RestrictedOpen;
   }
-
-  typedef RestrictedClosedIntegralOperator<StoredMatrix> base_type;
+  typedef krims::conditional_t<restriction == RestrictionType::RestrictedClosed,
+                               RestrictedClosedIntegralOperator<StoredMatrix>,
+                               UnrestrictedIntegralOperator<StoredMatrix>>
+        base_type;
   typedef StoredMatrix stored_matrix_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::vector_type vector_type;
