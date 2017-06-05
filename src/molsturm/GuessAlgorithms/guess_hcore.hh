@@ -69,8 +69,8 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_hcore(
   }
 
   // TODO Think through for unrestricted
-  const auto occa = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_ALPHA);
-  const auto occb = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_BETA);
+  const auto occa = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
+  const auto occb = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
   assert_implemented(occa == occb);
   const size_t n_vectors = std::max(occa.length(), occb.length());
 

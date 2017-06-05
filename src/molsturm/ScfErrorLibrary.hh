@@ -28,8 +28,8 @@ class ScfErrorLibrary {
   template <typename OverlapMatrix>
   static matrix_type pulay_error(const operator_type& fock_bb,
                                  const OverlapMatrix& overlap_bb) {
-    auto occ_a = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_ALPHA);
-    auto occ_b = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_BETA);
+    auto occ_a = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
+    auto occ_b = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
     assert_implemented(occ_a == occ_b);
 
 #ifdef DEBUG

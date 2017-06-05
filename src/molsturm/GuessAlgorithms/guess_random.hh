@@ -48,11 +48,11 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_random(
 
   // TODO Think this through for unrestricted
   //      Probably better pass the system we want to solve to this guy as well!
-  const auto occa = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_ALPHA);
-  const auto occb = fock_bb.indices_subspace(gscf::OrbitalSpace::OCC_BETA);
+  const auto occa = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
+  const auto occb = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
+  assert_implemented(occa == occb);
   const size_t n_alpha = occa.size();
   const size_t n_beta = occb.size();
-  assert_implemented(n_alpha == n_beta);
   const size_t n_vectors = std::max(n_alpha, n_beta);
 
   linalgwrap::MultiVector<vector_type> guess;

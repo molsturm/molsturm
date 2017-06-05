@@ -36,8 +36,8 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
 
   // Copy results back
   HfResults ret;
-  ret.n_beta = fbb.indices_subspace(gscf::OrbitalSpace::OCC_BETA).length();
-  ret.n_alpha = fbb.indices_subspace(gscf::OrbitalSpace::OCC_ALPHA).length();
+  ret.n_beta = fbb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA).length();
+  ret.n_alpha = fbb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA).length();
   ret.n_bas = n_bas;
 
   ret.restricted = true;

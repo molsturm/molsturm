@@ -37,8 +37,8 @@ void print_res(const State& res) {
   std::cout << "Obtained Hartree-Fock orbitals: " << std::endl;
   std::cout << ind << "a b" << std::endl;
 
-  auto occa = res.problem_matrix().indices_subspace(gscf::OrbitalSpace::OCC_ALPHA);
-  auto occb = res.problem_matrix().indices_subspace(gscf::OrbitalSpace::OCC_BETA);
+  auto occa = res.problem_matrix().indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
+  auto occb = res.problem_matrix().indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
   assert_implemented(occa == occb);
 
   const auto& orben = res.eigensolution().evalues();

@@ -158,21 +158,7 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   }
   ///@}
 
-  krims::Range<size_t> indices_subspace(gscf::OrbitalSpace osp) const override {
-    using gscf::OrbitalSpace;
-    switch (osp) {
-      case OrbitalSpace::OCC_ALPHA:
-      /* intentional fall-through */
-      case OrbitalSpace::OCC_BETA:
-        return {0, base_type::m_n_alpha};
-      case OrbitalSpace::VIRT_ALPHA:
-      /* intentional fall-through */
-      case OrbitalSpace::VIRT_BETA:
-        return {base_type::m_n_alpha, n_rows()};
-      default:
-        return {0, 0};
-    }
-  }
+  krims::Range<size_t> indices_orbspace(gscf::OrbitalSpace osp) const override final;
 
   /** Update the inner state:
    * Build the Fock matrix with the new coefficients
@@ -206,6 +192,27 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
 //
 // --------------------------------------------------------------------
 //
+
+template <typename StoredMatrix>
+krims::Range<size_t> RestrictedClosedIntegralOperator<StoredMatrix>::indices_orbspace(
+      gscf::OrbitalSpace osp) const {
+  using gscf::OrbitalSpace;
+  assert_internal(base_type::m_coefficients_ptr != nullptr);
+  const size_t n_orbs = base_type::m_coefficients_ptr->n_vectors();
+
+  switch (osp) {
+    case OrbitalSpace::OCC_ALPHA:
+    /* intentional fall-through */
+    case OrbitalSpace::OCC_BETA:
+      return {0, base_type::m_n_alpha};
+    case OrbitalSpace::VIRT_ALPHA:
+    /* intentional fall-through */
+    case OrbitalSpace::VIRT_BETA:
+      return {base_type::m_n_alpha, n_orbs};
+    default:
+      return {0, 0};
+  }
+}
 
 template <typename StoredMatrix>
 void RestrictedClosedIntegralOperator<StoredMatrix>::update_operator(
