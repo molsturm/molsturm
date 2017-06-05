@@ -1,5 +1,9 @@
 import os
 
+# The builddir (relative to the path of this file),
+# which we use to find some generated files:
+builddir = "build"
+
 # This file is loosely based upon the file
 # cpp/ycm/.ycm_extra_conf.py from the youcompleteme daemon process
 # available on github:
@@ -26,12 +30,7 @@ flags = [
     '-fexceptions',
     # Compile debug code as well
     '-DDEBUG',
-    # Compile extra code blocks:
-    # '-DLINALGWRAP_HAVE_GLIBC_STACKTRACE',
-    '-DLINALGWRAP_HAVE_ARMADILLO',
-    '-DLINALGWRAP_HAVE_ARPACK',
     # C++14 code blocks:
-    '-DLINALGWRAP_HAVE_CXX14',
     '-DKRIMS_HAVE_CXX14',
     '-DSTURMINT_HAVE_CXX14',
     '-DGINT_HAVE_CXX14',
@@ -47,22 +46,23 @@ flags = [
     # To suppress errors shown here, use "-isystem"
     # instead of "-I"
     '-I', 'src',
-    '-I', 'build/src',
-    '-isystem', './modules/rapidcheck/include',
-    '-isystem', './modules/rapidcheck/ext/catch/include',
+    '-I', builddir + '/src',
+    '-isystem', './modules/gint/src',
+    '-isystem', './modules/gscf/src',
     '-isystem', './modules/krims/src',
     '-isystem', './modules/linalgwrap/src',
     '-isystem', './modules/sturmint/src',
-    '-isystem', './modules/gint/src',
-    '-isystem', './modules/gscf/src',
+    '-isystem', builddir + '/modules/gint/src',
+    '-isystem', builddir + '/modules/gscf/src',
+    '-isystem', builddir + '/modules/krims/src',
+    '-isystem', builddir + '/modules/linalgwrap/src',
+    '-isystem', builddir + '/modules/sturmint/src',
+    #
+    '-isystem', './modules/rapidcheck/include',
+    '-isystem', './modules/rapidcheck/ext/catch/include',
     # Explicit clang includes:
     '-isystem', '/usr/lib/ycmd/clang_includes',
 ]
-
-def DirectoryOfThisScript():
-  return os.path.dirname( os.path.abspath( __file__ ) )
-
-SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.C' ]
 
 def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
   if not working_directory:
@@ -92,13 +92,13 @@ def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
       new_flags.append( new_flag )
   return new_flags
 
-
-def IsHeaderFile( filename ):
-  extension = os.path.splitext( filename )[ 1 ]
-  return extension in [ '.h', '.hxx', '.hpp', '.hh' ]
+#SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.C' ]
+#def IsHeaderFile( filename ):
+#  extension = os.path.splitext( filename )[ 1 ]
+#  return extension in [ '.h', '.hxx', '.hpp', '.hh' ]
 
 def FlagsForFile( filename, **kwargs ):
-  relative_to = DirectoryOfThisScript()
+  relative_to = os.path.dirname( os.path.abspath( __file__ ) )
   final_flags = MakeRelativePathsInFlagsAbsolute( flags, relative_to )
 
   return {
