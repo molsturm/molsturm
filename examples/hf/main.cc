@@ -15,6 +15,7 @@
 #include <molsturm/FockOperator.hh>
 #include <molsturm/IopScf.hh>
 #include <molsturm/IopScfKeys.hh>
+#include <molsturm/OverlapMatrix.hh>
 #include <molsturm/ScfDebugWrapper.hh>
 #include <molsturm/Version.hh>
 #include <molsturm/scf_guess.hh>
@@ -40,7 +41,6 @@ void print_res(const State& res) {
 
   auto occa = res.problem_matrix().indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
   auto occb = res.problem_matrix().indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
-  assert_implemented(occa == occb);
 
   const auto& orben = res.eigensolution().evalues();
   for (size_t i = 0; i < orben.size(); ++i) {
@@ -106,15 +106,15 @@ void run_hf(args_type args, bool debug = false) {
   }
 
   integral_lookup_type integrals(std::move(intparams));
-  auto S_bb = integrals.lookup_integral(IntegralTypeKeys::overlap);
+  auto Sa_bb = integrals.lookup_integral(IntegralTypeKeys::overlap);
 
   //
   // Checks about basis size:
   //
-  std::cout << "Basis size:  " << S_bb.n_rows() << std::endl << std::endl;
+  std::cout << "Basis size:  " << Sa_bb.n_rows() << std::endl << std::endl;
 
   const size_t max_elec = std::max(args.system.n_alpha, args.system.n_beta);
-  assert_throw(max_elec < S_bb.n_rows(), ExcTooSmallBasis(S_bb.n_rows()));
+  assert_throw(max_elec < Sa_bb.n_rows(), ExcTooSmallBasis(Sa_bb.n_rows()));
 
   assert_throw(args.n_eigenpairs >= std::max(args.system.n_alpha, args.system.n_beta),
                krims::ExcTooLarge<size_t>(max_elec, args.n_eigenpairs));
@@ -122,6 +122,7 @@ void run_hf(args_type args, bool debug = false) {
   //
   // Problem setup
   //
+  OverlapMatrix<stored_matrix_type, restricted> S_bb(Sa_bb);
   FockOperator<stored_matrix_type, restricted> fock_bb(integrals, args.system);
 
   // Obtain an SCF guess

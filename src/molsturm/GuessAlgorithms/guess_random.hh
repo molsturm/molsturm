@@ -46,25 +46,30 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_random(
   typedef typename stored_matrix_type::vector_type vector_type;
   typedef typename stored_matrix_type::scalar_type scalar_type;
 
-  // TODO Think this through for unrestricted
-  //      Probably better pass the system we want to solve to this guy as well!
+  // TODO Make alpha and beta block both truely random for unrestricted and not one
+  // identical to the other
   const auto occa = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
   const auto occb = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
+  const size_t n_vectors = std::max(occa.size(), occb.size());
   assert_implemented(occa == occb);
-  const size_t n_alpha = occa.size();
-  const size_t n_beta = occb.size();
-  const size_t n_vectors = std::max(n_alpha, n_beta);
+
+  // Get alpha-alpha block of the overlap matrix.
+  // Note by construction this block is identical to the beta-beta block
+  const auto& Sa_bb = S_bb.block_alpha();
+
+  // Restricted open-shell is not yet implemented
+  assert_internal(occa == occb || !fock_bb.restricted());
 
   linalgwrap::MultiVector<vector_type> guess;
   guess.reserve(n_vectors);
   for (size_t i = 0; i < n_vectors; ++i) {
-    guess.push_back(random<vector_type>(S_bb.n_rows()));
+    guess.push_back(random<vector_type>(Sa_bb.n_rows()));
   }
 
   linalgwrap::EigensolutionTypeFor<true, IntegralOperator> sol;
-  sol.evectors() = ortho(guess, S_bb);
+  sol.evectors() = ortho(guess, Sa_bb);
   sol.evalues() = std::vector<scalar_type>(n_vectors, 1);
-  return sol;
+  return fock_bb.restricted() ? sol : replicate_block(sol);
 }
 
 }  // namespace molsturm

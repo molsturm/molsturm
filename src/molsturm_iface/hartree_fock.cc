@@ -25,6 +25,7 @@
 #include <gint/IntegralType.hh>
 #include <molsturm/FockOperator.hh>
 #include <molsturm/IopScf.hh>
+#include <molsturm/OverlapMatrix.hh>
 #include <molsturm/scf_guess.hh>
 
 namespace molsturm {
@@ -39,15 +40,16 @@ HfResults hartree_fock_inner(const Parameters& params, const MolecularSystem& sy
 
   // Lookup integral terms
   gint::IntegralLookup<matrix_type> integrals(int_params);
-  auto S_bb = integrals.lookup_integral(gint::IntegralTypeKeys::overlap);
+  auto Sa_bb = integrals.lookup_integral(gint::IntegralTypeKeys::overlap);
 
   // Checks about basis size:
   const size_t max_elec = std::max(system.n_alpha, system.n_beta);
-  assert_throw(max_elec < S_bb.n_rows(), ExcTooSmallBasis(S_bb.n_rows(), max_elec));
+  assert_throw(max_elec < Sa_bb.n_rows(), ExcTooSmallBasis(Sa_bb.n_rows(), max_elec));
   assert_throw(params.n_eigenpairs >= max_elec,
                krims::ExcTooLarge<size_t>(max_elec, params.n_eigenpairs));
 
   // Run solver
+  OverlapMatrix<matrix_type, restrict> S_bb(Sa_bb);
   FockOperator<matrix_type, restrict> fock_bb(integrals, system);
   auto guess = scf_guess(system, fock_bb, S_bb, guess_params);
   fock_bb.update(guess.evectors_ptr);

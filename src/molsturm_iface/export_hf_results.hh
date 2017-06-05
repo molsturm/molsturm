@@ -21,7 +21,7 @@
 #include "HfResults.hh"
 #include "Parameters.hh"
 #include "config.hh"
-#include "gint/ERITensor_i.hh"
+#include <gint/ERITensor_i.hh>
 
 namespace molsturm {
 namespace iface {

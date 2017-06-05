@@ -53,32 +53,34 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_loewdin(
   krims::GenMap eigensolver_params = params.submap(GuessLoewdinKeys::eigensolver_params);
   eigensolver_params.insert_default(EigensystemSolverKeys::which, "LR");
 
-  // TODO Think this through for unrestricted
-  //      Probably better pass the system we want to solve to this guy as well!
   const auto occa = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
   const auto occb = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
-  const size_t n_alpha = occa.size();
-  const size_t n_beta = occb.size();
-  assert_implemented(occa == occb);
-  const size_t n_vectors = std::max(n_alpha, n_beta);
+  const size_t n_vectors = std::max(occa.size(), occb.size());
 
+  // Get alpha-alpha block of the overlap matrix.
+  // Note by construction this block is identical to the beta-beta block
+  const auto& Sa_bb = S_bb.block_alpha();
+
+  // Restricted open-shell is not yet implemented
+  assert_internal(occa == occb || !fock_bb.restricted());
   try {
-    auto sol = eigensystem_hermitian(S_bb, n_vectors, eigensolver_params);
+    auto sol = eigensystem_hermitian(Sa_bb, n_vectors, eigensolver_params);
 
     // Eigenvectors and eigenvalues.
     auto& evectors = sol.evectors();
     auto& evalues = sol.evalues();
 
     assert_internal(evectors.n_vectors() == n_vectors);
-    assert_internal(evectors.n_elem() == S_bb.n_cols());
+    assert_internal(evectors.n_elem() == Sa_bb.n_cols());
 
     for (size_t i = 0; i < evectors.n_vectors(); ++i) {
       evectors[i] *= 1. / sqrt(evalues[i]);
       evalues[i] = 1.;
     }
-    return sol;
+    return fock_bb.restricted() ? sol : replicate_block(sol);
   } catch (const SolverException& e) {
-    rescue::failed_eigenproblem(Eigenproblem<true, OverlapMatrix>(S_bb), params);
+    rescue::failed_eigenproblem(
+          Eigenproblem<true, typename OverlapMatrix::int_term_type>(Sa_bb), params);
     assert_throw(false,
                  ExcObtainingScfGuessFailed(
                        "Eigensolver for overlap failed with message " + e.extra()));

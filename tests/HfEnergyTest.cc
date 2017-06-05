@@ -24,6 +24,7 @@
 #include <linalgwrap/TestingUtils.hh>
 #include <molsturm/FockOperator.hh>
 #include <molsturm/IopScf.hh>
+#include <molsturm/OverlapMatrix.hh>
 #include <molsturm/scf_guess.hh>
 
 namespace molsturm {
@@ -61,8 +62,9 @@ void run_testscf(const MolecularSystem& sys, const GenMap& intparams,
 
   // Get the integrals and build the operator:
   int_lookup_type integrals{intparams};
-  integral_type S_bb = integrals.lookup_integral(IntegralTypeKeys::overlap);
+  integral_type Sa_bb = integrals.lookup_integral(IntegralTypeKeys::overlap);
   FockOperator<stored_matrix_type, restricted> fock_init(integrals, sys);
+  OverlapMatrix<stored_matrix_type, restricted> S_bb(Sa_bb);
 
   // Get a guess and run scf:
   auto guess = scf_guess(sys, fock_init, S_bb);

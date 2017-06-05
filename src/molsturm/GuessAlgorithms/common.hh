@@ -39,4 +39,32 @@ DefException1(ExcInvalidScfGuessParametersEncountered, std::string,
                  "parameters passed is not valid. Details: "
               << arg1);
 
+/** Replicate a guess solution for a restricted closed operator
+ * such that it exists twice on the diagonal.
+ * with zeros padded before and after in the coefficients.
+ *
+ * This will make the guess suitable for unrestricted calculations
+ */
+template <typename Solution>
+Solution replicate_block(Solution solution) {
+  typedef typename Solution::evector_type evector_type;
+
+  auto& evecs = solution.evectors();
+  const size_t n_orbs_alpha = evecs.n_vectors();
+  const size_t n_bas = evecs.n_elem();
+
+  linalgwrap::MultiVector<evector_type> guess(2 * n_bas, 2 * n_orbs_alpha);
+  for (size_t f = 0; f < n_orbs_alpha; ++f) {
+    std::copy(evecs[f].begin(), evecs[f].end(), guess[f].begin());
+    std::copy(evecs[f].begin(), evecs[f].end(), guess[f + n_orbs_alpha].begin() + n_bas);
+  }
+  solution.evectors() = guess;
+
+  auto& evals = solution.evalues();
+  evals.resize(2 * n_orbs_alpha);
+  std::copy(evals.begin(), evals.begin() + n_orbs_alpha, evals.begin() + n_orbs_alpha);
+
+  return solution;
+}
+
 }  // namespace molsturm

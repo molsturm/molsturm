@@ -68,18 +68,24 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_hcore(
     }
   }
 
-  // TODO Think through for unrestricted
   const auto occa = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
   const auto occb = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
-  assert_implemented(occa == occb);
   const size_t n_vectors = std::max(occa.length(), occb.length());
 
+  // Get alpha-alpha block of the overlap matrix.
+  // Note by construction this block is identical to the beta-beta block
+  const auto& Sa_bb = S_bb.block_alpha();
+
+  // Restricted open-shell is not yet implemented
+  assert_internal(occa == occb || !fock_bb.restricted());
   try {
-    auto solution = eigensystem_hermitian(hcore, S_bb, n_vectors, eigensolver_params);
-    return solution;
+    auto sol = eigensystem_hermitian(hcore, Sa_bb, n_vectors, eigensolver_params);
+    return fock_bb.restricted() ? sol : replicate_block(sol);
   } catch (const SolverException& e) {
     rescue::failed_eigenproblem(
-          Eigenproblem<true, decltype(hcore), OverlapMatrix>(hcore, S_bb), params);
+          Eigenproblem<true, decltype(hcore), typename OverlapMatrix::int_term_type>(
+                hcore, Sa_bb),
+          params);
     assert_throw(false, ExcObtainingScfGuessFailed(
                               "Eigensolver for Hcore failed with message " + e.extra()));
     return EigensolutionTypeFor<true, IntegralOperator>{};

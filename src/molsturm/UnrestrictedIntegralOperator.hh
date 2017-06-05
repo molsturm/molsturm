@@ -196,6 +196,7 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_state(
   const size_t n_bas = m_coul_bdens.n_rows();
   const size_t n_alpha = base_type::m_n_alpha;
   const size_t n_beta = base_type::m_n_beta;
+  assert_size(coeff_bf_ptr->n_elem(), 2 * n_bas);
 
   // Since the eigenvectors from the Block-Diagonal eigensolver are padded with zeros
   // in the alpha-beta and beta-alpha blocks, we need to remove that padding and get
@@ -206,18 +207,15 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_state(
   linalgwrap::MultiVector<vector_type> reduced_coeff_bf(n_bas, n_alpha + n_beta, false);
   // Copy alpha-alpha block
   for (size_t v = 0; v < n_alpha; ++v) {
-    for (size_t b = 0; b < n_bas; ++b) {
-      reduced_coeff_bf[v][b] = coeff_bf[v][b];
-    }
+    std::copy(coeff_bf[v].begin(), coeff_bf[v].begin() + n_bas,
+              reduced_coeff_bf[v].begin());
   }
 
   // Copy beta-beta block
   for (size_t v = 0; v < n_beta; ++v) {
-    for (size_t b = 0; b < n_bas; ++b) {
-      const size_t vf = v + n_orbs_alpha;
-      const size_t bf = b + n_bas;
-      reduced_coeff_bf[v][b] = coeff_bf[vf][bf];
-    }
+    const size_t v_beta = v + n_orbs_alpha;
+    std::copy(coeff_bf[v_beta].begin() + n_bas, coeff_bf[v_beta].end(),
+              reduced_coeff_bf[v_beta].begin());
   }
 
   // Make alpha and beta occupied views

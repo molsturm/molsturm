@@ -18,9 +18,9 @@
 //
 
 #include "export_hf_results.hh"
-#include "gint/Integral.hh"
-#include "molsturm/FockOperator.hh"
-#include "molsturm/IopScf.hh"
+#include <molsturm/FockOperator.hh>
+#include <molsturm/IopScf.hh>
+#include <molsturm/OverlapMatrix.hh>
 
 namespace molsturm {
 namespace iface {
@@ -200,10 +200,10 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   return ret;
 }
 
-#define INSTANTIATE(STATE_TYPE)                                  \
-  template HfResults export_hf_results(                          \
-        const IopScfState<FockOperator<matrix_type, STATE_TYPE>, \
-                          gint::Integral<matrix_type>>& state,   \
+#define INSTANTIATE(STATE_TYPE)                                           \
+  template HfResults export_hf_results(                                   \
+        const IopScfState<FockOperator<matrix_type, STATE_TYPE>,          \
+                          OverlapMatrix<matrix_type, STATE_TYPE>>& state, \
         const gint::ERITensor_i<scalar_type>& eri, const Parameters&)
 
 INSTANTIATE(RestrictionType::Unrestricted);
