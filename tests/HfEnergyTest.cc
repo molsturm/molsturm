@@ -22,8 +22,8 @@
 #include <gint/OrbitalType.hh>
 #include <linalgwrap/SmallMatrix.hh>
 #include <linalgwrap/TestingUtils.hh>
+#include <molsturm/FockOperator.hh>
 #include <molsturm/IopScf.hh>
-#include <molsturm/RestrictedClosedIntegralOperator.hh>
 #include <molsturm/scf_guess.hh>
 
 namespace molsturm {
@@ -50,7 +50,7 @@ struct ReferenceData {
   std::vector<double> energies_mos{};
 };
 
-template <typename Fock = RestrictedClosedIntegralOperator<stored_matrix_type>>
+template <RestrictionType restricted = RestrictionType::RestrictedClosed>
 void run_testscf(const MolecularSystem& sys, const GenMap& intparams,
                  const GenMap& scfparams, const ReferenceData& reference) {
   using gint::IntegralTypeKeys;
@@ -59,16 +59,10 @@ void run_testscf(const MolecularSystem& sys, const GenMap& intparams,
   intparams.insert_default("structure", sys.structure);
   intparams.insert_default("orbital_type", gint::OrbitalType::REAL_MOLECULAR);
 
-  // Get the integrals:
+  // Get the integrals and build the operator:
   int_lookup_type integrals{intparams};
   integral_type S_bb = integrals.lookup_integral(IntegralTypeKeys::overlap);
-  integral_type T_bb = integrals.lookup_integral(IntegralTypeKeys::kinetic);
-  integral_type V0_bb = integrals.lookup_integral(IntegralTypeKeys::nuclear_attraction);
-  integral_type J_bb = integrals.lookup_integral(IntegralTypeKeys::coulomb);
-  integral_type K_bb = integrals.lookup_integral(IntegralTypeKeys::exchange);
-
-  // The fock operator of this problem:
-  Fock fock_init({{T_bb, V0_bb}, J_bb, K_bb}, sys);
+  FockOperator<stored_matrix_type, restricted> fock_init(integrals, sys);
 
   // Get a guess and run scf:
   auto guess = scf_guess(sys, fock_init, S_bb);
@@ -155,6 +149,22 @@ TEST_CASE("Test HF energies and MOs compared to ORCA", "[hf energies]") {
 
     intparams.update("basis_set", "sto-3g");
     run_testscf(water, intparams, scfparams, d);
+  }  // h2o sto-3g
+
+  //
+  // Water STO-3G unrestricted
+  //
+  SECTION("H2o sto-3g unrestricted") {
+    ReferenceData d;
+    d.max_iter = 15;
+    d.energy_total = -74.959319286910;
+    d.energy_1e = -122.50621280;
+    d.energy_2e = 38.29541424;
+    d.energies_mos = {-20.233397, -1.265715, -0.629267, -0.441668,
+                      -0.387645,  0.602839,  0.765918};
+
+    intparams.update("basis_set", "sto-3g");
+    run_testscf<RestrictionType::Unrestricted>(water, intparams, scfparams, d);
   }  // h2o sto-3g
 
   //
