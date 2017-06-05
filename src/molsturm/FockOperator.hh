@@ -19,6 +19,8 @@
 
 #pragma once
 #include "RestrictedClosedIntegralOperator.hh"
+#include "RestrictionType.hh"
+#include "UnrestrictedIntegralOperator.hh"
 #include <gint/IntegralLookup.hh>
 #include <gint/IntegralType.hh>
 #include <krims/TypeUtils/UsingLibrary.hh>
@@ -47,17 +49,6 @@ IntegralTermContainer<StoredMatrix> build_hf_terms(
 }
 }  // namespace anonymous
 
-enum class RestrictionType {
-  /** Unrestricted calculation */
-  Unrestricted,
-
-  /** Fully restricted closed shell */
-  RestrictedClosed,
-
-  /** Restricted open shell */
-  RestrictedOpen,
-};
-
 /** Class representing a fock operator */
 template <typename StoredMatrix, RestrictionType restriction>
 class FockOperator final
@@ -68,17 +59,11 @@ class FockOperator final
   static_assert(restriction != RestrictionType::RestrictedOpen,
                 "RestrictedOpen is not implemented yet.");
 
-  static constexpr bool restricted() {
-    return restriction == RestrictionType::RestrictedClosed ||
-           restriction == RestrictionType::RestrictedOpen;
-  }
   typedef krims::conditional_t<restriction == RestrictionType::RestrictedClosed,
                                RestrictedClosedIntegralOperator<StoredMatrix>,
                                UnrestrictedIntegralOperator<StoredMatrix>>
         base_type;
   typedef StoredMatrix stored_matrix_type;
-  typedef typename base_type::scalar_type scalar_type;
-  typedef typename base_type::vector_type vector_type;
   typedef gint::Integral<stored_matrix_type> int_term_type;
   typedef typename base_type::lazy_matrix_expression_ptr_type
         lazy_matrix_expression_ptr_type;

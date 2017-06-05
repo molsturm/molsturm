@@ -20,6 +20,8 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   typedef typename linalgwrap::LazyMatrix_i<StoredMatrix>::lazy_matrix_expression_ptr_type
         lazy_matrix_expression_ptr_type;
 
+  constexpr bool restricted() const { return true; }
+
   /** \name Construct a Fock/Kohn-Sham operator for a restricted closed-shell
    *  calculation
    *

@@ -41,6 +41,8 @@ class UnrestrictedIntegralOperator
   typedef typename linalgwrap::BlockDiagonalMatrix<
         BlockType, 2>::lazy_matrix_expression_ptr_type lazy_matrix_expression_ptr_type;
 
+  constexpr bool restricted() const { return false; }
+
   /** \name Construct a Fock/Kohn-Sham operator for a restricted closed-shell
    *  calculation
    *
