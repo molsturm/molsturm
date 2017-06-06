@@ -443,6 +443,10 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
     parsed.system = molsturm::MolecularSystem(std::move(structure), charge);
   } else if (had_charge && had_multiplicity) {
     parsed.system = molsturm::MolecularSystem(std::move(structure), charge, multiplicity);
+  } else if (had_multiplicity) {
+    parsed.system = molsturm::MolecularSystem(std::move(structure), 0, multiplicity);
+  } else if (had_charge) {
+    parsed.system = molsturm::MolecularSystem(std::move(structure), charge);
   } else if (had_alpha) {
     parsed.system = molsturm::MolecularSystem(std::move(structure), {{n_alpha, n_beta}});
   } else {
