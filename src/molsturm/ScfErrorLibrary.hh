@@ -27,10 +27,10 @@ class ScfErrorLibrary {
    */
   template <typename OverlapMatrix>
   static matrix_type pulay_error(const operator_type& fock_bb,
-                                 const OverlapMatrix& overlap_bb) {
+                                 const OverlapMatrix& overlap_bb,
+                                 bool accumulate_both = true) {
     auto occ_a = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
     auto occ_b = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
-    assert_implemented(occ_a == occ_b);
 
 #ifdef DEBUG
     typedef typename OverlapMatrix::real_type real_type;
@@ -39,21 +39,60 @@ class ScfErrorLibrary {
     assert_dbg(fock_bb.is_symmetric(tol), linalgwrap::ExcMatrixNotSymmetric());
 #endif
 
-    // Occupied coefficients for alpha
-    auto ca_bo = fock_bb.coefficients().subview(occ_a);
+    // Lambda to compute the error for a block (alpha-alpha or beta-beta)
+    auto compute_error = [&fock_bb, &overlap_bb](krims::Range<size_t> occ) {
+      auto cocc_bo = fock_bb.coefficients().subview(occ);
 
-    // Form first products for alpha (Factor 2 since alpha == beta)
-    //    -- O(2*n_bas*n_bas*n_occ)
-    auto Sca_bo = overlap_bb * ca_bo;
-    auto Fca_bo = 2 * fock_bb * ca_bo;
+      // Form first products
+      //    -- O(2*n_bas*n_bas*n_occ)
+      auto Sc_bo = overlap_bb * cocc_bo;
+      auto Fc_bo = fock_bb * cocc_bo;
 
-    // Form the antisymmetric outer product sum for alpha
-    //
-    // The idea is
-    // S * P * F - F * P * S == S * C * C^T * F - F * C * C^T * S
-    //                       == (S*C) * (F*C)^T - (F*C) * (S*C)^T
-    //  -- O(n_bas*n_bas*n_occ)
-    return outer_prod_sum(Sca_bo, Fca_bo) - outer_prod_sum(Fca_bo, Sca_bo);
+      // Form the antisymmetric outer product sum
+      //
+      // The idea is
+      // S * P * F - F * P * S == S * C * C^T * F - F * C * C^T * S
+      //                       == (S*C) * (F*C)^T - (F*C) * (S*C)^T
+      //  -- O(n_bas*n_bas*n_occ)
+      return outer_prod_sum(Sc_bo, Fc_bo) - outer_prod_sum(Fc_bo, Sc_bo);
+    };
+
+    // Closed-shell case
+    if (occ_a == occ_b) return 2. * compute_error(occ_a);
+
+    // Compute individual errors in blocks
+    auto error_alpha = compute_error(occ_a);
+    auto error_beta = compute_error(occ_b);
+
+    if (accumulate_both) {
+      // Sum the errors of the beta electrons onto the
+      // appropriate alpha electrons (leaving out the
+      // parts where we have less betas then alphas)
+      for (size_t i = 0; i < error_beta.n_rows(); ++i) {
+        for (size_t j = 0; j < error_beta.n_cols(); ++j) {
+          error_alpha(i, j) += error_beta(i, j);
+        }
+      }
+      return error_alpha;
+    }
+
+    // Build a block-diagonal matrix
+    matrix_type error(error_alpha.n_rows() + error_beta.n_rows(),
+                      error_beta.n_cols() + error_alpha.n_cols());
+    for (size_t i = 0; i < error_alpha.n_rows(); ++i) {
+      for (size_t j = 0; j < error_alpha.n_cols(); ++j) {
+        error(i, j) += error_alpha(i, j);
+      }
+    }
+
+    for (size_t i = 0; i < error_beta.n_rows(); ++i) {
+      for (size_t j = 0; j < error_beta.n_cols(); ++j) {
+        const size_t ib = error_alpha.n_rows() + i;
+        const size_t jb = error_alpha.n_cols() + j;
+        error(ib, jb) += error_beta(i, j);
+      }
+    }
+    return error;
   }
 };
 }  // namespace molsturm
