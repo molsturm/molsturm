@@ -215,7 +215,7 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_state(
   for (size_t v = 0; v < n_beta; ++v) {
     const size_t v_beta = v + n_orbs_alpha;
     std::copy(coeff_bf[v_beta].begin() + n_bas, coeff_bf[v_beta].end(),
-              reduced_coeff_bf[v_beta].begin());
+              reduced_coeff_bf[v + n_alpha].begin());
   }
 
   // Make alpha and beta occupied views
@@ -224,7 +224,6 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_state(
         reduced_coeff_bf.subview({n_alpha, n_alpha + n_beta}));
 
   update_operator(ca_bo_ptr, cb_bo_ptr);
-
   if (include_energies) {
     update_energies(ca_bo_ptr, cb_bo_ptr);
   }
@@ -270,8 +269,8 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_operator(
   // alpha!
   exchge_adens.update(occa_map);
   m_exchge_bdens.update(occb_map);
-  blocka += coeff_exchge * m_exchge_bdens;
-  blockb += coeff_exchge * exchge_adens;
+  blocka += coeff_exchge * exchge_adens;
+  blockb += coeff_exchge * m_exchge_bdens;
 
   assert_internal(blocka.n_rows() == blocka.n_cols());
   assert_internal(blockb.n_rows() == blockb.n_cols());
@@ -365,10 +364,10 @@ template <typename StoredMatrix, typename BlockType>
 void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::assert_coefficient_structure(
       const coefficients_ptr_type& coeff_bf_ptr) const {
 #ifdef DEBUG
-  assert_internal(coeff_bf_ptr->n_vectors() % 2 == 0);
   const size_t n_orbs = coeff_bf_ptr->n_vectors();
   const size_t n_orbs_alpha = n_orbs / 2;
   const size_t n_bas = m_coul_bdens.n_rows();
+  assert_internal(n_orbs % 2 == 0);
 
   auto is_zero = [](scalar_type v) { return v == 0.; };
 
