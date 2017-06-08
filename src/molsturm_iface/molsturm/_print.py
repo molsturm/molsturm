@@ -66,9 +66,9 @@ def print_mo_occupation(hfres, out=sys.stdout, indention=6*" ", title="Orbital o
       "enb": "",
     }
     if i < hfres["n_orbs_alpha"]:
-      kw["ena"] = hfres["orbital_energies_f"][i]
+      kw["ena"] = hfres["orben_f"][i]
     if i < hfres["n_orbs_beta"]:
-      kw["enb"] = hfres["orbital_energies_f"][i+hfres["n_orbs_alpha"]]
+      kw["enb"] = hfres["orben_f"][i+hfres["n_orbs_alpha"]]
     out.write(fstr.format(**kw))
 
 def print_energies(hfres,out=sys.stdout, indention=6*" ", title="Final energies:"):

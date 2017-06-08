@@ -77,10 +77,17 @@ struct HfResults {
   double energy_kinetic;
   //@}
 
-  std::vector<double> coeff_fb;
-  std::vector<double> orbital_energies_f;
+  // Orbital coefficients
+  std::vector<double> orbcoeff_fb;
+
+  // Orbital energy
+  std::vector<double> orben_f;
+
+  // Fock matrix
   std::vector<double> fock_ff;
-  std::vector<double> repulsion_integrals_ffff;
+
+  // Electron Repulsion Interaction tensor
+  std::vector<double> eri_ffff;
 };
 
 }  // namespace iface

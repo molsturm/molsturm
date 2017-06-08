@@ -75,12 +75,12 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   ret.energy_total = fbb.energy_total();
   ret.energy_nuclear_repulsion = fbb.energy_nuclear_repulsion();
 
-  // Insert alpha and beta energies:
+  // Insert alpha and beta orbital energies:
   std::copy(soln.evalues().begin(), soln.evalues().end(),
-            std::back_inserter(ret.orbital_energies_f));
+            std::back_inserter(ret.orben_f));
   std::copy(soln.evalues().begin(), soln.evalues().end(),
-            std::back_inserter(ret.orbital_energies_f));
-  assert_size(ret.orbital_energies_f.size(), n_orbs);
+            std::back_inserter(ret.orben_f));
+  assert_size(ret.orben_f.size(), n_orbs);
 
   // Compute the full fock matrix in MO space, i.e.  C^T * (F * C)
   // => Need a dot product here, so actually the dot of all vectors with another
@@ -104,20 +104,20 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   }
 
   // Copy coefficients (also alpha and beta block is needed!)
-  ret.coeff_fb.resize(n_orbs * n_bas);
+  ret.orbcoeff_fb.resize(n_orbs * n_bas);
   for (size_t f = 0; f < soln.evectors().n_vectors(); ++f) {
     for (size_t b = 0; b < n_bas; ++b) {
       const size_t fb = f * n_bas + b;
       const size_t fb_beta = (f + ret.n_orbs_alpha) * n_bas + b;
-      assert_internal(fb < ret.coeff_fb.size());
-      assert_internal(fb_beta < ret.coeff_fb.size());
-      ret.coeff_fb[fb] = soln.evectors()[f][b];
-      ret.coeff_fb[fb_beta] = soln.evectors()[f][b];
+      assert_internal(fb < ret.orbcoeff_fb.size());
+      assert_internal(fb_beta < ret.orbcoeff_fb.size());
+      ret.orbcoeff_fb[fb] = soln.evectors()[f][b];
+      ret.orbcoeff_fb[fb_beta] = soln.evectors()[f][b];
     }  // j
   }    // i
 
   if (not params.export_repulsion_integrals) {
-    ret.repulsion_integrals_ffff.resize(0);
+    ret.eri_ffff.resize(0);
     return ret;
   }
 
@@ -128,7 +128,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   eri.contract_with(soln.evectors(), soln.evectors(), soln.evectors(), soln.evectors(),
                     eri_aaaa);
 
-  ret.repulsion_integrals_ffff.resize(n_orbs * n_orbs * n_orbs * n_orbs);
+  ret.eri_ffff.resize(n_orbs * n_orbs * n_orbs * n_orbs);
   for (size_t i = 0, ijkl = 0; i < n_orbs_alpha; ++i) {
     for (size_t j = 0; j < n_orbs_alpha; ++j) {
       for (size_t k = 0; k < n_orbs_alpha; ++k) {
@@ -153,10 +153,10 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
           assert_internal(bbbb < n_orbs * n_orbs * n_orbs * n_orbs);
           assert_internal(ijkl < eri_aaaa.size());
 
-          ret.repulsion_integrals_ffff[aaaa] = eri_aaaa[ijkl];
-          ret.repulsion_integrals_ffff[aabb] = eri_aaaa[ijkl];
-          ret.repulsion_integrals_ffff[bbaa] = eri_aaaa[ijkl];
-          ret.repulsion_integrals_ffff[bbbb] = eri_aaaa[ijkl];
+          ret.eri_ffff[aaaa] = eri_aaaa[ijkl];
+          ret.eri_ffff[aabb] = eri_aaaa[ijkl];
+          ret.eri_ffff[bbaa] = eri_aaaa[ijkl];
+          ret.eri_ffff[bbbb] = eri_aaaa[ijkl];
         }  // l
       }    // k
     }      // j

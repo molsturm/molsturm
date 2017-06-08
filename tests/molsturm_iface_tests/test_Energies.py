@@ -75,7 +75,7 @@ class TestEnergies(NumCompTestCase):
     if "energy_mos" in ref:
       tol=max(1e-6, error)   # Unfortunately ORCA spits out the mos only up to very low accuracy
       mos = np.array(ref["energy_mos"])
-      self.assertArrayAlmostEqual(hf["orbital_energies_f"], mos, tol=tol, prefix="MO energies: ")
+      self.assertArrayAlmostEqual(hf["orben_f"], mos, tol=tol, prefix="MO energies: ")
     return hf
 
   def run_mp2(self,case,hf):

@@ -24,8 +24,7 @@
 # This files include constants which are needed all over the code
 
 """The keys corresponding to numpy arrays in the HfResults class"""
-HFRES_ARRAY_KEYS = [ "orbital_energies_f", "repulsion_integrals_ffff", 
-                     "fock_ff", "coeff_fb" ]
+HFRES_ARRAY_KEYS = [ "orben_f", "eri_ffff", "fock_ff", "orbcoeff_fb" ]
 
 """Keys which could be numpy arrays in the input Parameters to hartree_fock"""
 INPUT_PARAMETER_ARRAY_KEYS = [ "atom_numbers", "atoms", "coords", "nlm_basis" ]

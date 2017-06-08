@@ -48,13 +48,13 @@ class TestHartreeFock(NumCompTestCase):
       self.assertEqual(self._hf_result[key], data.ref_convergence_result[key])
 
   def test_orbital_energies(self):
-    self.assertArrayAlmostEqual(self._hf_result["orbital_energies_f"],
+    self.assertArrayAlmostEqual(self._hf_result["orben_f"],
                                 data.ref_orbital_energies,
                                 tol=data.params["error"],
                                 prefix="Orbital energies: ")
 
   def test_coefficients(self):
-    self.assertArrayAlmostEqual(self._hf_result["coeff_fb"],
+    self.assertArrayAlmostEqual(self._hf_result["orbcoeff_fb"],
                                 data.ref_coefficients,
                                 tol=data.params["error"],
                                 prefix="Coefficients: ")
@@ -83,8 +83,8 @@ class TestHartreeFock(NumCompTestCase):
       for j in [ "a", "b" ]:
         for k in [ "a", "b" ]:
           for l in [ "a", "b" ]:
-            Jijkl = self._hf_result["repulsion_integrals_ffff"][slicemap[i],slicemap[j],
-                                                                slicemap[k], slicemap[l]]
+            Jijkl = self._hf_result["eri_ffff"][slicemap[i],slicemap[j],
+                                                slicemap[k], slicemap[l]]
             try:
               ref_Jijkl = data.ref_repulsion_integrals[i+j+k+l]
             except KeyError as e:
