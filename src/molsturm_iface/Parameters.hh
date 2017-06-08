@@ -87,7 +87,7 @@ struct Parameters {
   //
   // Compute the repulsion integrals as a full tensor in the molecular orbital basis.
   // The underlying ao2mo transformation is rather slow.
-  bool enable_repulsion_integrals = true;
+  bool export_repulsion_integrals = false;
 };
 
 }  // namespace iface

@@ -27,7 +27,7 @@ namespace iface {
 
 struct ExportParameters {
   double error = 0;
-  bool enable_repulsion_integrals = true;
+  bool export_repulsion_integrals = true;
 };
 
 template <typename State>

@@ -48,10 +48,16 @@ class TestEnergies(NumCompTestCase):
   def run_hf(self,case):
     error = case["params"]["error"]
 
+    do_postHf = False
+    if "mp2" in molsturm.posthf.available_methods:
+      do_postHf = True
+
     params = dict(case["params"])
     params.update({
       "eigensolver":    "lapack",
       "guess_esolver":  "lapack",
+      #
+      "export_repulsion_integrals": do_postHf,
     })
 
     hf = molsturm.hartree_fock(**params)

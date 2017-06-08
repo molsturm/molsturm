@@ -39,6 +39,8 @@ params = {
   "eigensolver":    "lapack",
   "guess_method":   "loewdin",
   "guess_esolver":  "lapack",
+  #
+  "export_repulsion_integrals": True,
 }
 
 ref_convergence_result = {

@@ -15,6 +15,8 @@ params = {
   "eigensolver":   "lapack",
   "guess_esolver": "lapack",
   "error":          1e-10,
+  #
+  "export_repulsion_integrals": True,
 }
 
 res = molsturm.hartree_fock(**params)

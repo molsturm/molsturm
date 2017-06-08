@@ -116,7 +116,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
     }  // j
   }    // i
 
-  if (not params.enable_repulsion_integrals) {
+  if (not params.export_repulsion_integrals) {
     ret.repulsion_integrals_ffff.resize(0);
     return ret;
   }

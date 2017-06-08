@@ -12,6 +12,8 @@ params = {
   "print_iterations": True,
   #
   "error":          1e-10,
+  #
+  "export_repulsion_integrals": True,
 }
 
 res = molsturm.hartree_fock(**params)

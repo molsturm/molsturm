@@ -32,7 +32,7 @@ namespace molsturm {
 namespace iface {
 
 ExportParameters build_export_parameters(const Parameters& params) {
-  return ExportParameters{params.error, params.enable_repulsion_integrals};
+  return ExportParameters{params.error, params.export_repulsion_integrals};
 }
 
 template <RestrictionType restrict>
