@@ -1,0 +1,10 @@
+# Info for the data generator script
+include:
+  - dump_yaml
+
+# Input:
+atoms:       [ be ]
+coords:      [[ 0,0,0 ]]
+basis_set:   sto-3g
+basis_type:  "gaussian/libint"
+enable_repulsion_integrals: True
