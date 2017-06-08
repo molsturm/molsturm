@@ -96,6 +96,14 @@ def hartree_fock(forward_parameters=True, **kwargs):
   # Build params and run:
   params = iface.Parameters()
   for key in kwargs:
+    # vv TODO XXX temporary please remove me
+    #    We will rename these keys soon, so transform them already in perparation.
+    if key == "basis_type" and kwargs[key].startswith("atomic"):
+      kwargs[key] = "deprecated/"+kwargs[key]
+    elif key == "basis_type" and kwargs[key].startswith("sturmian/atomic"):
+      kwargs[key] = kwargs[key][9:]
+    # ^^ TODO XXX temporary please remove me
+
     if not key in params_keys or key in exclude_keys:
       raise ValueError("Keyword " + key + " is unknown to hartree_fock")
     elif key in __params_transform_maps:

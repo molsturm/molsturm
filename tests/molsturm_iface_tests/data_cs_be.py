@@ -29,7 +29,7 @@ params = {
   "atom_numbers": [4],
   "coords":       [ [0,0,0] ],
   #
-  "basis_type":     "atomic/cs_naive",
+  "basis_type":     "sturmian/atomic/cs_naive",
   "n_max":          3,
   "l_max":          2,
   "k_exp":          1.0,

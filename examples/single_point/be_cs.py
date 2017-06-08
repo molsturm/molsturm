@@ -27,7 +27,7 @@ params = {
   "atom_numbers": [4],
   "coords":       [[0,0,0]],
   #
-  "basis_type":   "atomic/cs_reference_pc",
+  "basis_type":   "sturmian/atomic/cs_reference_pc",
   "k_exp":        1.3,
   #
   "eigensolver":   "lapack",

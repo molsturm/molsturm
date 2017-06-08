@@ -36,7 +36,7 @@ params = {
   "atom_numbers": [4],
   "coords":       [[0,0,0]],
   #
-  "basis_type":   "atomic/cs_dummy",
+  "basis_type":   "sturmian/atomic/cs_dummy",
   "n_max":        3,
   "l_max":        2,
   "k_exp":        1.3,
