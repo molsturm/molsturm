@@ -15,8 +15,8 @@
 #include <molsturm/IopScfKeys.hh>
 #include <molsturm/RestrictedClosedIntegralOperator.hh>
 #include <molsturm/ScfDebugWrapper.hh>
+#include <molsturm/Version.hh>
 #include <molsturm/scf_guess.hh>
-#include <molsturm/version.hh>
 
 DefException1(
       ExcTooSmallBasis, size_t,
@@ -173,7 +173,7 @@ void run_rhf(args_type args, bool debug = false) {
 }
 
 int main(int argc, char** argv) {
-  std::cout << "molsturm version:   " << molsturm::version::version_string() << std::endl
+  std::cout << "molsturm version:   " << molsturm::Version::as_string() << std::endl
             << "gscf version:       " << gscf::version::version_string() << std::endl
             << "gint version:       " << gint::version::version_string() << std::endl
             << "linalgwrap version: " << linalgwrap::version::version_string()

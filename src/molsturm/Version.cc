@@ -1,9 +1,9 @@
-#include "molsturm/version.hh"
+#include "molsturm/Version.hh"
 #include <sstream>
 
 namespace molsturm {
 
-std::string version::version_string() {
+std::string Version::as_string() {
   std::stringstream ss;
   ss << major << "." << minor << "." << patch;
   return ss.str();
