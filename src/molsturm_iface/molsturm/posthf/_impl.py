@@ -21,6 +21,8 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
+from .._constants import HFRES_ARRAY_KEYS
+
 try:
   import pyadc
   _pyadc_found = True
@@ -42,12 +44,9 @@ def generate_pyadc_input(hfres):
   include_keys = [ "n_alpha", "n_beta", "n_orbs_alpha", "n_orbs_beta",
                    "n_bas", "restricted", "threshold",
                    #
-                   "repulsion_integrals_ffff", "fock_ff",
-                   "coeff_fb", "orbital_energies_f",
-                   #
                    "energy_nuclear_repulsion", "energy_nuclear_attraction",
                    "energy_coulomb", "energy_exchange", "energy_kinetic",
-                 ]
+                 ] + HFRES_ARRAY_KEYS
   remap_keys = { "energy_total" : "energy_scf" }
 
   params = { k:hfres[k] for k in include_keys if k in hfres }
@@ -62,6 +61,12 @@ def run_pyadc(hfres,**params):
   """
   if not _pyadc_found:
     raise RuntimeError("Cannot run pyadc: pyadc not found.")
+
+  # Check everything we need is there
+  for k in HFRES_ARRAY_KEYS:
+    if not k in hfres:
+      raise ValueError("hfres parameters do not contain the required key '" +
+                       k + "'.")
 
   resp = generate_pyadc_input(hfres)
   resp.update(params)

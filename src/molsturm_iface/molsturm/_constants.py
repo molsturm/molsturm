@@ -21,6 +21,14 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from ._impl import available_methods
-from ._impl import generate_pyadc_input
-from ._impl import mp2, run_pyadc
+# This files include constants which are needed all over the code
+
+"""The keys corresponding to numpy arrays in the HfResults class"""
+HFRES_ARRAY_KEYS = [ "orbital_energies_f", "repulsion_integrals_ffff", 
+                     "fock_ff", "coeff_fb" ]
+
+"""Keys which could be numpy arrays in the input Parameters to hartree_fock"""
+INPUT_PARAMETER_ARRAY_KEYS = [ "atom_numbers", "atoms", "coords", "nlm_basis" ]
+
+"""The key used to indicate the input parameters in the dict returned by hartree_fock"""
+HFRES_INPUT_PARAMETER_KEY= "input_parameters"

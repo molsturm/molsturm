@@ -23,6 +23,7 @@
 
 import molsturm_iface as iface
 import numpy as np
+from ._constants import HFRES_ARRAY_KEYS, HFRES_INPUT_PARAMETER_KEY
 
 def __np_to_coords(arr):
   ret = iface.DoubleVector()
@@ -66,7 +67,24 @@ __params_transform_maps = {
 """The list of keys understood by the hartree_fock function"""
 hartree_fock_keys = [ k for k in dir(iface.Parameters) if k[0] != "_" ]
 
-def hartree_fock(**kwargs):
+def hartree_fock(forward_parameters=True, **kwargs):
+  """
+  Run a Hartree-Fock calculation with molsturm. The list of valid input
+  parameters can be retrieved by the means of the list "hartree_fock_keys".
+
+  Parameters:
+    forward_parameters:   Should the list of kwargs be forwarded to the
+                          output dictionary for archiving purposes?
+                          If True(default) the returned dictionary
+                          will contain a key "input_parameters" which
+                          is a copy of the parameters on the commandline.
+
+  A couple of selected kwargs:
+    - basis_type        The type of the basis used for the calculation
+    - coords            List of iterables of size 3: Coordinats of the atoms
+    - atoms             List of the atom symbols (in the same order as coords)
+  """
+
   # The list of valid keys is the list of keys
   # with the special ones (starting with __) removed.
   params_keys = [ k for k in dir(iface.Parameters) if k[0] != "_" ]
@@ -91,18 +109,23 @@ def hartree_fock(**kwargs):
   res = iface.hartree_fock(params)
 
   # Build output dictionary:
-  out_arrays = [ "coeff_fb", "fock_ff", "orbital_energies_f",
-                 "repulsion_integrals_ffff"]
   shape_lookup = { "f": res.n_orbs_alpha + res.n_orbs_beta,
                    "b": res.n_bas }
 
-  out = { k :getattr(res,k) for k in res_keys if not k in out_arrays }
-  for k in out_arrays:
+  out = { k :getattr(res,k) for k in res_keys if not k in HFRES_ARRAY_KEYS }
+  for k in HFRES_ARRAY_KEYS:
     # Build the shape to cast the numpy arrays into from the
     # suffixes (e.g. _ffff, _bf) and the shape lookup object
     # we created above
     target_shape = tuple( shape_lookup[c] for c in k[k.rfind("_")+1:] )
-    out[k] = np.array(getattr(res,k)).reshape(target_shape)
+    ary = np.array(getattr(res,k))
+    if ary.size != 0:
+      # If the size is 0, then the data has not been computed,
+      # so we can ignore it
+      out[k] = ary.reshape(target_shape)
+
+  if forward_parameters:
+    out[HFRES_INPUT_PARAMETER_KEY] = kwargs
 
   return out
 
