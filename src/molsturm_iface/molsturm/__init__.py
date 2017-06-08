@@ -24,4 +24,5 @@
 from ._print import *
 from ._hartree_fock import hartree_fock, hartree_fock_keys
 from ._serialisation import *
+from molsturm_iface import Version
 

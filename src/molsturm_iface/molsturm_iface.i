@@ -7,6 +7,7 @@
 #include "HfResults.hh"
 #include "hartree_fock.hh"
 #include <krims/ExceptionSystem/Exceptions.hh>
+#include <molsturm/Version.hh>
 %}
 
 %include "std_vector.i"
@@ -35,3 +36,4 @@ namespace std {
 %include "Parameters.hh"
 %include "HfResults.hh"
 %include "hartree_fock.hh"
+%include "../molsturm/Version.hh"
