@@ -47,7 +47,7 @@ option(MOLSTURM_ENABLE_EXAMPLES "Build molsturm examples" ON)
 ##########################################################################
 # Project setup
 
-project(molsturm VERSION 0.0.0)
+project(molsturm VERSION 0.0.1)
 message("\n# Configuring ${PROJECT_NAME}\n#")
 
 # Global include directories for this project:
