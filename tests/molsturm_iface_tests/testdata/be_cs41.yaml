@@ -125,7 +125,7 @@ fock_ff:
   -1.0733312048219245e-17, -1.734723475976807e-16, -5.551115123125783e-17, 0.8899056412176695]
 input_parameters:
   atom_numbers: [4]
-  basis_type: atomic/cs_reference_pc
+  basis_type: sturmian/atomic/cs_reference_pc
   coords:
   - [0, 0, 0]
   export_repulsion_integrals: false

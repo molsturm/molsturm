@@ -353,7 +353,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
       if (res_atomic != std::end(valid_atomic_basis)) {
         parsed.sturmian = true;
         parsed.gaussian = false;
-        parsed.basis_type = "atomic/" + argument;
+        parsed.basis_type = "sturmian/atomic/" + argument;
       } else if (res_gaussian != std::end(valid_gaussian_basis)) {
         parsed.gaussian = true;
         parsed.sturmian = false;

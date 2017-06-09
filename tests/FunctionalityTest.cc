@@ -28,7 +28,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   int l_max = 2;
   size_t n_eigenpairs = 4;
   const double tolerance = 1e-9;
-  const std::string basis_type = "atomic/cs_naive";
+  const std::string basis_type = "sturmian/atomic/cs_naive";
   const gint::OrbitalType otype = gint::OrbitalType::COMPLEX_ATOMIC;
 
   //
