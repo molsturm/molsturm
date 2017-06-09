@@ -1,0 +1,12 @@
+# Info for the data generator script
+include:
+  - dump_yaml
+
+# Input:
+atom_numbers: [ 4 ]
+coords:       [[ 0,0,0 ]]
+basis_type:   "sturmian/atomic/cs_reference_pc"
+n_max:        4
+l_max:        1
+export_repulsion_integrals: False
+guess_esolver: lapack
