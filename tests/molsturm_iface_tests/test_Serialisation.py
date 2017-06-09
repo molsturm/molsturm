@@ -60,6 +60,7 @@ class TestSerialisation(unittest.TestCase):
       elif isinstance(d1[k],list):
         self.assertListEqual(d1[k],d2[k])
       else:
+        self.assertEqual(type(d1[k]), type(d2[k]))
         self.assertEqual(d1[k],d2[k])
 
 

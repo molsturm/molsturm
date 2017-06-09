@@ -25,16 +25,6 @@ import h5py
 import numpy as np
 from os.path import basename
 
-# Type transformations for scalar types
-# If type not found here, we have an error
-__scalar_transform = [
-  ( complex, np.complex128                ),
-  ( float,   np.float64                   ),
-  ( int,     np.int64                     ),
-  ( bool,    np.bool8                     ),
-  ( str,     h5py.special_dtype(vlen=str) ),
-]
-
 def __emplace_ndarray(keyval, group, typ, **kwargs):
   dset = group.create_dataset(keyval[0], data=keyval[1], **kwargs)
   dset.attrs["type"] = "ndarray"
@@ -70,30 +60,43 @@ def __extract_none(dataset):
   return (basename(dataset.name), None)
 
 
+# Type transformations for scalar types
+# If type not found here, we have an error
+# in the direction python -> hdf5, else we ignore it.
+__scalar_transform = [
+  ( str,     h5py.special_dtype(vlen=str) ),
+  ( bool,    np.dtype("b1")               ),
+  ( complex, np.dtype("c16")              ),
+  ( float,   np.dtype("f8")               ),
+  ( int,     np.dtype("int64")            ),
+]
+
 def __emplace_scalar(keyval, group, typ, **kwargs):
-  trans = None # Indicate no target type found
+  dtype = None # Indicate no target type found
   for t in __scalar_transform:
     if isinstance(keyval[1], t[0]):
-      trans=t
+      dtype=t[1]
       break
-  if trans is None:
+  if dtype is None:
     raise TypeError("Encountered unknown data type '" + str(type(keyval[1])) + "'")
 
   # Make a np array with one element and insert
-  dset = group.create_dataset(keyval[0], data=np.array([ keyval[1] ], dtype=trans[1]),
-                              **kwargs)
+  dset = group.create_dataset(keyval[0], data=np.array([ keyval[1] ], dtype=dtype),
+                              dtype=dtype, **kwargs)
   dset.attrs["type"] = "scalar"
 
 def __extract_scalar(dataset):
-  trans = None # Indicate no target type found
+  dtype = None # Target type to transform to
   for t in __scalar_transform:
     if dataset.dtype == t[1]:
-      trans = t[0]
+      dtype = t[0]
       break
-  if trans is None:
-    raise ValueError("Encountered unknown data type '" + str(type(dataset.dtype)) + "'")
 
-  return (basename(dataset.name), trans(dataset[0]))
+  ret = dataset[0]
+  if dtype is not None:
+    ret = dtype(ret)
+
+  return (basename(dataset.name), ret)
 
 
 def __extract_dataset(dataset):

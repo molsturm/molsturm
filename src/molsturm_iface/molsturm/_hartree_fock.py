@@ -132,6 +132,12 @@ def hartree_fock(forward_parameters=True, **kwargs):
       # so we can ignore it
       out[k] = ary.reshape(target_shape)
 
+  # vv TODO XXX temporary please remove me
+  #    We will rename these keys soon, so transform them already in perparation.
+  if key == "basis_type" and kwargs[key].startswith("atomic"):
+    kwargs[key] = "sturmian/"+kwargs[key]
+  # ^^ TODO XXX temporary please remove me
+
   if forward_parameters:
     out[HFRES_INPUT_PARAMETER_KEY] = kwargs
 
