@@ -20,7 +20,6 @@
 #include "hartree_fock.hh"
 #include "config.hh"
 #include "export_hf_results.hh"
-#include "export_hf_results.hh"
 #include "parse_parameters.hh"
 #include <gint/IntegralLookup.hh>
 #include <gint/IntegralType.hh>

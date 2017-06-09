@@ -28,6 +28,10 @@ namespace iface {
 struct ExportParameters {
   double error = 0;
   bool export_repulsion_integrals = true;
+
+  ExportParameters() = default;
+  ExportParameters(double error, bool export_repulsion_integrals)
+        : error(error), export_repulsion_integrals(export_repulsion_integrals) {}
 };
 
 template <typename State>
