@@ -4,7 +4,7 @@ BUILD_PATH="../build"
 # ------------------------------------------------
 
 for dir in $PWD/../src/molsturm_iface $PWD/$BUILD_PATH/src/molsturm_iface; do
-	dir=$(realpath $dir)
+	dir=$(readlink -f $dir)
 	if [ ! -d "$dir" ]; then
 		echo "Not a valid path:  $dir" >&2
 		echo "Probably the examples won't work" >&2
@@ -16,7 +16,7 @@ done
 
 for file in $PWD/../../adcc/build/src/pyadc/pyadc_iface.py $PWD/../../adcc/src/pyadc/pyadc.py; do
 	if [ -f "$file" ]; then
-		dir=$(realpath $(dirname $file))
+		dir=$(readlink -f $(dirname $file))
 		export PYTHONPATH="$PYTHONPATH:$dir"
 	else
 		break
