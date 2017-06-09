@@ -43,6 +43,10 @@ def metadata_common():
     "date": datetime.now().isoformat(),
   }
 
+#
+# Yaml
+#
+
 def dump_yaml(hfres, stream):
   """Take a HartreeFock result and dump the data
      in yaml format.
@@ -136,6 +140,26 @@ def load_yaml(stream):
       pass
   return res
 
+def metadata_yaml(stream):
+  """Extract meta data block of a molsturm yaml file and return as a dictionary
+     Returns None no meta data block found
+  """
+  if isinstance(stream,str):
+    with open(stream,"r") as f:
+      return metadata_yaml(f)
+  elif not isinstance(stream,IOBase):
+    raise TypeError("stream parameter needs to be a string or a stream object")
+
+  res = yaml_load(stream)
+  try:
+    return res["meta"]
+  except KeyError:
+    return None
+
+#
+# HDF5
+#
+
 def dump_hdf5(hfres, path):
   """Take a HartreeFock result and dump the data in hdf5 format.
      Most of the data will be plain text, but the large numpy
@@ -180,17 +204,27 @@ def load_hdf5(path, meta_check=True):
   with h5py.File(path,"r") as h5f:
     if meta_check:
       # Check metadata first
-      meta_type = h5f.attrs["format_type"]
-      meta_version = h5f.attrs["format_version"]
+      try:
+        meta_type = h5f.attrs["format_type"]
+        meta_version = h5f.attrs["format_version"]
+      except KeyError:
+        raise ValueError("Could not find required metadata from HDF5 file for metadata "
+                         "check. You can try disabling the metadata check using "
+                         "'meta_check=False'. but strange things maght happen ...")
 
       if meta_type != "hdf5":
-        raise ValueError("Yaml stream format is not 'hdf5', but '"
+        raise ValueError("Hdf5 file format is not 'hdf5', but '"
                          +str(meta_type)+ "'.")
 
       if StrictVersion(meta_version) > StrictVersion(parser_max_version):
         raise ValueError("Parser not compatible to versions beyond "
                          + parser_max_version + ". Encountered version "
                          + meta_version + ".")
-
     return extract_group(h5f)
 
+def metadata_hdf5(path):
+  """Extract meta data block of an hdf5 file and return as a dictionary
+     Returns None no meta data block found
+  """
+  with h5py.File(path,"r") as h5f:
+    return { at : h5f.attrs[at] for at in h5f.attrs }
