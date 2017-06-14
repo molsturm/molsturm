@@ -39,7 +39,27 @@ gint::Structure build_structure(const Parameters& params) {
                ExcInvalidParameters(
                      "Exactly one of atom_numbers, atoms may contain atom definitions."));
 
+  for (auto& num : params.atom_numbers) {
+    assert_throw(num,
+                 ExcInvalidParameters("Atomic numbers need to be larger than zero."));
+  }
+
   size_t n_atoms = std::max(params.atom_numbers.size(), params.atoms.size());
+  gint::Structure s;
+  s.reserve(n_atoms);
+
+  // The case of one atom is special ... deal with it first.
+  if (n_atoms == 1) {
+    if (params.atom_numbers.size() > 0) {
+      const unsigned int atnum = static_cast<unsigned int>(params.atom_numbers[0]);
+      s.push_back(gint::Atom{atnum, {{0., 0., 0.}}});
+    } else {
+      s.push_back(gint::Atom(params.atoms[0], {{0., 0., 0.}}));
+    }
+    return s;
+  }
+
+  // Check that we get the right number of coords
   assert_throw(params.coords.size() == 3 * n_atoms,
                ExcInvalidParameters("We expect the size of the coords vector to be "
                                     "exactly three times the number of atoms, i.e. " +
@@ -47,15 +67,11 @@ gint::Structure build_structure(const Parameters& params) {
                                     " entries. But instead we got only " +
                                     std::to_string(params.coords.size()) + " entries."));
 
-  gint::Structure s;
-  s.reserve(n_atoms);
   for (size_t i = 0; i < n_atoms; ++i) {
     const std::array<double, 3> coord{
           {params.coords[3 * i], params.coords[3 * i + 1], params.coords[3 * i + 2]}};
 
     if (params.atom_numbers.size() > 0) {
-      assert_throw(params.atom_numbers[i] > 0,
-                   ExcInvalidParameters("Atomic numbers need to be larger than zero."));
       unsigned int atnum = static_cast<unsigned int>(params.atom_numbers[i]);
       s.emplace_back(atnum, std::move(coord));
     } else {

@@ -24,17 +24,30 @@
 import molsturm_iface as iface
 import numpy as np
 from ._constants import HFRES_ARRAY_KEYS, HFRES_INPUT_PARAMETER_KEY
+from collections import Iterable
 
-def __np_to_coords(arr):
+def __to_coords(arr):
+  if not isinstance(arr,Iterable):
+    raise TypeError("Argument passed to \"coords\" needs to be iterable")
+
   ret = iface.DoubleVector()
-  for c in arr:
+  def parse_coord(c):
     if len(c) != 3:
       raise ValueError("All items of the coordinates array need have exactly 3 items.")
     for i in range(3):
-      ret.push_back(c[i])
+      try:
+        ret.push_back(float(c[i]))
+      except ValueError:
+        raise ValueError("All elements of coord vectors need to be castible to float")
+
+  if isinstance(arr[0], Iterable):
+    for c in arr:
+      parse_coord(c)
+  else:
+    parse_coord(arr)
   return ret
 
-def __np_to_nlm(arr):
+def __to_nlm(arr):
   ret = iface.IntVector()
   for c in arr:
     if len(c) != 3:
@@ -43,29 +56,44 @@ def __np_to_nlm(arr):
       ret.push_back(c[i])
   return ret
 
-def __to_int_vector(li):
+def __to_atom_numbers(li):
   ret = iface.IntVector()
-  for n in li:
-    ret.push_back(n)
+  if isinstance(li,int):
+    ret.push_back(int(li))
+  elif isinstance(li,Iterable):
+    for n in li:
+      ret.push_back(int(n))
+  else:
+    raise ValueError("atom numbers needs be an int or a list of ints")
   return ret
 
-def __to_string_vector(li):
+def __to_atoms(li):
   ret = iface.StringVector()
-  for n in li:
-    ret.push_back(n)
+  if isinstance(li,str):
+    ret.push_back(str(li))
+  elif isinstance(li,Iterable):
+    for n in li:
+      ret.push_back(str(n))
+  else:
+    raise ValueError("atoms needs to be a string or a list of strings")
   return ret
 
 # Special input parameters for which the above conversion functions need
 # to be used before assignment
 __params_transform_maps = {
-  "coords":       __np_to_coords,
-  "atom_numbers": __to_int_vector,
-  "atoms":        __to_string_vector,
-  "nlm_basis":    __np_to_nlm,
+  "coords":       __to_coords,
+  "atom_numbers": __to_atom_numbers,
+  "atoms":        __to_atoms,
+  "nlm_basis":    __to_nlm,
 }
 
+# These keys exist in the Parameters struct, but should not be exposed
+# via the hartree_fock interface
+HF_PARAMS_EXCLUDE_KEYS = [ "restricted_set_by_user", "all" ]
+
 """The list of keys understood by the hartree_fock function"""
-hartree_fock_keys = [ k for k in dir(iface.Parameters) if k[0] != "_" ]
+hartree_fock_keys = [ k for k in dir(iface.Parameters)
+                      if k[0] != "_" and not k in HF_PARAMS_EXCLUDE_KEYS ]
 
 def hartree_fock(forward_parameters=True, **kwargs):
   """
@@ -90,13 +118,10 @@ def hartree_fock(forward_parameters=True, **kwargs):
   params_keys = [ k for k in dir(iface.Parameters) if k[0] != "_" ]
   res_keys = [ k for k in dir(iface.HfResults) if k[0] != "_" ]
 
-  # These keys exist in the Parameters struct, but should not be exposed further up.
-  exclude_keys = [ "restricted_set_by_user" ]
-
   # Build params and run:
   params = iface.Parameters()
   for key in kwargs:
-    if not key in params_keys or key in exclude_keys:
+    if not key in params_keys or key in HF_PARAMS_EXCLUDE_KEYS:
       raise ValueError("Keyword " + key + " is unknown to hartree_fock")
     elif key in __params_transform_maps:
       setattr(params,key,__params_transform_maps[key](kwargs[key]))
