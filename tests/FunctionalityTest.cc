@@ -2,6 +2,7 @@
 #include <gint/IntegralLookup.hh>
 #include <gint/IntegralLookupKeys.hh>
 #include <gint/OrbitalType.hh>
+#include <linalgwrap/SmallMatrix.hh>
 #include <linalgwrap/TestingUtils.hh>
 #include <molsturm/IopScf.hh>
 #include <molsturm/MolecularSystem.hh>

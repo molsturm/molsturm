@@ -9,6 +9,7 @@
 #include <gint/version.hh>
 #include <gscf/version.hh>
 #include <iostream>
+#include <linalgwrap/SmallMatrix.hh>
 #include <linalgwrap/io.hh>
 #include <linalgwrap/version.hh>
 #include <molsturm/IopScf.hh>
