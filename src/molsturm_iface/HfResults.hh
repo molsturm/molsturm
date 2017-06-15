@@ -86,6 +86,9 @@ struct HfResults {
   // Fock matrix
   std::vector<double> fock_ff;
 
+  // Matrix of all one electron integrals accumulated
+  std::vector<double> hcore_ff;
+
   // Electron Repulsion Interaction tensor
   std::vector<double> eri_ffff;
 };

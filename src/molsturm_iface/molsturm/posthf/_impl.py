@@ -44,9 +44,11 @@ def generate_pyadc_input(hfres):
   include_keys = [ "n_alpha", "n_beta", "n_orbs_alpha", "n_orbs_beta",
                    "n_bas", "restricted", "threshold",
                    #
+                   "orben_f", "eri_ffff", "fock_ff", "orbcoeff_fb",
+                   #
                    "energy_nuclear_repulsion", "energy_nuclear_attraction",
                    "energy_coulomb", "energy_exchange", "energy_kinetic",
-                 ] + HFRES_ARRAY_KEYS
+                 ]
   remap_keys = { "energy_total" : "energy_scf" }
 
   params = { k:hfres[k] for k in include_keys if k in hfres }

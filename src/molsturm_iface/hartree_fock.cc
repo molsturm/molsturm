@@ -30,17 +30,12 @@
 namespace molsturm {
 namespace iface {
 
-ExportParameters build_export_parameters(const Parameters& params) {
-  return ExportParameters{params.error, params.export_repulsion_integrals};
-}
-
 template <RestrictionType restrict>
 HfResults hartree_fock_inner(const Parameters& params, const MolecularSystem& system) {
   // Parse parameters
   const krims::GenMap int_params = build_int_params(params, system);
   const krims::GenMap guess_params = build_guess_params(params);
   const krims::GenMap scf_params = build_scf_params(params);
-  const ExportParameters export_params = build_export_parameters(params);
 
   // Lookup integral terms
   gint::IntegralLookup<matrix_type> integrals(int_params);
@@ -58,7 +53,7 @@ HfResults hartree_fock_inner(const Parameters& params, const MolecularSystem& sy
   fock_bb.update(guess.evectors_ptr);
 
   auto result = run_scf(fock_bb, S_bb, guess, scf_params);
-  return export_hf_results(result, integrals.eri_tensor(), export_params);
+  return export_hf_results(result, integrals.eri_tensor(), params);
 }
 
 HfResults hartree_fock(const Parameters& params) {

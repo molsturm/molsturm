@@ -88,6 +88,12 @@ struct Parameters {
   // Compute the repulsion integrals as a full tensor in the molecular orbital basis.
   // The underlying ao2mo transformation is rather slow.
   bool export_repulsion_integrals = false;
+
+  // Export the fock matrix
+  bool export_fock_matrix = true;
+
+  // Export the matrix of all one electron terms combined
+  bool export_hcore_matrix = true;
 };
 
 }  // namespace iface

@@ -19,24 +19,16 @@
 
 #pragma once
 #include "HfResults.hh"
+#include "Parameters.hh"
 #include "config.hh"
 #include "gint/ERITensor_i.hh"
 
 namespace molsturm {
 namespace iface {
 
-struct ExportParameters {
-  double error = 0;
-  bool export_repulsion_integrals = true;
-
-  ExportParameters() = default;
-  ExportParameters(double error, bool export_repulsion_integrals)
-        : error(error), export_repulsion_integrals(export_repulsion_integrals) {}
-};
-
 template <typename State>
 HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_type>& eri,
-                            const ExportParameters& params);
+                            const Parameters& params);
 
 }  // namespace iface
 }  // namespace molsturm
