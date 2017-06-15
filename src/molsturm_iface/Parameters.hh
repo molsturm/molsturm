@@ -90,7 +90,7 @@ struct Parameters {
   bool export_repulsion_integrals = false;
 
   // Export the fock matrix
-  bool export_fock_matrix = true;
+  bool export_fock_matrix = false;
 
   // Export the matrix of all one electron terms combined
   bool export_hcore_matrix = true;
