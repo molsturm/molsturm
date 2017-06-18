@@ -169,6 +169,16 @@ krims::GenMap build_guess_params(const Parameters& params) {
 
 krims::GenMap build_scf_params(const Parameters& params) {
   using linalgwrap::EigensystemSolverKeys;
+  const bool restricted = false;
+
+  assert_throw(
+        params.n_eigenpairs % 2 == 0,
+        ExcInvalidParameters(
+              "The n_eigenpairs parameter applies to the accumulated number of "
+              "eigenpairs in the SCF calculations, i.e. the number of alpha plus "
+              "the number of beta orbitals. This is the done even for restricted "
+              "calculations. For now we further require this number to be even number."));
+  const size_t n_eigenpairs = restricted ? params.n_eigenpairs / 2 : params.n_eigenpairs;
 
   const ScfMsgType verbosity =
         params.print_iterations ? ScfMsgType::IterationProcess : ScfMsgType::Silent;
@@ -180,7 +190,7 @@ krims::GenMap build_scf_params(const Parameters& params) {
         {IopScfKeys::max_tot_energy_change, params.error / 4.},
         //
         {IopScfKeys::max_iter, params.max_iter},
-        {IopScfKeys::n_eigenpairs, params.n_eigenpairs},
+        {IopScfKeys::n_eigenpairs, n_eigenpairs},
         {IopScfKeys::verbosity, verbosity},
         {gscf::PulayDiisScfKeys::n_prev_steps, params.diis_size},
   };

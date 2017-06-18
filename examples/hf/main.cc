@@ -55,7 +55,7 @@ void print_res(const State& res) {
 }
 
 /** Run an SCF */
-template <RestrictionType restricted>
+template <RestrictionType restrict>
 void run_hf(args_type args, bool debug = false) {
   using gint::IntegralTypeKeys;
   using gint::IntegralLookupKeys;
@@ -116,14 +116,14 @@ void run_hf(args_type args, bool debug = false) {
   const size_t max_elec = std::max(args.system.n_alpha, args.system.n_beta);
   assert_throw(max_elec < Sa_bb.n_rows(), ExcTooSmallBasis(Sa_bb.n_rows()));
 
-  assert_throw(args.n_eigenpairs >= std::max(args.system.n_alpha, args.system.n_beta),
-               krims::ExcTooLarge<size_t>(max_elec, args.n_eigenpairs));
+  assert_throw(2 * args.n_eigenpairs >= std::max(args.system.n_alpha, args.system.n_beta),
+               krims::ExcTooLarge<size_t>(max_elec, 2 * args.n_eigenpairs));
 
   //
   // Problem setup
   //
-  OverlapMatrix<stored_matrix_type, restricted> S_bb(Sa_bb);
-  FockOperator<stored_matrix_type, restricted> fock_bb(integrals, args.system);
+  OverlapMatrix<stored_matrix_type, restrict> S_bb(Sa_bb);
+  FockOperator<stored_matrix_type, restrict> fock_bb(integrals, args.system);
 
   // Obtain an SCF guess
   krims::GenMap guess_params{{ScfGuessKeys::method, args.guess_method}};
@@ -131,6 +131,9 @@ void run_hf(args_type args, bool debug = false) {
                       {{EigensystemSolverKeys::method, args.guess_esolver}});
   auto guess = scf_guess(args.system, fock_bb, S_bb, guess_params);
 
+  const size_t n_eigenpairs = restrict == RestrictionType::RestrictedClosed
+                                    ? args.n_eigenpairs / 2
+                                    : args.n_eigenpairs;
   krims::GenMap params{
         // error
         {IopScfKeys::max_error_norm, args.error},
@@ -138,7 +141,7 @@ void run_hf(args_type args, bool debug = false) {
         {IopScfKeys::max_tot_energy_change, args.error / 4.},
         //
         {IopScfKeys::max_iter, args.max_iter},
-        {IopScfKeys::n_eigenpairs, args.n_eigenpairs},
+        {IopScfKeys::n_eigenpairs, n_eigenpairs},
         {IopScfKeys::verbosity, ScfMsgType::FinalSummary | ScfMsgType::IterationProcess},
         {gscf::PulayDiisScfKeys::n_prev_steps, args.diis_size},
   };

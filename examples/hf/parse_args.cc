@@ -403,6 +403,10 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
                   << std::endl;
         return false;
       }
+      if (parsed.n_eigenpairs % 2 != 0) {
+        std::cerr << "n_eigenpairs needs an even number." << std::endl;
+        return false;
+      }
     } else if (flag == std::string("--eigensolver")) {
       parsed.eigensolver = argument;
     } else if (flag == std::string("--guess_method")) {

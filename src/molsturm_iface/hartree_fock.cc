@@ -44,9 +44,21 @@ HfResults hartree_fock_inner(const Parameters& params, const MolecularSystem& sy
 
   // Checks about basis size:
   const size_t max_elec = std::max(system.n_alpha, system.n_beta);
-  assert_throw(max_elec < Sa_bb.n_rows(), ExcTooSmallBasis(Sa_bb.n_rows(), max_elec));
-  assert_throw(params.n_eigenpairs >= max_elec,
-               krims::ExcTooLarge<size_t>(max_elec, params.n_eigenpairs));
+  assert_throw(
+        max_elec < n_bas,
+        ExcInvalidParameters("A basis with n_bas == " + std::to_string(n_bas) +
+                             " basis functions is too small for treating a system with " +
+                             std::to_string(system.n_alpha) + " alpha and " +
+                             std::to_string(system.n_beta) +
+                             " beta electrons. Choose a larger basis!"));
+  assert_throw(params.n_eigenpairs >= 2 * max_elec,
+               ExcInvalidParameters(
+                     "Cannot treat a system with " + std::to_string(system.n_alpha) +
+                     " alpha and " + std::to_string(system.n_beta) +
+                     " beta electrons with computing only " +
+                     std::to_string(params.n_eigenpairs) +
+                     " eigenpairs in the SCF eigensolver. You need to request at least " +
+                     std::to_string(2 * max_elec) + " eigenpairs."));
 
   // Run solver
   OverlapMatrix<matrix_type, restrict> S_bb(Sa_bb);
