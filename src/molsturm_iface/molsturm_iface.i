@@ -24,10 +24,13 @@ namespace std {
 %exception {
   try {
     $action
-  } catch (krims::ExcNotImplemented& e) {
+  } catch (const krims::ExcNotImplemented& e) {
     PyErr_SetString(PyExc_NotImplementedError, e.what());
     return NULL;
-  } catch (krims::ExceptionBase& e) {
+  } catch (const molsturm::iface::ExcInvalidParameters& e) {
+    PyErr_SetString(PyExc_RuntimeError, e.extra().c_str());
+    return NULL;
+  } catch (const krims::ExceptionBase& e) {
     PyErr_SetString(PyExc_RuntimeError, e.what());
     return NULL;
   }
