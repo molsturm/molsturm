@@ -22,5 +22,5 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from ._impl import available_methods
-from ._impl import generate_pyadc_input
-from ._impl import mp2, run_pyadc
+from ._adcc import generate_adcc_adcman_input, run_adcc_adcman
+from ._impl import mp2, mp3, adc0, adc1, adc2s, adc2x, adc3

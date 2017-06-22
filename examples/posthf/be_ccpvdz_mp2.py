@@ -22,7 +22,7 @@ molsturm.print_convergence_summary(res)
 molsturm.print_energies(res)
 molsturm.print_mo_occupation(res)
 
-res_adc = molsturm.posthf.mp2(res,max_memory=32*1024*1024)
+res_adc = molsturm.posthf.mp2(res)
 print("MP2 energy", res_adc["energy_mp2"])
 print("tot energy", res_adc["energy_ground_state"])
 

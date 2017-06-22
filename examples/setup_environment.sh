@@ -14,7 +14,7 @@ done
 
 # ------------------------------------------------
 
-for file in $PWD/../../adcc/build/src/pyadc/pyadc_iface.py $PWD/../../adcc/src/pyadc/pyadc.py; do
+for file in $PWD/../../adcc/build/src/adcc_iface/adcc_iface.py $PWD/../../adcc/src/adcc_iface/adcc_iface.i; do
 	if [ -f "$file" ]; then
 		dir=$(readlink -f $(dirname $file))
 		export PYTHONPATH="$PYTHONPATH:$dir"

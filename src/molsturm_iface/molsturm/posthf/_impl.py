@@ -21,64 +21,93 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from .._constants import HFRES_ARRAY_KEYS
-
-try:
-  import pyadc
-  _pyadc_found = True
-except ImportError:
-  _pyadc_found = False
+from ._adcc import run_adcc_adcman, adcc_found
 
 def __build_available_methods():
-  if _pyadc_found:
-    return [ "mp2" ]
+  if adcc_found:
+    return [ "mp2", "mp3", "adc0", "adc1", "adc2s", "adc2x", "adc3" ]
   else:
     return [ ]
 available_methods = __build_available_methods()
 
-def generate_pyadc_input(hfres):
-  """
-  Take the results dictionary from a hf calculation and build
-  the input dictionary for a pyadc calculation out of it.
-  """
-  include_keys = [ "n_alpha", "n_beta", "n_orbs_alpha", "n_orbs_beta",
-                   "n_bas", "restricted", "threshold",
-                   #
-                   "orben_f", "eri_ffff", "fock_ff", "orbcoeff_fb",
-                   #
-                   "energy_nuclear_repulsion", "energy_nuclear_attraction",
-                   "energy_coulomb", "energy_exchange", "energy_kinetic",
-                 ]
-  remap_keys = { "energy_total" : "energy_scf" }
+def __assert_available(method):
+  """Check if the method is available and bail out if not"""
+  if not method in available_methods:
+    raise RuntimeError("molsturm.posthf did not find a way to do an " + method +
+                       " calculation. Check that this method is available.")
 
-  params = { k:hfres[k] for k in include_keys if k in hfres }
-  params.update({ remap_keys[k]:hfres[k] for k in remap_keys
-                  if k in hfres })
-  return params
-
-def run_pyadc(hfres,**params):
+def mp2(hfres, **params):
   """
   Take hf results and extra parameters as an input
-  and run pyadc off it.
+  and run an Møller Plesset 2nd order calculation.
+
+  Return the resulting dictionary of computed data.
   """
-  if not _pyadc_found:
-    raise RuntimeError("Cannot run pyadc: pyadc not found.")
+  __assert_available("mp2")
+  return run_adcc_adcman(hfres, method="mp2", **params)
 
-  # Check everything we need is there
-  for k in HFRES_ARRAY_KEYS:
-    if not k in hfres:
-      raise ValueError("hfres parameters do not contain the required key '" +
-                       k + "'.")
-
-  resp = generate_pyadc_input(hfres)
-  resp.update(params)
-  return pyadc.adc(**resp)
-
-def mp2(hfres,**params):
+def mp3(hfres, **params):
   """
   Take hf results and extra parameters as an input
-  and run an mp2 calculations. Return the resulting
-  dictionary of computed data.
+  and run an Møller Plesset 3rd order calculation.
+
+  Return the resulting dictionary of computed data.
   """
-  return run_pyadc(hfres, **params)
+  __assert_available("mp3")
+  return run_adcc_adcman(hfres, method="mp3", **params)
+
+def adc0(hfres, **params):
+  """
+  Take hf results and extra parameters as an input
+  and run an Algebraic Diagrammatic Construction
+  0th order calculation.
+
+  Return the resulting dictionary of computed data.
+  """
+  __assert_available("adc0")
+  return run_adcc_adcman(hfres, method="adc0", **params)
+
+def adc1(hfres, **params):
+  """
+  Take hf results and extra parameters as an input
+  and run an Algebraic Diagrammatic Construction
+  1st order calculation.
+
+  Return the resulting dictionary of computed data.
+  """
+  __assert_available("adc1")
+  return run_adcc_adcman(hfres, method="adc1", **params)
+
+def adc2s(hfres, **params):
+  """
+  Take hf results and extra parameters as an input
+  and run an Algebraic Diagrammatic Construction
+  strict 2nd order calculation.
+
+  Return the resulting dictionary of computed data.
+  """
+  __assert_available("adc2s")
+  return run_adcc_adcman(hfres, method="adc2s", **params)
+
+def adc2x(hfres, **params):
+  """
+  Take hf results and extra parameters as an input
+  and run an Algebraic Diagrammatic Construction
+  extended 2nd order calculation.
+
+  Return the resulting dictionary of computed data.
+  """
+  __assert_available("adc2x")
+  return run_adcc_adcman(hfres, method="adc2x", **params)
+
+def adc3(hfres, **params):
+  """
+  Take hf results and extra parameters as an input
+  and run an Algebraic Diagrammatic Construction
+  3rd order calculation.
+
+  Return the resulting dictionary of computed data.
+  """
+  __assert_available("adc2x")
+  return run_adcc_adcman(hfres, method="adc2x", **params)
 
