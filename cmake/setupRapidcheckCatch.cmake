@@ -27,11 +27,19 @@ set(RC_ENABLE_TESTS ON CACHE BOOL "Build RapidCheck tests")
 # Change compiler flags (CMAKE_CXX_FLAGS) to make fresh build config
 set(CMAKE_CXX_FLAGS_STORED_TMP ${CMAKE_CXX_FLAGS})
 set(CMAKE_CXX_FLAGS "")
-#enable_if_compiles(CMAKE_CXX_FLAGS "-Wno-gnu-zero-variadic-macro-arguments")
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	enable_if_compiles(CMAKE_CXX_FLAGS "-stdlib=${DRB_CXX_STANDARD_LIBRARY}")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU"
+		AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "6.0")
+	# TODO Problems in rapidcheck's code
+	#      Fix them some day
+	enable_if_compiles(CMAKE_CXX_FLAGS "-Wno-error=shift-negative-value")
+	enable_if_compiles(CMAKE_CXX_FLAGS_STORED_TMP "-Wno-error=shift-negative-value")
+	enable_if_compiles(CMAKE_CXX_FLAGS "-Wno-error=misleading-indentation")
+	enable_if_compiles(CMAKE_CXX_FLAGS_STORED_TMP "-Wno-error=misleading-indentation")
 endif()
+
+stdlib_cxx_flags(${DRB_CXX_STANDARD_LIBRARY} CMAKE_CXX_FLAGS dummy)
+unset(dummy)
 
 # Add the rapidcheck subdirectory and configure its built.
 message(STATUS "Configuring rapidcheck in dir ${rapidcheck_DIR}")
