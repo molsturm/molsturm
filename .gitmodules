@@ -1,6 +1,3 @@
-[submodule "modules/sturmint"]
-	path = modules/sturmint
-	url = ssh://gitte@ccsvn.iwr.uni-heidelberg.de:42022/sturmint.git
 [submodule "modules/linalgwrap"]
 	path = modules/linalgwrap
 	url = https://github.com/linalgwrap/linalgwrap
