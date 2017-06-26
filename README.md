@@ -1,5 +1,6 @@
 # molsturm
 
+Modular electronic structure theory program.
 
 
 ## Requirements for the python interface
@@ -12,3 +13,5 @@ In a recent Debian/Ubuntu the following should do:
 ```
 apt-get install python3-h5py python3-yaml
 ```
+
+More documentation will follow shortly ...
