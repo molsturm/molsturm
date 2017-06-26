@@ -3,16 +3,16 @@
 	url = ssh://gitte@ccsvn.iwr.uni-heidelberg.de:42022/sturmint.git
 [submodule "modules/linalgwrap"]
 	path = modules/linalgwrap
-	url = git@github.com:linalgwrap/linalgwrap.git
+	url = https://github.com/linalgwrap/linalgwrap
 [submodule "modules/gscf"]
 	path = modules/gscf
-	url = git@github.com:molsturm/gscf.git
+	url = https://github.com/molsturm/gscf
 [submodule "modules/gint"]
 	path = modules/gint
-	url = ssh://gitte@ccsvn.iwr.uni-heidelberg.de:42022/gint.git
+	url = https://github.com/molsturm/gint
 [submodule "modules/krims"]
 	path = modules/krims
-	url = ssh://git@github.com/linalgwrap/krims
+	url = https://github.com/linalgwrap/krims
 [submodule "modules/rapidcheck"]
 	path = modules/rapidcheck
 	url = https://github.com/emil-e/rapidcheck
