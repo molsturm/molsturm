@@ -41,7 +41,7 @@ env:
     - TESTS=1  TESTS_REGEX="molsturm"
 
 before_install:
-    - travis_retry pip3 install --user pyyaml
+    - travis_retry pip3 install --user pyyaml numpy h5py
 
 addons:
   apt:
@@ -96,6 +96,7 @@ matrix:
       compiler: clang
       env: CC_COMP="clang-4.0" CXX_COMP="clang++-4.0" BUILD_TARGET="clang-tidy-molsturm"
   allow_failures:
+    - env: CC_COMP="gcc" CXX_COMP="g++"
     - env: CC_COMP="clang-4.0" CXX_COMP="clang++-4.0" BUILD_TARGET="clang-tidy-molsturm"
 
 script:
