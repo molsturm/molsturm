@@ -20,10 +20,11 @@
 %module molsturm_iface
 
 %{
-#include "Parameters.hh"
-#include "HfResults.hh"
-#include "hartree_fock.hh"
+#include "available_features.hh"
 #include "ExcInvalidParameters.hh"
+#include "hartree_fock.hh"
+#include "HfResults.hh"
+#include "Parameters.hh"
 #include <molsturm/Version.hh>
 %}
 
@@ -53,6 +54,7 @@ namespace std {
   }
 }
 
+%include "available_features.hh"
 %include "Parameters.hh"
 %include "HfResults.hh"
 %include "hartree_fock.hh"
