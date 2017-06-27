@@ -29,3 +29,4 @@ coords:      [[ 0,0,0 ]]
 basis_set:   sto-3g
 basis_type:  "gaussian/libint"
 export_repulsion_integrals: True
+export_fock_matrix: True

@@ -34,21 +34,22 @@ params = {
   "l_max":          2,
   "k_exp":          1.0,
   #
-  "n_eigenpairs":   4,
+  "n_eigenpairs":   8,
   "error":          1e-9,
   "eigensolver":    "lapack",
   "guess_method":   "loewdin",
   "guess_esolver":  "lapack",
   #
   "export_repulsion_integrals": True,
+  "export_fock_matrix": True,
 }
 
 ref_convergence_result = {
   "n_bas":          14,
   "n_beta":         sum(params["atom_numbers"])//2,
   "n_alpha":        sum(params["atom_numbers"])//2,
-  "n_orbs_beta":    params["n_eigenpairs"],
-  "n_orbs_alpha":   params["n_eigenpairs"],
+  "n_orbs_beta":    params["n_eigenpairs"]//2,
+  "n_orbs_alpha":   params["n_eigenpairs"]//2,
   "restricted":     True,
 }
 
@@ -83,7 +84,7 @@ ref_coefficients = np.array([
 ]).transpose()
 
 def __make_ref_fock_aa():
-  n_a = params["n_eigenpairs"]
+  n_a = params["n_eigenpairs"]//2
   m = np.zeros(n_a*n_a)
   m[::n_a+1] = ref_orbital_energies[:n_a]
   return m.reshape(n_a,n_a)
@@ -91,7 +92,7 @@ def __make_ref_fock_aa():
 ref_fock = { "aa": __make_ref_fock_aa(), "bb": __make_ref_fock_aa(), }
 
 def __make_ref_repulsion_integrals_aaaa():
-  n_a = params["n_eigenpairs"]
+  n_a = params["n_eigenpairs"]//2
   return np.array([ 1.3201564829887236, -0.051927456174132254,
    1.0191882208517448e-17, -6.932670580196954e-18, -0.05192745617413223,
    0.4593375841694676, 1.698530801552094e-17, -1.0424022896950529e-17,
