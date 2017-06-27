@@ -29,6 +29,7 @@ provided that *all* of the following requirements are met:
 	- A BLAS implementation, e.g. [OpenBLAS](https://github.com/xianyi/OpenBLAS/)
 	- A LAPACK compatible library, e.g. [LAPACK](http://netlib.org/lapack)
 	- [armadillo](http://arma.sourceforge.net/)
+
   See [github.com/linalgwrap/linalgwrap](https://github.com/linalgwrap/linalgwrap/blob/master/README.md)
   for more details about ``linalgwrap``'s dependencies.
 
