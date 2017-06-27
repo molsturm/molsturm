@@ -1,18 +1,30 @@
 import os
 
-# The builddir (relative to the path of this file),
-# which we use to find some generated files:
-builddir = "build"
-
 # This file is loosely based upon the file
 # cpp/ycm/.ycm_extra_conf.py from the youcompleteme daemon process
 # available on github:
 # https://github.com/Valloric/ycmd/blob/master/cpp/ycm/.ycm_extra_conf.py
 
+def FindStdInclude():
+  # Find the standard library include directory
 
-# These are the compilation flags that will be used in case there's no
-# compilation database set (by default, one is not set).
-flags = [
+  for include in [ "/usr/include/c++" ]:
+    for dir in ["v1"] + [ str(ver) for ver in range(4,10,1) ]:
+      if os.path.exists(os.path.join(dir,"cstdlib")):
+        return dir
+
+  # libc++ include directory:
+  return "/usr/include/c++/v1"
+
+
+def BuildBaseFlags():
+  # These are the compilation flags that will be used in case there's no
+  # compilation database set (by default, one is not set).
+
+  # The builddir (relative to the path of this file),
+  # which we use to find some generated files:
+  builddir = "build"
+  return [
     # Warnings: For a very detailed discussion about this
     # see the following stackexchange post:
     # https://programmers.stackexchange.com/questions/122608#124574
@@ -61,8 +73,9 @@ flags = [
     '-isystem', './modules/rapidcheck/include',
     '-isystem', './modules/rapidcheck/ext/catch/include',
     # Explicit clang includes:
-    '-isystem', '/usr/lib/ycmd/clang_includes',
-]
+    '-isystem', FindStdInclude(),
+  ]
+
 
 def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
   if not working_directory:
