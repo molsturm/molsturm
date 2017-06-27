@@ -246,7 +246,9 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   const size_t n_bas = restricted ? fbb.n_rows() : fbb.n_rows() / 2;
   const size_t n_orbs_alpha = restricted ? soln.n_ep() : soln.n_ep() / 2;
   const size_t n_orbs_beta = restricted ? n_orbs_alpha : soln.n_ep() / 2;
+#ifdef DEBUG
   const size_t n_orbs = n_orbs_alpha + n_orbs_beta;
+#endif
 
   HfResults ret;
 
@@ -312,8 +314,8 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
     for (const auto& id_term : fbb.terms_1e()) hcore_block += id_term.second;
 
     // The full hcore matrix (alpha-alpha and beta-beta block along the diagonal)
-    linalgwrap::BlockDiagonalMatrix<linalgwrap::LazyMatrixSum<matrix_type>, 2> hcore_bb(
-          {{hcore_block, hcore_block}});
+    linalgwrap::BlockDiagonalMatrix<linalgwrap::LazyMatrixSum<matrix_type>, 2> hcore_bb{
+          {{hcore_block, hcore_block}}};
 
     // Compute the full one electron matrix in MO space, i.e.  C^T * (Hcore_bb * C)
     // => Need a dot product here, so actually the dot of all vectors with another

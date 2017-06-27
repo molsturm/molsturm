@@ -42,7 +42,7 @@ class OverlapMatrix<StoredMatrix, RestrictionType::Unrestricted>
  public:
   typedef gint::Integral<StoredMatrix> int_term_type;
   OverlapMatrix(int_term_type S_bb)
-        : linalgwrap::BlockDiagonalMatrix<int_term_type, 2>({{S_bb, S_bb}}) {}
+        : linalgwrap::BlockDiagonalMatrix<int_term_type, 2>{{{S_bb, S_bb}}} {}
   const int_term_type& block_alpha() const { return this->diag_blocks()[0]; }
   const int_term_type& block_beta() const { return this->diag_blocks()[1]; }
 };

@@ -68,6 +68,17 @@ if (CMAKE_VERSION VERSION_GREATER 3.5.0)
 	set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 endif()
 
+if (NOT BUILD_SHARED_LIBS)
+	# Since the python interface goes via a shared library
+	# we need to enable -fPIC even if we are actually building
+	# the libraries statically.
+	# TODO Do not do this for executables ... there we strictly
+	#      speaking do not need this ... but then in fact
+	#      we don't really have any other executables than the
+	#      examples and the tests
+	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
 # setup hard dependencies
 include(cmake/setup_dependencies.cmake)
 
