@@ -43,6 +43,7 @@ set(PackageModuleLocation share/cmake)
 # setup global options (needs to be done before call to project())
 option(MOLSTURM_ENABLE_TESTS "Build molsturm tests" ON)
 option(MOLSTURM_ENABLE_EXAMPLES "Build molsturm examples" ON)
+option(BUILD_SHARED_LIBS "Build shared libraries instead of static ones" ON)
 
 ##########################################################################
 # Project setup
