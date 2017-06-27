@@ -1,4 +1,6 @@
 # molsturm
+[![Build Status](https://travis-ci.org/molsturm/molsturm.svg?branch=master)](https://travis-ci.org/molsturm/molsturm)
+[![Licence](https://img.shields.io/github/license/molsturm/molsturm.svg)](LICENCE)
 
 Modular electronic structure theory program.
 
