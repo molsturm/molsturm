@@ -37,8 +37,14 @@ class TestEnergies(NumCompTestCase):
 
   @classmethod
   def import_cases(cls):
-    # Parse input and build test cases:
-    return data.cases
+    ret = dict()
+    for label in data.cases:
+      basis_type = data.cases[label]["params"]["basis_type"]
+      if not basis_type in molsturm.available_basis_types:
+        print("Skipping test ",label)
+      else:
+        ret[label] = data.cases[label]
+    return ret
 
   @classmethod
   def setUpClass(cls):
@@ -67,7 +73,7 @@ class TestEnergies(NumCompTestCase):
 
     self.assertAlmostEqual(hf_1e, ref["energy_1e"], tol=10*error, prefix="1e energy: ")
     self.assertAlmostEqual(hf_2e, ref["energy_2e"], tol=10*error, prefix="2e energy: ")
-    self.assertAlmostEqual(hf["energy_nuclear_repulsion"], ref["energy_nucrep"], 
+    self.assertAlmostEqual(hf["energy_nuclear_repulsion"], ref["energy_nucrep"],
                            tol=10*error, prefix="Nuclear repulsion: ")
     self.assertAlmostEqual(hf["energy_total"], ref["energy_total"], tol=error,
                            prefix="Total energy: ")

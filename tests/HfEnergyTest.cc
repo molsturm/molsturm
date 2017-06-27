@@ -27,6 +27,7 @@
 #include <molsturm/OverlapMatrix.hh>
 #include <molsturm/scf_guess.hh>
 
+#ifdef GINT_HAVE_LIBINT
 namespace molsturm {
 namespace tests {
 using namespace linalgwrap;
@@ -233,3 +234,4 @@ TEST_CASE("Test HF energies and MOs compared to ORCA", "[hf energies]") {
 
 }  // namespace tests
 }  // namespace molsturm
+#endif  // GINT_HAVE_LIBINT

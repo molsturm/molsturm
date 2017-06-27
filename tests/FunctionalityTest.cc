@@ -27,6 +27,7 @@
 #include <molsturm/MolecularSystem.hh>
 #include <molsturm/RestrictedClosedIntegralOperator.hh>
 
+#if defined GINT_HAVE_STURMINT or defined GINT_HAVE_STATIC_INTEGRALS
 namespace molsturm {
 namespace tests {
 using namespace gscf;
@@ -48,8 +49,12 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   int l_max = 2;
   size_t n_eigenpairs = 4;
   const double tolerance = 1e-9;
-  const std::string basis_type = "sturmian/atomic/cs_naive";
   const gint::OrbitalType otype = gint::OrbitalType::COMPLEX_ATOMIC;
+#if defined GINT_HAVE_STURMINT
+  const std::string basis_type = "sturmian/atomic/cs_naive";
+#elif defined GINT_HAVE_STATIC_INTEGRALS
+  const std::string basis_type = "sturmian/atomic/cs_static14";
+#endif
 
   //
   // Types to use
@@ -206,3 +211,4 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
 
 }  // namespace test
 }  // namespace molsturm
+#endif  // GINT_HAVE_STURMINT or GINT_HAVE_STATIC_INTEGRALS

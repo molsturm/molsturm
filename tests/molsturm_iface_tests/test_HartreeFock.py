@@ -25,7 +25,10 @@ from NumCompTestCase import NumCompTestCase
 import molsturm
 import data_cs_be as data
 import numpy as np
+import unittest
 
+@unittest.skipUnless(data.params["basis_type"] in molsturm.available_basis_types,
+                     "Required basis type is not available")
 class TestHartreeFock(NumCompTestCase):
   """This test should ensure, that we get exactly the same data
      through the python interface as we get without it by directly
