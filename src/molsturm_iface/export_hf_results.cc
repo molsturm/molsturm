@@ -68,7 +68,7 @@ void export_ff_matrix(const bool restricted, const Matrix& in,
 }
 
 template <typename Vector>
-void export_coeff_fb(const bool restricted, const linalgwrap::MultiVector<Vector>& mv,
+void export_coeff_bf(const bool restricted, const linalgwrap::MultiVector<Vector>& mv,
                      std::vector<scalar_type>& out) {
   const size_t n_orbs = restricted ? 2 * mv.n_vectors() : mv.n_vectors();
   const size_t n_bas = restricted ? mv.n_elem() : mv.n_elem() / 2;
@@ -76,37 +76,37 @@ void export_coeff_fb(const bool restricted, const linalgwrap::MultiVector<Vector
   assert_internal(n_orbs_alpha * 2 == n_orbs);
 
   // Loop over alpha-alpha block
-  out.resize(n_orbs * n_bas);
-  for (size_t f = 0; f < n_orbs_alpha; ++f) {
-    for (size_t b = 0; b < n_bas / 2; ++b) {
-      const size_t fb = f * n_bas + b;
-      const size_t fb_beta = (f + n_orbs_alpha) * n_bas + b;
-      assert_internal(fb < out.size());
-      assert_internal(fb_beta < out.size());
+  out.resize(n_bas * n_orbs);
+  for (size_t b = 0; b < n_bas; ++b) {
+    for (size_t f = 0; f < n_orbs_alpha; ++f) {
+      const size_t bf = b * n_orbs + f;
+      const size_t bf_beta = bf + n_orbs_alpha;
+      assert_internal(bf < out.size());
+      assert_internal(bf_beta < out.size());
 
       // Copy the alpha-alpha block to the new location
-      out[fb] = mv[f][b];
+      out[bf] = mv[f][b];
 
       // Also copy to the beta block. Either take another copy
       // of the alpha block or shift the f and b indices to get
       // into the beta block
-      out[fb_beta] = restricted ? mv[f][b] : mv[f + n_orbs_alpha][b + n_bas];
+      out[bf_beta] = restricted ? mv[f][b] : mv[f + n_orbs_alpha][b + n_bas];
     }  // b
   }    // f
 }
 
 template <typename Vector>
 void export_eri_restricted(const gint::ERITensor_i<scalar_type>& eri,
-                           const linalgwrap::MultiVector<Vector>& coeff_fb,
+                           const linalgwrap::MultiVector<Vector>& coeff_bf,
                            std::vector<scalar_type>& out) {
-  const size_t n_orbs_alpha = coeff_fb.n_vectors();
+  const size_t n_orbs_alpha = coeff_bf.n_vectors();
   const size_t n_orbs = 2 * n_orbs_alpha;
 
   // Form the alpha-alpha-alpha-alpha spin block by contraction
   // and copy it to all the other non-zero places
   // i.e. (aa|aa), (aa|bb), (bb|aa), (bb|bb)
   std::vector<double> eri_aaaa(n_orbs_alpha * n_orbs_alpha * n_orbs_alpha * n_orbs_alpha);
-  eri.contract_with(coeff_fb, coeff_fb, coeff_fb, coeff_fb, eri_aaaa);
+  eri.contract_with(coeff_bf, coeff_bf, coeff_bf, coeff_bf, eri_aaaa);
 
   out.resize(n_orbs * n_orbs * n_orbs * n_orbs);
   for (size_t i = 0, ijkl = 0; i < n_orbs_alpha; ++i) {
@@ -178,14 +178,16 @@ std::pair<linalgwrap::MultiVector<Vector>, linalgwrap::MultiVector<Vector>> coef
 
 template <typename Vector>
 void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
-                             const linalgwrap::MultiVector<Vector>& coeff_fb,
+                             const linalgwrap::MultiVector<Vector>& coeff_bf,
                              std::vector<scalar_type>& out) {
-  const size_t n_orbs_alpha = coeff_fb.n_vectors() / 2;  // == n_orbs_beta
-  const size_t n_orbs = 2 * n_orbs_alpha;
-  const size_t n_bas = coeff_fb.n_elem() / 2;
+  using linalgwrap::MultiVector;
 
-  assert_internal(n_orbs == coeff_fb.n_vectors());
-  assert_internal(2 * n_bas == coeff_fb.n_elem());
+  const size_t n_orbs_alpha = coeff_bf.n_vectors() / 2;  // == n_orbs_beta
+  const size_t n_orbs = 2 * n_orbs_alpha;
+  const size_t n_bas = coeff_bf.n_elem() / 2;
+
+  assert_internal(n_orbs == coeff_bf.n_vectors());
+  assert_internal(2 * n_bas == coeff_bf.n_elem());
 
   // Build the relevant blocks of the eri tensor
   std::vector<double> eri_aaaa(n_orbs_alpha * n_orbs_alpha * n_orbs_alpha * n_orbs_alpha);
@@ -200,13 +202,13 @@ void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
     const auto& cb_bf = cab_bf.second;
 
     // Contract with the eri tensor
-    eri.contract_with(ca_fb, ca_fb, ca_fb, ca_fb, eri_aaaa);
-    eri.contract_with(ca_fb, ca_fb, cb_fb, cb_fb, eri_aabb);
-    eri.contract_with(cb_fb, cb_fb, cb_fb, cb_fb, eri_bbbb);
+    eri.contract_with(ca_bf, ca_bf, ca_bf, ca_bf, eri_aaaa);
+    eri.contract_with(ca_bf, ca_bf, cb_bf, cb_bf, eri_aabb);
+    eri.contract_with(cb_bf, cb_bf, cb_bf, cb_bf, eri_bbbb);
 
     // TODO This contraction could be avoided if one uses the property that
     //      ( ij | kl ) = ( kl | ij ) to construct this thing from eri_aabb
-    eri.contract_with(cb_fb, cb_fb, ca_fb, ca_fb, eri_bbaa);
+    eri.contract_with(cb_bf, cb_bf, ca_bf, ca_bf, eri_bbaa);
   }
 
   out.resize(n_orbs * n_orbs * n_orbs * n_orbs);
@@ -349,7 +351,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
 
   // Insert alpha and beta orbital energies and the coefficient matrices
   export_vector(restricted, soln.evalues(), ret.orben_f);
-  export_coeff_fb(restricted, soln.evectors(), ret.orbcoeff_fb);
+  export_coeff_bf(restricted, soln.evectors(), ret.orbcoeff_bf);
   assert_internal(ret.orben_f.size() == n_orbs);
   assert_internal(ret.orbcoeff_bf.size() == n_orbs * n_bas /* *2 */);
 

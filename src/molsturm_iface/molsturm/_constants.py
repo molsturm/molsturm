@@ -24,7 +24,13 @@
 # This files include constants which are needed all over the code
 
 """The keys corresponding to numpy arrays in the HfResults class"""
-HFRES_ARRAY_KEYS = [ "orben_f", "eri_ffff", "fock_ff", "orbcoeff_fb", "hcore_ff" ]
+HFRES_ARRAY_KEYS = [ "orben_f", "eri_ffff", "fock_ff", "orbcoeff_bf", "hcore_ff", "overlap_ff" ]
+
+"""The optional output arrays in the hartree_fock procedure along with the parameters to switch them on"""
+HFRES_OPTIONAL = { "eri_ffff":   "export_repulsion_integrals",
+                   "hcore_ff":   "export_hcore_matrix",
+                   "fock_ff":    "export_fock_matrix",
+                   "overlap_ff": "export_overlap_matrix" }
 
 """Keys which could be numpy arrays in the input Parameters to hartree_fock"""
 INPUT_PARAMETER_ARRAY_KEYS = [ "atom_numbers", "atoms", "coords", "nlm_basis" ]

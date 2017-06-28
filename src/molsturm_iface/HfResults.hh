@@ -81,7 +81,7 @@ struct HfResults {
   double spin_squared;
 
   // Orbital coefficients
-  std::vector<double> orbcoeff_fb;
+  std::vector<double> orbcoeff_bf;
 
   // Orbital energy
   std::vector<double> orben_f;
