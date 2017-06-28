@@ -112,7 +112,7 @@ def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
 
 def FlagsForFile( filename, **kwargs ):
   relative_to = os.path.dirname( os.path.abspath( __file__ ) )
-  final_flags = MakeRelativePathsInFlagsAbsolute( flags, relative_to )
+  final_flags = MakeRelativePathsInFlagsAbsolute( BuildBaseFlags(), relative_to )
 
   return {
     'flags': final_flags,
