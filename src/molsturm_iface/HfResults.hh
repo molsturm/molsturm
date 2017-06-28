@@ -77,6 +77,9 @@ struct HfResults {
   double energy_kinetic;
   //@}
 
+  /** The expectation value of the total spin squared */
+  double spin_squared;
+
   // Orbital coefficients
   std::vector<double> orbcoeff_fb;
 
@@ -85,6 +88,9 @@ struct HfResults {
 
   // Fock matrix
   std::vector<double> fock_ff;
+
+  // Overlap matrix
+  std::vector<double> overlap_ff;
 
   // Matrix of all one electron integrals accumulated
   std::vector<double> hcore_ff;

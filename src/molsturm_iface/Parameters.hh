@@ -94,6 +94,9 @@ struct Parameters {
 
   // Export the matrix of all one electron terms combined
   bool export_hcore_matrix = true;
+
+  // Export the overlap matrix (in MO basis)
+  bool export_overlap_matrix = false;
 };
 
 }  // namespace iface

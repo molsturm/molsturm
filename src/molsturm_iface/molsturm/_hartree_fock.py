@@ -105,13 +105,20 @@ def hartree_fock(forward_parameters=True, **kwargs):
                           output dictionary for archiving purposes?
                           If True(default) the returned dictionary
                           will contain a key "input_parameters" which
-                          is a copy of the parameters on the commandline.
+                          is a set of parameters to reproduce the very
+                          computation. Some transformations may have been
+                          applied to the input kwargs (e.g. xyz files
+                          are read and stored as a list of atoms and
+                          coordinates)
 
   A couple of selected kwargs:
     - basis_type        The type of the basis used for the calculation
     - coords            List of iterables of size 3: Coordinats of the atoms
     - atoms             List of the atom symbols (in the same order as coords)
   """
+  # TODO Better return a dict-like class instead of a dict. That way
+  #      we can use the class more easily and distinguish between results
+  #      at different levels better.
 
   # The list of valid keys is the list of keys
   # with the special ones (starting with __) removed.

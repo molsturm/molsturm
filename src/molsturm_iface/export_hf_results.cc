@@ -142,6 +142,40 @@ void export_eri_restricted(const gint::ERITensor_i<scalar_type>& eri,
     }      // j
   }        // i
 }
+
+/** Split a block-diagonal coefficient multivector into its consituent blocks by copying
+ */
+template <typename Vector>
+std::pair<linalgwrap::MultiVector<Vector>, linalgwrap::MultiVector<Vector>> coeff_blocks(
+      const linalgwrap::MultiVector<Vector>& coeff_bf_full) {
+  const size_t n_orbs_alpha = coeff_bf_full.n_vectors() / 2;  // == n_orbs_beta
+  const size_t n_bas = coeff_bf_full.n_elem() / 2;
+  assert_internal(n_orbs_alpha * 2 == coeff_bf_full.n_vectors());
+  assert_internal(2 * n_bas == coeff_bf_full.n_elem());
+
+  // Partition coeff_bf into alpha-alpha and beta-beta blocks
+  linalgwrap::MultiVector<Vector> ca_bf(n_bas, n_orbs_alpha);
+  for (size_t f = 0; f < n_orbs_alpha; ++f) {
+    assert_internal(n_bas <= coeff_bf_full[f].size());
+    assert_internal(n_bas <= ca_bf[f].size());
+    std::copy(coeff_bf_full[f].begin(), coeff_bf_full[f].begin() + n_bas,
+              ca_bf[f].begin());
+  }
+
+  linalgwrap::MultiVector<Vector> cb_bf(n_bas, n_orbs_alpha);
+  for (size_t f = 0; f < n_orbs_alpha; ++f) {
+    const size_t ff = f + n_orbs_alpha;
+    for (size_t b = 0; b < n_bas; ++b) {
+      assert_internal(std::distance(coeff_bf_full[ff].begin() + n_bas,
+                                    coeff_bf_full[ff].end()) == cb_bf[f].size());
+      std::copy(coeff_bf_full[ff].begin() + n_bas, coeff_bf_full[ff].end(),
+                cb_bf[f].begin());
+    }
+  }
+
+  return std::make_pair(std::move(ca_bf), std::move(cb_bf));
+}
+
 template <typename Vector>
 void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
                              const linalgwrap::MultiVector<Vector>& coeff_fb,
@@ -158,24 +192,12 @@ void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
   std::vector<double> eri_aabb(n_orbs_alpha * n_orbs_alpha * n_orbs_alpha * n_orbs_alpha);
   std::vector<double> eri_bbbb(n_orbs_alpha * n_orbs_alpha * n_orbs_alpha * n_orbs_alpha);
   std::vector<double> eri_bbaa(n_orbs_alpha * n_orbs_alpha * n_orbs_alpha * n_orbs_alpha);
-  {
-    // Partition ca_fb into alpha-alpha and beta-beta blocks
-    linalgwrap::MultiVector<Vector> ca_fb(n_bas, n_orbs_alpha);
-    for (size_t f = 0; f < n_orbs_alpha; ++f) {
-      assert_internal(n_bas <= coeff_fb[f].size());
-      assert_internal(n_bas <= ca_fb[f].size());
-      std::copy(coeff_fb[f].begin(), coeff_fb[f].begin() + n_bas, ca_fb[f].begin());
-    }
 
-    linalgwrap::MultiVector<Vector> cb_fb(n_bas, n_orbs_alpha);
-    for (size_t f = 0; f < n_orbs_alpha; ++f) {
-      const size_t ff = f + n_orbs_alpha;
-      for (size_t b = 0; b < n_bas; ++b) {
-        assert_internal(std::distance(coeff_fb[ff].begin() + n_bas, coeff_fb[ff].end()) ==
-                        cb_fb[f].size());
-        std::copy(coeff_fb[ff].begin() + n_bas, coeff_fb[ff].end(), cb_fb[f].begin());
-      }
-    }
+  {
+    // Partition into alpha-alpha and beta-beta blocks
+    std::pair<MultiVector<Vector>, MultiVector<Vector>> cab_bf = coeff_blocks(coeff_bf);
+    const auto& ca_bf = cab_bf.first;
+    const auto& cb_bf = cab_bf.second;
 
     // Contract with the eri tensor
     eri.contract_with(ca_fb, ca_fb, ca_fb, ca_fb, eri_aaaa);
@@ -225,13 +247,44 @@ void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
 
 template <typename Vector>
 void export_eri(const bool restricted, const gint::ERITensor_i<scalar_type>& eri,
-                const linalgwrap::MultiVector<Vector>& coeff_fb,
+                const linalgwrap::MultiVector<Vector>& coeff_bf,
                 std::vector<scalar_type>& out) {
   if (restricted) {
-    export_eri_restricted(eri, coeff_fb, out);
+    export_eri_restricted(eri, coeff_bf, out);
   } else {
-    export_eri_unrestricted(eri, coeff_fb, out);
+    export_eri_unrestricted(eri, coeff_bf, out);
   }
+}
+
+template <typename Vector, typename OverlapMatrix>
+typename Vector::scalar_type compute_spin_squared(
+      const bool restricted, const OverlapMatrix& S_bb,
+      const linalgwrap::MultiVector<Vector>& coeff_bf, const size_t n_alpha,
+      const size_t n_beta) {
+  using linalgwrap::MultiVector;
+  using krims::range;
+
+  // If restricted the <S^2> is always zeros
+  if (restricted) return 0.;
+
+  // Partition into alpha-alpha and beta-beta blocks
+  // and filter out the occupied alpha and occupied beta coefficients
+  std::pair<MultiVector<Vector>, MultiVector<Vector>> cab_bf = coeff_blocks(coeff_bf);
+  const MultiVector<Vector> coa_bf = cab_bf.first.subview(range(n_alpha));
+  const MultiVector<Vector> cob_bf = cab_bf.second.subview(range(n_beta));
+
+  // Build the alpha-beta block of the overlap matrix in MO basis
+  const auto& Sa_bb = S_bb.block_alpha();
+  auto Sab_ff = linalgwrap::dot(cob_bf, Sa_bb * coa_bf);
+
+  // Compute the exact value for <S^2> which we would expect for this
+  // system if the determinant was an eigenfunction of S^2
+  assert_internal(n_alpha >= n_beta);
+  const double spin_total = (n_alpha - n_beta) / 2.;
+  const double spin_squared_exact = spin_total * (1 + spin_total);
+
+  // According to Szabo-Ostlund, p. 107 (2.271) this is the actual value for <S^2>
+  return spin_squared_exact + n_beta - linalgwrap::norm_frobenius_squared(Sab_ff);
 }
 
 }  // namespace
@@ -268,6 +321,10 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   ret.final_tot_energy_change = state.last_tot_energy_change;
   ret.final_1e_energy_change = state.last_1e_energy_change;
 
+  // SCF analysis:
+  ret.spin_squared = compute_spin_squared(restricted, state.overlap_matrix(),
+                                          soln.evectors(), ret.n_alpha, ret.n_beta);
+
   // SCF energies:
   for (const auto& kv : fbb.energies()) {
     switch (kv.first.integral_type()) {
@@ -294,7 +351,18 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   export_vector(restricted, soln.evalues(), ret.orben_f);
   export_coeff_fb(restricted, soln.evectors(), ret.orbcoeff_fb);
   assert_internal(ret.orben_f.size() == n_orbs);
-  assert_internal(ret.orbcoeff_fb.size() == n_orbs * n_bas /* *2 */);
+  assert_internal(ret.orbcoeff_bf.size() == n_orbs * n_bas /* *2 */);
+
+  if (params.export_overlap_matrix) {
+    // Compute the overlap matrix in MO space, i.e. C^T (S * C)
+    auto overlap_ff =
+          linalgwrap::dot(soln.evectors(), state.overlap_matrix() * soln.evectors());
+    export_ff_matrix(restricted, overlap_ff, ret.overlap_ff);
+    assert_internal(ret.overlap_ff.size() == n_orbs * n_orbs);
+  } else {
+    // Empty vector objects won't proceed to the output python dictionary
+    ret.overlap_ff.resize(0);
+  }
 
   if (params.export_fock_matrix) {
     // Compute the full fock matrix in MO space, i.e.  C^T * (F * C)
@@ -303,6 +371,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
     export_ff_matrix(restricted, fock_ff, ret.fock_ff);
     assert_internal(ret.fock_ff.size() == n_orbs * n_orbs);
   } else {
+    // Empty vector objects won't proceed to the output python dictionary
     ret.fock_ff.resize(0);
   }
 

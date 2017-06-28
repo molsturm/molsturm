@@ -121,6 +121,7 @@ def print_energies(hfres,out=sys.stdout, indention=6*" ", title="Final energies:
                .format(key="E_total", val=hfres[prefix+"total"])+"\n")
   out.writelines(lines)
 
+
 def print_quote(hfres, out=sys.stdout):
   from numpy.random import randint
 
