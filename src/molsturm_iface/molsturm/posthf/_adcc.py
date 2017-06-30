@@ -84,7 +84,7 @@ def run_adcc_adcman(hfres,**params):
                if key in __adcc_include_keys or key in __adcc_remap_keys ]:
     if not key in hfres:
       raise ValueError("The hartree_fock result dictionary does not contain the required key '" +
-                       k + "'. Please switch the parameter '" + HFRES_OPTIONAL[key] +
+                       key + "'. Please switch the parameter '" + HFRES_OPTIONAL[key] +
                        "' to True when running the molsturm.hartree_fock caculation.")
 
   for k in [ "method" ]:
