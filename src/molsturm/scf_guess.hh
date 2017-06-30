@@ -34,7 +34,8 @@ struct ScfGuessKeys : public GuessAlgorithmsKeysBase {
  *   Avalable are:
  *      - "atomic_super":  Superposition of atomic densities
  *      - "extended_hueckel": Extended hueckel guess
- *      - "from_archived": Try to re-use an archived scf solution.
+ *      - "external": Use an eigensolution, which is externally provided
+ *                    via the parameters
  *      - "hcore":    Diagonalise core hamiltonian
  *      - "loewdin":  Diagonalise S and use the eigenvectors
  *    (Default: hcore)
@@ -53,8 +54,8 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> scf_guess(
     return guess_atomic_super(system, fock_bb, S_bb, params);
   } else if (method == std::string("extended_hueckel")) {
     return guess_extended_hueckel(system, fock_bb, S_bb, params);
-  } else if (method == std::string("from_archived")) {
-    return guess_from_archived(system, fock_bb, S_bb, params);
+  } else if (method == std::string("external")) {
+    return guess_external(system, fock_bb, S_bb, params);
   } else if (method == std::string("hcore")) {
     return guess_hcore(system, fock_bb, S_bb, params);
   } else if (method == std::string("loewdin")) {

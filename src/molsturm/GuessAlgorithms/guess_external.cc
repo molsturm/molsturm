@@ -17,13 +17,10 @@
 // along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#pragma once
+#include "guess_external.hh"
 
-#include "GuessAlgorithms/guess_external.hh"
-#include "GuessAlgorithms/guess_hcore.hh"
-#include "GuessAlgorithms/guess_loewdin.hh"
-#include "GuessAlgorithms/guess_random.hh"
+namespace molsturm {
 
-// TODO These are just stubs atm:
-#include "GuessAlgorithms/guess_atomic_super.hh"
-#include "GuessAlgorithms/guess_extended_hueckel.hh"
+const std::string GuessExternalKeys::eigensolution = "eigensolution";
+
+}  // namespace molsturm

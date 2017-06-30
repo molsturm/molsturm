@@ -24,6 +24,7 @@
 #include <gint/sturmian/atomic/NlmBasis.hh>
 #include <gscf/PulayDiisScfKeys.hh>
 #include <linalgwrap/EigensystemSolver.hh>
+#include <molsturm/GuessAlgorithms.hh>
 #include <molsturm/IopScfKeys.hh>
 #include <molsturm/ScfMsgType.hh>
 #include <molsturm/scf_guess.hh>
@@ -93,8 +94,9 @@ MolecularSystem build_molecular_system(const Parameters& params) {
 bool parse_restricted(const Parameters& params, const MolecularSystem& system) {
   // Adjust value for restricted => Use automatically determined value
   // if the user did not override this.
-  const bool restricted = params.restricted_set_by_user ? params.restricted
-                                                        : system.n_alpha == system.n_beta;
+  const bool restricted = params.internal_restricted_set_by_user
+                                ? params.restricted
+                                : system.n_alpha == system.n_beta;
   assert_throw(!restricted || system.n_alpha == system.n_beta,
                ExcInvalidParameters("Only systems with even electron count can be "
                                     "treated using restricted calculations. Use an "
@@ -105,14 +107,15 @@ bool parse_restricted(const Parameters& params, const MolecularSystem& system) {
 krims::GenMap build_int_params_sturmian(const Parameters& params,
                                         const MolecularSystem& system) {
   using gint::IntegralLookupKeys;
-
-  krims::GenMap intparams;
-
   assert_implemented(system.structure.n_atoms() == 1);
-  intparams.update({
+
+  assert_throw(params.k_exp > 0,
+               ExcInvalidParameters("The parameter k_exp is mandatory for a sturmian "
+                                    "basis with a value larger than zero."));
+  krims::GenMap intparams{
         {IntegralLookupKeys::orbital_type, gint::OrbitalType::COMPLEX_ATOMIC},
         {"k_exponent", params.k_exp},
-  });
+  };
 
   if (params.nlm_basis.size() > 0) {
     using gint::sturmian::atomic::Nlm;
@@ -183,9 +186,49 @@ krims::GenMap build_guess_params(const Parameters& params,
                                  const MolecularSystem& /*system*/) {
   using linalgwrap::EigensystemSolverKeys;
 
-  krims::GenMap guess_params{{ScfGuessKeys::method, params.guess_method}};
+  krims::GenMap guess_params{{ScfGuessKeys::method, params.guess}};
   guess_params.update(ScfGuessKeys::eigensolver_params,
                       {{EigensystemSolverKeys::method, params.guess_esolver}});
+
+  if (params.guess == "external") {
+    // This is special, since we need to provide the guess externally
+    auto& orben_f = params.guess_external_orben_f;
+    auto& orbcoeff_bf = params.guess_external_orbcoeff_bf;
+
+    assert_throw(!orben_f.empty(),
+                 ExcInvalidParameters("If guess == external the parameter "
+                                      "guess_external_orben_f needs to be "
+                                      "initialised."));
+    assert_throw(!orbcoeff_bf.empty(),
+                 ExcInvalidParameters("If guess == external the parameter "
+                                      "guess_external_orbcoeff_bf needs to be "
+                                      "initialised."));
+
+    // Determine n_orbs and n_bas from the sizes provided:
+    const size_t n_orbs = orben_f.size();
+    const size_t n_bas = orbcoeff_bf.size() / n_orbs;
+    assert_throw(n_orbs * n_bas == orbcoeff_bf.size(),
+                 ExcInvalidParameters("The sizes of guess_external_orben_f == " +
+                                      std::to_string(orben_f.size()) +
+                                      " and guess_external_orbcoeff_bf == " +
+                                      std::to_string(orbcoeff_bf.size()) +
+                                      " are not compatible, since the latter is not an "
+                                      "integer multiple of the former."));
+
+    linalgwrap::Eigensolution<double, linalgwrap::SmallVector<double>> esolution;
+    esolution.evalues() = orben_f;
+    esolution.evectors() =
+          linalgwrap::MultiVector<linalgwrap::SmallVector<double>>(n_bas, n_orbs, false);
+    for (size_t b = 0; b < n_bas; ++b) {
+      for (size_t f = 0; f < n_orbs; ++f) {
+        const size_t bf = b * n_orbs + f;
+        esolution.evectors()[f][b] = orbcoeff_bf[bf];
+      }  // f
+    }    // b
+
+    guess_params.update(GuessExternalKeys::eigensolution, std::move(esolution));
+  }  // method == external
+
   return guess_params;
 }
 

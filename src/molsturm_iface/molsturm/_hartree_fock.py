@@ -26,6 +26,13 @@ import numpy as np
 from ._constants import HFRES_ARRAY_KEYS, HFRES_INPUT_PARAMETER_KEY
 from collections import Iterable
 
+def __to_double_vector(val):
+  ret = iface.DoubleVector()
+  for v in val.flatten():
+    ret.push_back(float(v))
+  return ret
+
+
 def __to_coords(arr):
   if not isinstance(arr,Iterable):
     raise TypeError("Argument passed to \"coords\" needs to be iterable")
@@ -47,6 +54,7 @@ def __to_coords(arr):
     parse_coord(arr)
   return ret
 
+
 def __to_nlm(arr):
   ret = iface.IntVector()
   for c in arr:
@@ -55,6 +63,7 @@ def __to_nlm(arr):
     for i in range(3):
       ret.push_back(c[i])
   return ret
+
 
 def __to_atom_numbers(li):
   ret = iface.IntVector()
@@ -66,6 +75,7 @@ def __to_atom_numbers(li):
   else:
     raise ValueError("atom numbers needs be an int or a list of ints")
   return ret
+
 
 def __to_atoms(li):
   ret = iface.StringVector()
