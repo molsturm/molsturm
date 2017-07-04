@@ -21,6 +21,26 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from ._impl import available_methods
-from ._adcc import generate_adcc_adcman_input, run_adcc_adcman
-from ._impl import mp2, mp3, adc0, adc1, adc2s, adc2x, adc3, fci
+def has_real_harmonics(basis_type):
+  """
+  Does the basis have real spherical harmonics in the angular part(True)
+  or complex ones(False)
+
+  By default complex is assumed.
+  """
+  if basis_type == "gaussian/libint":
+    return True
+  else:
+    return False
+
+def is_sturmian(basis_type):
+  """
+  Is the basis a Sturmian basis.
+  """
+  return basis_type.startswith("sturmian/")
+
+def is_gaussian(basis_type):
+  """
+  Is the basis a Gaussian basis.
+  """
+  return basis_type.startswith("gaussian/")

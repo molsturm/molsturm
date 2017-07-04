@@ -44,6 +44,15 @@ for file in $PWD/../../adcc/build/src/adcc_iface/adcc_iface.py $PWD/../../adcc/s
 	fi
 done
 
+for file in $PWD/../../pyscf/__init__.py; do
+	if [ -f "$file" ]; then
+		dir=$(readlink -f $(dirname $file))
+		export PYTHONPATH="$PYTHONPATH:$dir"
+	else
+		break
+	fi
+done
+
 python3 <<- EOF
 from molsturm.posthf import available_methods
 print("Available post-HF methods:")

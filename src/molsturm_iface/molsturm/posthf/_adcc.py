@@ -22,6 +22,7 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from .._constants import HFRES_OPTIONAL
+from .._constants import HFRES_INPUT_PARAMETER_KEY
 import numpy as np
 
 try:
@@ -93,6 +94,11 @@ def run_adcc_adcman(hfres,**params):
 
 
   resp = generate_adcc_adcman_input(hfres)
-  resp.update(params)
+  for p in params:
+    if p in __adcc_remap_params:
+      remap = __adcc_remap_params[p]
+      resp[remap[0]] = remap[1](params[p])
+    else:
+      resp[p] = params[p]
   return adcc.adcman(**resp)
 
