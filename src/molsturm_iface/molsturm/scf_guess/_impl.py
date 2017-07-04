@@ -22,6 +22,7 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from .._sturmian import build_basis_projector, build_nlm_basis
+from .._basis import is_sturmian, is_gaussian
 from .._constants import HFRES_INPUT_PARAMETER_KEY
 import numpy as np
 
@@ -104,9 +105,6 @@ def extrapolate_from_previous(old_hfres, kwargs):
   """
   old_kwargs  = old_hfres[HFRES_INPUT_PARAMETER_KEY]
 
-  is_gaussian = kwargs["basis_type"].startswith("gaussian/")
-  is_sturmian = kwargs["basis_type"].startswith("sturmian/")
-
   def check_agreement(key):
     both_have_key = key in old_kwargs and key in kwargs
     both_without_key = not key in old_kwargs and not key in kwargs
@@ -117,10 +115,10 @@ def extrapolate_from_previous(old_hfres, kwargs):
                        "value for '" + key + "' differ.")
 
   check_agreement("basis_type")
-  if is_gaussian:
+  if is_gaussian(kwargs["basis_type"]):
     check_agreement("basis_set")
     return __extrapolate_from_previous_gaussian(old_hfres, kwargs)
-  elif is_sturmian:
+  elif is_sturmian(kwargs["basis_type"]):
     return __extrapolate_from_previous_sturmian(old_hfres, kwargs)
   else:
     raise ValueError("Did not understand basis_type: '"+basis_type+"'.")
