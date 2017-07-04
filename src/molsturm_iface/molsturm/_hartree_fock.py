@@ -122,7 +122,7 @@ def __setup_guess(kwargs, inputargs):
   guess = kwargs[guess_key]
 
   if isinstance(guess, str):
-    if val == "external":
+    if guess == "external":
       __setup_user_provided_guess(kwargs, inputargs)
     else:
       inputargs[guess_key] = guess
