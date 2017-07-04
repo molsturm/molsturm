@@ -250,9 +250,9 @@ krims::GenMap build_scf_params(const Parameters& params, const MolecularSystem& 
 
   krims::GenMap scfparams{
         // error
-        {IopScfKeys::max_error_norm, params.error},
-        {IopScfKeys::max_1e_energy_change, params.error * 100.},
-        {IopScfKeys::max_tot_energy_change, params.error / 4.},
+        {IopScfKeys::max_error_norm, params.conv_tol},
+        {IopScfKeys::max_1e_energy_change, params.conv_tol * 100.},
+        {IopScfKeys::max_tot_energy_change, params.conv_tol / 4.},
         //
         {IopScfKeys::max_iter, params.max_iter},
         {IopScfKeys::n_eigenpairs, n_eigenpairs},

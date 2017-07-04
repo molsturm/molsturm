@@ -84,7 +84,7 @@ struct Parameters {
   // SCF and convergence
   //
   size_t max_iter = 25;
-  double error = 5e-7;
+  double conv_tol = 5e-7;
   size_t diis_size = 4;
   size_t n_eigenpairs = 10000;
   std::string eigensolver = "auto";

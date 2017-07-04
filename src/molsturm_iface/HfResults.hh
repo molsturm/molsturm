@@ -31,9 +31,6 @@ struct HfResults {
   unsigned int n_orbs_alpha = 0;
   unsigned int n_orbs_beta = 0;
 
-  //! SCF convergence threshold
-  double threshold = 0;
-
   //! Restricted calculation or not
   bool restricted;
 

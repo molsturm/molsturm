@@ -35,7 +35,7 @@ except ImportError:
 # Keys to include verbatim from the hf res dictionary to the adcc input
 __adcc_include_keys = [
   "n_alpha", "n_beta", "n_orbs_alpha", "n_orbs_beta",
-  "n_bas", "restricted", "threshold",
+  "n_bas", "restricted",
   #
   "orben_f", "eri_ffff", "fock_ff",
   #
@@ -66,6 +66,8 @@ def generate_adcc_adcman_input(hfres):
     # in the __adcc_remap_keys dictionary.
     params.update({ __adcc_remap_keys[k][0] : __adcc_remap_keys[k][1](hfres[k])
                     for k in __adcc_remap_keys })
+
+    params.update("threshold", 5*hfres["final_error_norm"])
   except KeyError as e:
     raise ValueError("The hartree_fock result dictionary does not contain the required " +
                      "key '" + e.args[0] + ".")
