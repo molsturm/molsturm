@@ -56,7 +56,7 @@ struct HfResults {
   /** \name Energies */
   //@{
   //! Total SCF energy
-  double energy_total;
+  double energy_ground_state;
 
   //! Nuclear repulsion energy
   double energy_nuclear_repulsion;

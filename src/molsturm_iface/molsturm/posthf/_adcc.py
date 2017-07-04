@@ -47,10 +47,15 @@ __adcc_include_keys = [
 # First item of the tuple is the target key and the second is the
 # transformation function.
 __adcc_remap_keys = {
-  "energy_total" : ("energy_scf",  lambda x:  x                     ),
+  "energy_ground_state" : ("energy_scf",  lambda x:  x                     ),
   #                                note: The copy is needed here, since the data
   #                                      needs to be in memory in contiguous stride
   "orbcoeff_bf"  : ("orbcoeff_fb", lambda x:  x.transpose().copy()  ),
+}
+
+# Parameters which are to be transformed
+__adcc_remap_params = {
+  "verbosity":   ("print_level", lambda x: x),
 }
 
 

@@ -316,7 +316,6 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   ret.n_orbs_beta = n_orbs_beta;
 
   // SCF statistics
-  ret.threshold = params.error;
   ret.n_iter = state.n_iter();
   ret.n_mtx_applies = state.n_mtx_applies();
   ret.final_error_norm = state.last_error_norm;
@@ -346,7 +345,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
         continue;
     }
   }
-  ret.energy_total = fbb.energy_total();
+  ret.energy_ground_state = fbb.energy_total();
   ret.energy_nuclear_repulsion = fbb.energy_nuclear_repulsion();
 
   // Insert alpha and beta orbital energies and the coefficient matrices
@@ -380,7 +379,8 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   if (params.export_hcore_matrix) {
     // Build the alpha-alpha block of the one electron terms in atomic basis function
     // space
-    // (Note: This equals the beta-beta block for the one electron terms)
+    // (Note: This equals the beta-beta block for the one electron terms for both
+    //        restricted and unrestricted calculations)
     linalgwrap::LazyMatrixSum<matrix_type> hcore_block;
     for (const auto& id_term : fbb.terms_1e()) hcore_block += id_term.second;
 
