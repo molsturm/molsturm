@@ -21,7 +21,9 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from .._constants import HFRES_ARRAY_KEYS
+from .._constants import HFRES_OPTIONAL
+from .._constants import HFRES_INPUT_PARAMETER_KEY
+import numpy as np
 
 try:
   import adcc
@@ -29,24 +31,52 @@ try:
 except ImportError:
   adcc_found = False
 
+
+# Keys to include verbatim from the hf res dictionary to the adcc input
+__adcc_include_keys = [
+  "n_alpha", "n_beta", "n_orbs_alpha", "n_orbs_beta",
+  "n_bas", "restricted",
+  #
+  "orben_f", "eri_ffff", "fock_ff",
+  #
+  "energy_nuclear_repulsion", "energy_nuclear_attraction",
+  "energy_coulomb", "energy_exchange", "energy_kinetic",
+]
+
+# Keys which are to be transformed and then included in the adcc dictionary
+# First item of the tuple is the target key and the second is the
+# transformation function.
+__adcc_remap_keys = {
+  "energy_ground_state" : ("energy_scf",  lambda x:  x                     ),
+  #                                note: The copy is needed here, since the data
+  #                                      needs to be in memory in contiguous stride
+  "orbcoeff_bf"  : ("orbcoeff_fb", lambda x:  x.transpose().copy()  ),
+}
+
+# Parameters which are to be transformed
+__adcc_remap_params = {
+  "verbosity":   ("print_level", lambda x: x),
+}
+
+
 def generate_adcc_adcman_input(hfres):
   """
   Take the results dictionary from a hf calculation and build
   the input dictionary for a adcc.adcman calculation out of it.
   """
-  include_keys = [ "n_alpha", "n_beta", "n_orbs_alpha", "n_orbs_beta",
-                   "n_bas", "restricted", "threshold",
-                   #
-                   "orben_f", "eri_ffff", "fock_ff", "orbcoeff_fb",
-                   #
-                   "energy_nuclear_repulsion", "energy_nuclear_attraction",
-                   "energy_coulomb", "energy_exchange", "energy_kinetic",
-                 ]
-  remap_keys = { "energy_total" : "energy_scf" }
+  try:
+    params = { k:hfres[k] for k in __adcc_include_keys }
 
-  params = { k:hfres[k] for k in include_keys if k in hfres }
-  params.update({ remap_keys[k]:hfres[k] for k in remap_keys
-                  if k in hfres })
+    # Remap both the key string as well as the value of all key-value pairs
+    # in the __adcc_remap_keys dictionary.
+    params.update({ __adcc_remap_keys[k][0] : __adcc_remap_keys[k][1](hfres[k])
+                    for k in __adcc_remap_keys })
+
+    params.update("threshold", 5*hfres["final_error_norm"])
+  except KeyError as e:
+    raise ValueError("The hartree_fock result dictionary does not contain the required " +
+                     "key '" + e.args[0] + ".")
+
   return params
 
 def run_adcc_adcman(hfres,**params):
@@ -58,17 +88,24 @@ def run_adcc_adcman(hfres,**params):
     raise RuntimeError("Cannot run adcc.adcman: adcc not found.")
 
   # Check everything we need is there
-  for k in HFRES_ARRAY_KEYS:
-    if not k in hfres:
-      raise ValueError("hfres parameters do not contain the required key '" +
-                       k + "'.")
+  for key in [ key for key in HFRES_OPTIONAL
+               if key in __adcc_include_keys or key in __adcc_remap_keys ]:
+    if not key in hfres:
+      raise ValueError("The hartree_fock result dictionary does not contain the required key '" +
+                       key + "'. Please switch the parameter '" + HFRES_OPTIONAL[key] +
+                       "' to True when running the molsturm.hartree_fock caculation.")
 
   for k in [ "method" ]:
     if not k in params:
-      raise ValueError("The parameter key " + k + " is mandatory.")
+      raise ValueError("The parameter " + k + " is required.")
 
 
   resp = generate_adcc_adcman_input(hfres)
-  resp.update(params)
+  for p in params:
+    if p in __adcc_remap_params:
+      remap = __adcc_remap_params[p]
+      resp[remap[0]] = remap[1](params[p])
+    else:
+      resp[p] = params[p]
   return adcc.adcman(**resp)
 

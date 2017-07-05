@@ -31,9 +31,6 @@ struct HfResults {
   unsigned int n_orbs_alpha = 0;
   unsigned int n_orbs_beta = 0;
 
-  //! SCF convergence threshold
-  double threshold = 0;
-
   //! Restricted calculation or not
   bool restricted;
 
@@ -59,7 +56,7 @@ struct HfResults {
   /** \name Energies */
   //@{
   //! Total SCF energy
-  double energy_total;
+  double energy_ground_state;
 
   //! Nuclear repulsion energy
   double energy_nuclear_repulsion;
@@ -77,14 +74,20 @@ struct HfResults {
   double energy_kinetic;
   //@}
 
+  /** The expectation value of the total spin squared */
+  double spin_squared;
+
   // Orbital coefficients
-  std::vector<double> orbcoeff_fb;
+  std::vector<double> orbcoeff_bf;
 
   // Orbital energy
   std::vector<double> orben_f;
 
   // Fock matrix
   std::vector<double> fock_ff;
+
+  // Overlap matrix
+  std::vector<double> overlap_ff;
 
   // Matrix of all one electron integrals accumulated
   std::vector<double> hcore_ff;

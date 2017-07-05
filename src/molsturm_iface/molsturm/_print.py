@@ -84,7 +84,7 @@ def print_energies(hfres,out=sys.stdout, indention=6*" ", title="Final energies:
   twoElectron = [ "coulomb", "exchange" ]   # 2 electron terms
 
   # Keys with special treatment
-  special = zeroElectron + twoElectron + [ "total" ]
+  special = zeroElectron + twoElectron + [ "ground_state" ]
   oneElectron = sorted([ k[len(prefix):] for k in hfres
                          if k.startswith(prefix) and \
                            not k[len(prefix):] in special
@@ -118,8 +118,9 @@ def print_energies(hfres,out=sys.stdout, indention=6*" ", title="Final energies:
   lines.append(fstr.format(key="virial ratio", val=virial))
   lines.append("\n")
   lines.append((indention+"{key:"+str(maxlen)+"s} = {val:20.15g}") \
-               .format(key="E_total", val=hfres[prefix+"total"])+"\n")
+               .format(key="E_total", val=hfres[prefix+"ground_state"])+"\n")
   out.writelines(lines)
+
 
 def print_quote(hfres, out=sys.stdout):
   from numpy.random import randint

@@ -24,9 +24,16 @@
 namespace molsturm {
 namespace iface {
 
+/** Parameters which are available from the python interface.
+ *  All parameters prefixed with internal_ are internal and will not
+ *  be exposed to the user or available for the user
+ */
 struct Parameters {
   static const int all;
 
+  //
+  // System and setup
+  //
   // The system we model
   int charge = 0;
   size_t multiplicity = 0;
@@ -47,20 +54,23 @@ struct Parameters {
   std::vector<std::string> atoms = {};
 
   /** Use restricted or unrestricted fock operator
-   * Note: This parameter is only used if restricted_set
-   * is also set to true.
+   * Note: This parameter is only used if
+   * internal_restricted_set_by_user is also set to true.
    * */
   bool restricted = false;
-  bool restricted_set_by_user = false;
+  bool internal_restricted_set_by_user = false;
 
   // Basis
   std::string basis_type = "";
 
   // Sturmians
-  double k_exp = 1.0;
+  double k_exp = 0.0;
   int n_max = 0;
   int l_max = all;
   int m_max = all;
+  // TODO Phase out n_max, l_max and m_max and only transfer
+  //      the nlm_basis array at all to the c++ side from python
+  //      See also molsturm/scf_guess/_impl.py
 
   /** Transferred as a linearised array, i.e.
    *  (n1,l1,m1,n2,l2,m2, ... )
@@ -70,20 +80,26 @@ struct Parameters {
   // Gaussians
   std::string basis_set = "";
 
-  // Convergence
+  //
+  // SCF and convergence
+  //
   size_t max_iter = 25;
-  double error = 5e-7;
+  double conv_tol = 5e-7;
   size_t diis_size = 4;
   size_t n_eigenpairs = 10000;
   std::string eigensolver = "auto";
   std::string guess_esolver = "auto";
-  std::string guess_method = "hcore";
+  std::string guess = "hcore";
 
   // Printing
   bool print_iterations = false;
 
+  // Special guess parameters for guess = external
+  std::vector<double> guess_external_orben_f{};
+  std::vector<double> guess_external_orbcoeff_bf{};
+
   //
-  // Influence on what is computed
+  // Influence on export back to python
   //
   // Compute the repulsion integrals as a full tensor in the molecular orbital basis.
   // The underlying ao2mo transformation is rather slow.
@@ -94,6 +110,9 @@ struct Parameters {
 
   // Export the matrix of all one electron terms combined
   bool export_hcore_matrix = true;
+
+  // Export the overlap matrix (in MO basis)
+  bool export_overlap_matrix = false;
 };
 
 }  // namespace iface

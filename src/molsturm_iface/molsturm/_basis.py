@@ -21,19 +21,26 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-# This files include constants which are needed all over the code
+def has_real_harmonics(basis_type):
+  """
+  Does the basis have real spherical harmonics in the angular part(True)
+  or complex ones(False)
 
-"""The keys corresponding to numpy arrays in the HfResults class"""
-HFRES_ARRAY_KEYS = [ "orben_f", "eri_ffff", "fock_ff", "orbcoeff_bf", "hcore_ff", "overlap_ff" ]
+  By default complex is assumed.
+  """
+  if basis_type == "gaussian/libint":
+    return True
+  else:
+    return False
 
-"""The optional output arrays in the hartree_fock procedure along with the parameters to switch them on"""
-HFRES_OPTIONAL = { "eri_ffff":   "export_repulsion_integrals",
-                   "hcore_ff":   "export_hcore_matrix",
-                   "fock_ff":    "export_fock_matrix",
-                   "overlap_ff": "export_overlap_matrix" }
+def is_sturmian(basis_type):
+  """
+  Is the basis a Sturmian basis.
+  """
+  return basis_type.startswith("sturmian/")
 
-"""Keys which could be numpy arrays in the input Parameters to hartree_fock"""
-INPUT_PARAMETER_ARRAY_KEYS = [ "atom_numbers", "atoms", "coords", "nlm_basis" ]
-
-"""The key used to indicate the input parameters in the dict returned by hartree_fock"""
-HFRES_INPUT_PARAMETER_KEY= "input_parameters"
+def is_gaussian(basis_type):
+  """
+  Is the basis a Gaussian basis.
+  """
+  return basis_type.startswith("gaussian/")

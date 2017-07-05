@@ -22,12 +22,15 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from ._adcc import run_adcc_adcman, adcc_found
+from ._pyscf import pyscf_found, run_fci_pyscf
 
 def __build_available_methods():
+  ret=[]
   if adcc_found:
-    return [ "mp2", "mp3", "adc0", "adc1", "adc2s", "adc2x", "adc3" ]
-  else:
-    return [ ]
+    ret += [ "mp2", "mp3", "adc0", "adc1", "adc2s", "adc2x", "adc3" ]
+  if pyscf_found:
+    ret += [ "fci" ]
+  return ret
 available_methods = __build_available_methods()
 
 def __assert_available(method):
@@ -108,6 +111,20 @@ def adc3(hfres, **params):
 
   Return the resulting dictionary of computed data.
   """
-  __assert_available("adc2x")
+  __assert_available("adc3")
   return run_adcc_adcman(hfres, method="adc2x", **params)
+
+def fci(hfres, **kwargs):
+  """
+  Take the hf results and extra parameters and
+  run a Full-CI calculation. Return the dictionary
+  of computed data.
+
+  A few kwargs:
+    verbosity     Control the verbosity of the output
+    n_roots       Number of FCI roots to compute
+    conv_tol      Tolerance fo consiter root to be converged
+  """
+  __assert_available("fci")
+  return run_fci_pyscf(hfres, **kwargs)
 
