@@ -184,10 +184,12 @@ void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
 
   const size_t n_orbs_alpha = coeff_bf.n_vectors() / 2;  // == n_orbs_beta
   const size_t n_orbs = 2 * n_orbs_alpha;
+#ifdef DEBUG
   const size_t n_bas = coeff_bf.n_elem() / 2;
 
   assert_internal(n_orbs == coeff_bf.n_vectors());
   assert_internal(2 * n_bas == coeff_bf.n_elem());
+#endif  // DEBUG
 
   // Build the relevant blocks of the eri tensor
   std::vector<double> eri_aaaa(n_orbs_alpha * n_orbs_alpha * n_orbs_alpha * n_orbs_alpha);
