@@ -54,8 +54,7 @@ def run_fci_pyscf(hfres, **params):
 
   # If the underlying basis uses complex harmonics than we cannot
   # assume that (ij|kl) = (ji|kl) (Shell-pair, Mullikan notation)
-  basis_type = hfres[HFRES_INPUT_PARAMETER_KEY]["basis_type"]
-  real_harmonics = has_real_harmonics(basis_type)
+  real_harmonics = has_real_harmonics(**hfres[HFRES_INPUT_PARAMETER_KEY])
 
   if rhf and real_harmonics:
     fci = pyscf.fci.direct_spin1.FCI()

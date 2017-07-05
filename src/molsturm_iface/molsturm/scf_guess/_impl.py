@@ -115,10 +115,10 @@ def extrapolate_from_previous(old_hfres, kwargs):
                        "value for '" + key + "' differ.")
 
   check_agreement("basis_type")
-  if is_gaussian(kwargs["basis_type"]):
+  if is_gaussian(**kwargs):
     check_agreement("basis_set")
     return __extrapolate_from_previous_gaussian(old_hfres, kwargs)
-  elif is_sturmian(kwargs["basis_type"]):
+  elif is_sturmian(**kwargs):
     return __extrapolate_from_previous_sturmian(old_hfres, kwargs)
   else:
     raise ValueError("Did not understand basis_type: '"+basis_type+"'.")
