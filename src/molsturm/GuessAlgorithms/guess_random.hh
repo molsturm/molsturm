@@ -48,8 +48,8 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_random(
 
   // TODO Make alpha and beta block both truely random for unrestricted and not one
   // identical to the other
-  const auto occa = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
-  const auto occb = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
+  const auto occa        = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
+  const auto occb        = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
   const size_t n_vectors = std::max(occa.size(), occb.size());
   assert_implemented(occa == occb);
 
@@ -68,7 +68,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_random(
 
   linalgwrap::EigensolutionTypeFor<true, IntegralOperator> sol;
   sol.evectors() = ortho(guess, Sa_bb);
-  sol.evalues() = std::vector<scalar_type>(n_vectors, 1);
+  sol.evalues()  = std::vector<scalar_type>(n_vectors, 1);
   return fock_bb.restricted() ? sol : replicate_block(sol);
 }
 

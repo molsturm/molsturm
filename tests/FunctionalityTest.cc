@@ -44,11 +44,11 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
               {"Be", {{0, 0, 0}}},
         },
         /* charge */ 0);
-  double k_exp = 1.;
-  int n_max = 3;
-  int l_max = 2;
-  size_t n_eigenpairs = 4;
-  const double tolerance = 1e-9;
+  double k_exp                  = 1.;
+  int n_max                     = 3;
+  int l_max                     = 2;
+  size_t n_eigenpairs           = 4;
+  const double tolerance        = 1e-9;
   const gint::OrbitalType otype = gint::OrbitalType::COMPLEX_ATOMIC;
 #if defined GINT_HAVE_STURMINT
   const std::string basis_type = "sturmian/atomic/cs_naive";
@@ -111,13 +111,13 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
         {0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0.}};
 
   // The expected energies:
-  scalar_type exp_energy_coulomb = 5.268082025825932;
+  scalar_type exp_energy_coulomb  = 5.268082025825932;
   scalar_type exp_energy_exchange = -1.73626312131552;
-  scalar_type exp_energy_kinetic = 5.720460090270233;
-  scalar_type exp_energy_nucattr = -20.6344714235971;
+  scalar_type exp_energy_kinetic  = 5.720460090270233;
+  scalar_type exp_energy_nucattr  = -20.6344714235971;
   scalar_type exp_energy_1e_terms = exp_energy_nucattr + exp_energy_kinetic;
   scalar_type exp_energy_2e_terms = exp_energy_coulomb + exp_energy_exchange;
-  scalar_type exp_energy_total = exp_energy_1e_terms + exp_energy_2e_terms;
+  scalar_type exp_energy_total    = exp_energy_1e_terms + exp_energy_2e_terms;
 
   //
   // Setup integrals
@@ -132,11 +132,11 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   int_lookup_type integrals{intparams};
 
   // Get the integral as actual objects.
-  integral_type S_bb = integrals.lookup_integral("overlap");
-  integral_type T_bb = integrals.lookup_integral("kinetic");
+  integral_type S_bb  = integrals.lookup_integral("overlap");
+  integral_type T_bb  = integrals.lookup_integral("kinetic");
   integral_type V0_bb = integrals.lookup_integral("nuclear_attraction");
-  integral_type J_bb = integrals.lookup_integral("coulomb");
-  integral_type K_bb = integrals.lookup_integral("exchange");
+  integral_type J_bb  = integrals.lookup_integral("coulomb");
+  integral_type K_bb  = integrals.lookup_integral("exchange");
 
   // Combine 1e terms:
   std::vector<integral_type> terms_1e{T_bb, V0_bb};
@@ -144,7 +144,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   //
   // Problem setup and run.
   //
-  auto guess_bf_ptr = std::make_shared<MultiVector<vector_type>>(S_bb.n_rows(), 4);
+  auto guess_bf_ptr     = std::make_shared<MultiVector<vector_type>>(S_bb.n_rows(), 4);
   (*guess_bf_ptr)[0](0) = -0.9238795325112872L;
   (*guess_bf_ptr)[0](1) = -1.306562964876376L;
   (*guess_bf_ptr)[0](5) = -0.9238795325112864L;
@@ -198,7 +198,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   // Check the energies:
   double energytol = tolerance;
   const auto& fock = res.problem_matrix();
-  auto energies = fock.energies();
+  auto energies    = fock.energies();
   CHECK(energies[J_bb.id()] == numcomp(exp_energy_coulomb).tolerance(energytol));
   CHECK(energies[K_bb.id()] == numcomp(exp_energy_exchange).tolerance(energytol));
   CHECK(energies[V0_bb.id()] == numcomp(exp_energy_nucattr).tolerance(energytol));

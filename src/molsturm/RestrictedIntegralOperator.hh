@@ -213,7 +213,7 @@ RestrictedIntegralOperator<StoredMatrix>::RestrictedIntegralOperator(
   assert_size(m_terms_1e.size(), m_coeff_1e.size());
 
   // Set up one-electron terms of m_fock:
-  auto itterm = std::begin(m_terms_1e);
+  auto itterm  = std::begin(m_terms_1e);
   auto itcoeff = std::begin(m_coeff_1e);
   for (; itterm != std::end(m_terms_1e); ++itterm, ++itcoeff) {
     // Are matrices square and of the expected size?
@@ -345,7 +345,7 @@ void RestrictedIntegralOperator<StoredMatrix>::update_state_and_energies(
   //
   // Calculate the energies of the 1e terms:
   //
-  auto itterm = std::begin(m_terms_1e);
+  auto itterm  = std::begin(m_terms_1e);
   auto itcoeff = std::begin(m_coeff_1e);
   for (; itterm != std::end(m_terms_1e); ++itterm, ++itcoeff) {
     // TODO Do not know the RO-HF case atm
@@ -373,7 +373,7 @@ void RestrictedIntegralOperator<StoredMatrix>::update_state_and_energies(
 
     // Scale energy appropriately and set it in map:
     // 0.5 because those are 2e term and we need to avoid double counting.
-    m_energies[m_coul.id()] = 0.5 * m_coeff_coul * energy_coul;
+    m_energies[m_coul.id()]   = 0.5 * m_coeff_coul * energy_coul;
     m_energies[m_exchge.id()] = 0.5 * m_coeff_exchge * energy_exchge;
   }
 }
@@ -417,7 +417,7 @@ RestrictedIntegralOperator<StoredMatrix>::terms_alpha() const {
   std::map<std::string, scaled_int_term_type> ret;
 
   // Insert 1e terms:
-  auto itterm = std::begin(m_terms_1e);
+  auto itterm  = std::begin(m_terms_1e);
   auto itcoeff = std::begin(m_coeff_1e);
   for (; itterm != std::end(m_terms_1e); ++itterm, ++itcoeff) {
     ret.insert(itterm->id(), view::scale(*itterm, *itcoeff));

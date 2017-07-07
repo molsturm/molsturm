@@ -25,11 +25,11 @@ namespace iface {
 
 struct HfResults {
   unsigned int n_alpha = 0;
-  unsigned int n_beta = 0;
-  unsigned int n_bas = 0;
+  unsigned int n_beta  = 0;
+  unsigned int n_bas   = 0;
 
   unsigned int n_orbs_alpha = 0;
-  unsigned int n_orbs_beta = 0;
+  unsigned int n_orbs_beta  = 0;
 
   //! Restricted calculation or not
   bool restricted;

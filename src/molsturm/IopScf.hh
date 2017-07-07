@@ -66,7 +66,7 @@ struct IopScfState final : public gscf::ScfStateBase<ProblemMatrix, OverlapMatri
     // TODO This is all but good. The DiagMat template argument really has to
     //      disappear (or we need yet a layer ... a common base independent of
     //      DiagMat.
-    base_type::last_error_norm = other_state.last_error_norm;
+    base_type::last_error_norm    = other_state.last_error_norm;
     base_type::problem_matrix_ptr = other_state.problem_matrix_ptr;
     base_type::push_new_eigensolution(other_state.previous_eigensolution(),
                                       other_state.eigenproblem_stats());
@@ -74,10 +74,10 @@ struct IopScfState final : public gscf::ScfStateBase<ProblemMatrix, OverlapMatri
                                       other_state.eigenproblem_stats());
 
     last_tot_energy_change = other_state.last_tot_energy_change;
-    last_1e_energy_change = other_state.last_1e_energy_change;
+    last_1e_energy_change  = other_state.last_1e_energy_change;
 
     last_step_tot_energy = other_state.last_step_tot_energy;
-    last_step_1e_energy = other_state.last_step_1e_energy;
+    last_step_1e_energy  = other_state.last_step_1e_energy;
 
     // The following is correct, since we pass the current state number on to the
     // IopScfStateWrapper as well, such that it accumulates to give the correct
@@ -152,7 +152,7 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
     max_tot_energy_change =
           map.at(IopScfKeys::max_tot_energy_change, max_tot_energy_change);
     max_1e_energy_change = map.at(IopScfKeys::max_1e_energy_change, max_1e_energy_change);
-    verbosity = map.at(IopScfKeys::verbosity, verbosity);
+    verbosity            = map.at(IopScfKeys::verbosity, verbosity);
 
     // Copy the map to the internal storage such that we
     // can pass it on to the actual eigensolvers.
@@ -258,10 +258,10 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_up_to(state_type& state,
                                                           size_t run_until_iter) const {
   // Setup inner solver (max => User settings of accuracy take preference)
   WrappedSolver inner_solver{m_inner_params};
-  inner_solver.max_error_norm = std::max(base_type::max_error_norm, error);
-  inner_solver.max_1e_energy_change = std::max(100. * error, max_1e_energy_change);
+  inner_solver.max_error_norm        = std::max(base_type::max_error_norm, error);
+  inner_solver.max_1e_energy_change  = std::max(100. * error, max_1e_energy_change);
   inner_solver.max_tot_energy_change = std::max(error, max_tot_energy_change);
-  inner_solver.run_until_iter = run_until_iter;
+  inner_solver.run_until_iter        = run_until_iter;
 
   // Setup inner state
   typename WrappedSolver::state_type inner_state{state.problem_matrix(),
@@ -305,7 +305,7 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
 
   // TODO make this configurable
   const real_type diis_startup_error_norm = 0.25;
-  const size_t diis_startup_iter = 12;
+  const size_t diis_startup_iter          = 12;
 
   {  // truncated ODA
     solve_up_to<TruncODASolver>(state, diis_startup_error_norm, diis_startup_iter);
@@ -386,7 +386,7 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
               << "with energies" << std::endl;
 
     // For the virial ratio we need accumulated kinetic and potential energies.
-    real_type kinetic_energy = 0;
+    real_type kinetic_energy   = 0;
     real_type potential_energy = fock_bb.energy_nuclear_repulsion();
 
     size_t friendly_label_size = nuc_rep_label.size();

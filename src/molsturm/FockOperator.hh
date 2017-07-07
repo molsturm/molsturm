@@ -34,10 +34,10 @@ IntegralTermContainer<StoredMatrix> build_hf_terms(
       std::vector<gint::Integral<StoredMatrix>> extra_1e_terms) {
   using gint::IntegralTypeKeys;
 
-  auto T_bb = integrals.lookup_integral(IntegralTypeKeys::kinetic);
+  auto T_bb  = integrals.lookup_integral(IntegralTypeKeys::kinetic);
   auto V0_bb = integrals.lookup_integral(IntegralTypeKeys::nuclear_attraction);
-  auto J_bb = integrals.lookup_integral(IntegralTypeKeys::coulomb);
-  auto K_bb = integrals.lookup_integral(IntegralTypeKeys::exchange);
+  auto J_bb  = integrals.lookup_integral(IntegralTypeKeys::coulomb);
+  auto K_bb  = integrals.lookup_integral(IntegralTypeKeys::exchange);
 
   std::vector<gint::Integral<StoredMatrix>> terms_1e = {
         {std::move(T_bb), std::move(V0_bb)}};

@@ -27,8 +27,8 @@ DefException2(ExcInvalidMultiplicity, size_t, std::string,
               << "The multiplicity \"" << arg1
               << " is invalid for this molecular system: " << arg2);
 
-DefException1(ExcNonIntegerElectronCount, double, << "The determined electron count "
-                                                  << arg1 << " is not an integer value.");
+DefException1(ExcNonIntegerElectronCount, double,
+              << "The determined electron count " << arg1 << " is not an integer value.");
 
 // TODO Allow to construct from GenMap!
 /** Class which describes the physical system to model

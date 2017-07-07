@@ -35,7 +35,7 @@ struct Parameters {
   // System and setup
   //
   // The system we model
-  int charge = 0;
+  int charge          = 0;
   size_t multiplicity = 0;
 
   /** The coordinates of the atoms, transferred as
@@ -53,21 +53,21 @@ struct Parameters {
   /** The atom labels */
   std::vector<std::string> atoms = {};
 
+  bool internal_restricted_set_by_user = false;
   /** Use restricted or unrestricted fock operator
    * Note: This parameter is only used if
    * internal_restricted_set_by_user is also set to true.
    * */
   bool restricted = false;
-  bool internal_restricted_set_by_user = false;
 
   // Basis
   std::string basis_type = "";
 
   // Sturmians
   double k_exp = 0.0;
-  int n_max = 0;
-  int l_max = all;
-  int m_max = all;
+  int n_max    = 0;
+  int l_max    = all;
+  int m_max    = all;
   // TODO Phase out n_max, l_max and m_max and only transfer
   //      the nlm_basis array at all to the c++ side from python
   //      See also molsturm/scf_guess/_impl.py
@@ -83,13 +83,13 @@ struct Parameters {
   //
   // SCF and convergence
   //
-  size_t max_iter = 25;
-  double conv_tol = 5e-7;
-  size_t diis_size = 4;
-  size_t n_eigenpairs = 10000;
-  std::string eigensolver = "auto";
+  size_t max_iter           = 25;
+  double conv_tol           = 5e-7;
+  size_t diis_size          = 4;
+  size_t n_eigenpairs       = 10000;
+  std::string eigensolver   = "auto";
   std::string guess_esolver = "auto";
-  std::string guess = "hcore";
+  std::string guess         = "hcore";
 
   // Printing
   bool print_iterations = false;

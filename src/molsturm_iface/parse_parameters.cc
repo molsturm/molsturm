@@ -192,7 +192,7 @@ krims::GenMap build_guess_params(const Parameters& params,
 
   if (params.guess == "external") {
     // This is special, since we need to provide the guess externally
-    auto& orben_f = params.guess_external_orben_f;
+    auto& orben_f     = params.guess_external_orben_f;
     auto& orbcoeff_bf = params.guess_external_orbcoeff_bf;
 
     assert_throw(!orben_f.empty(),
@@ -206,7 +206,7 @@ krims::GenMap build_guess_params(const Parameters& params,
 
     // Determine n_orbs and n_bas from the sizes provided:
     const size_t n_orbs = orben_f.size();
-    const size_t n_bas = orbcoeff_bf.size() / n_orbs;
+    const size_t n_bas  = orbcoeff_bf.size() / n_orbs;
     assert_throw(n_orbs * n_bas == orbcoeff_bf.size(),
                  ExcInvalidParameters("The sizes of guess_external_orben_f == " +
                                       std::to_string(orben_f.size()) +
@@ -221,8 +221,7 @@ krims::GenMap build_guess_params(const Parameters& params,
           linalgwrap::MultiVector<linalgwrap::SmallVector<double>>(n_bas, n_orbs, false);
     for (size_t b = 0; b < n_bas; ++b) {
       for (size_t f = 0; f < n_orbs; ++f) {
-        const size_t bf = b * n_orbs + f;
-        esolution.evectors()[f][b] = orbcoeff_bf[bf];
+        esolution.evectors()[f][b] = orbcoeff_bf[b * n_orbs + f];
       }  // f
     }    // b
 

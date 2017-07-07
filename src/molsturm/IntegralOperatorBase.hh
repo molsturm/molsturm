@@ -283,7 +283,7 @@ IntegralOperatorBase<StoredMatrix>::terms_1e() const {
   using linalgwrap::LazyMatrixProduct;
   std::map<gint::IntegralIdentifier, LazyMatrixProduct<StoredMatrix>> ret;
 
-  auto itterm = std::begin(m_terms_1e);
+  auto itterm  = std::begin(m_terms_1e);
   auto itcoeff = std::begin(m_coeff_1e);
   for (; itterm != std::end(m_terms_1e); ++itterm, ++itcoeff) {
     ret.insert(std::make_pair(itterm->id(), (*itcoeff) * (*itterm)));

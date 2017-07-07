@@ -81,7 +81,7 @@ class ScfErrorLibrary {
 
     // Compute individual errors in blocks
     auto error_alpha = compute_error(occ_a);
-    auto error_beta = compute_error(occ_b);
+    auto error_beta  = compute_error(occ_b);
 
     if (accumulate_both) {
       // Sum the errors of the beta electrons onto the

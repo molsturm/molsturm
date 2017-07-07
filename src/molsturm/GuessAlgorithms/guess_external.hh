@@ -66,14 +66,14 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_external(
               GuessExternalKeys::eigensolution);
 
   auto& evectors = esolution.evectors();
-  auto& evalues = esolution.evalues();
+  auto& evalues  = esolution.evalues();
   assert_throw(evectors.n_vectors() == evalues.size(),
                ExcInvalidScfGuessParametersEncountered(
                      "Number of eigenvectors and number of eigenvalues in provided "
                      "eigensolution does not agree."));
 
-  const auto occa = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
-  const auto occb = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
+  const auto occa        = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
+  const auto occb        = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
   const size_t n_vectors = std::max(occa.length(), occb.length());
 
   // Restricted open-shell is not yet implemented
