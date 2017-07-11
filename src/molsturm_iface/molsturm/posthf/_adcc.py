@@ -72,7 +72,7 @@ def generate_adcc_adcman_input(hfres):
     params.update({ __adcc_remap_keys[k][0] : __adcc_remap_keys[k][1](hfres[k])
                     for k in __adcc_remap_keys })
 
-    params.update("threshold", 5*hfres["final_error_norm"])
+    params["threshold"] = 5*hfres["final_error_norm"]
   except KeyError as e:
     raise ValueError("The hartree_fock result dictionary does not contain the required " +
                      "key '" + e.args[0] + ".")
