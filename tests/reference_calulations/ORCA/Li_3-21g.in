@@ -1,0 +1,5 @@
+!hf EXTREMESCF nofrozencore largeprint 3-21G
+
+*xyz 0 2
+ li    0.0  0.0  0.0
+*
