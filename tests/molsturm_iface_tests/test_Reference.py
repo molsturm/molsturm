@@ -21,7 +21,7 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from NumCompTestCase import NumCompTestCase
+from HartreeFockTestCase import HartreeFockTestCase
 import molsturm
 import molsturm.posthf
 import testdata
@@ -29,7 +29,7 @@ import unittest
 
 @unittest.skipUnless("gaussian/libint" in molsturm.available_basis_types,
                      "gaussian/libint not available. Skipping reference tests")
-class TestReference(NumCompTestCase):
+class TestReference(HartreeFockTestCase):
   """This test should ensure, that we our molsturm can reproduce
      data exactly in the way computed with ORCA or another standard
      quantum chemistry program.
@@ -39,42 +39,6 @@ class TestReference(NumCompTestCase):
   def setUpClass(cls):
     cls.cases = testdata.reference_cases()
     cls.hf_results = dict()
-
-  def run_hf(self, case):
-    testing = case["testing"]
-    params = case["params"]
-    ref = case["hf"]
-
-    # Update parameters if posthf is done
-    if testing["any_posthf"]:
-      params.setdefault("export_fock_matrix",         True)
-      params.setdefault("export_repulsion_integrals", True)
-      params.setdefault("export_hcore_matrix",        True)
-    hf = molsturm.hartree_fock(**params)
-    hfene = molsturm.compute_derived_hartree_fock_energies(hf)
-
-    # Generic numerical tolerance
-    num_tol = testing["numeric_tolerance"]
-
-    # Compare energies:
-    for key in ref:
-      if not key.startswith("energy_"):
-        continue
-      computed = hfene[key] if key in hfene else hf[key]
-      self.assertAlmostEqual(computed, ref[key], tol=num_tol, prefix=key+": ")
-
-    # Compare orbital energies:
-    orben_tol = testing.get("orben_tolerance", num_tol)
-    self.assertArrayAlmostEqual(hf["orben_f"], ref["orben_f"], tol=orben_tol,
-                                prefix="MO energies: ")
-
-    # Compare n_iter and spin_squared
-    spin_squared_tol = testing.get("spin_squared_tolerance", num_tol)
-    self.assertLessEqual(hf["n_iter"], testing["max_n_iter"])
-    self.assertAlmostEqual(hf["spin_squared"], ref["spin_squared"], tol=spin_squared_tol)
-
-    self.hf_results[ testing["name"] ] = hf
-
 
   def run_mp2(self, case):
     testing = case["testing"]
@@ -113,8 +77,20 @@ class TestReference(NumCompTestCase):
 
   def test_0_hf(self):
     for case in self.cases:
-      with self.subTest(label=case["testing"]["name"]):
-        self.run_hf(case)
+      testing = case["testing"]
+
+      with self.subTest(label=testing):
+        params = case["params"]
+
+        # Update parameters if posthf is done
+        if testing["any_posthf"]:
+          params.setdefault("export_fock_matrix",         True)
+          params.setdefault("export_repulsion_integrals", True)
+          params.setdefault("export_hcore_matrix",        True)
+        hf = molsturm.hartree_fock(**params)
+
+        self.compare_hf_results(case, hf)
+        self.hf_results[ testing["name"] ] = hf
 
 
   @unittest.skipUnless("mp2" in molsturm.posthf.available_methods,
@@ -128,6 +104,8 @@ class TestReference(NumCompTestCase):
         self.run_mp2(case)
 
 
+  @unittest.skipUnless("fci" in molsturm.posthf.available_methods,
+                       "fci not available => Skipping fci tests")
   def test_2_fci(self):
     for case in self.cases:
       if not "fci" in case:
