@@ -29,7 +29,7 @@ import unittest
 
 @unittest.skipUnless(data.params["basis_type"] in molsturm.available_basis_types,
                      "Required basis type is not available")
-class TestHartreeFock(NumCompTestCase):
+class TestHartreeFockFull(NumCompTestCase):
   """This test should ensure, that we get exactly the same data
      through the python interface as we get without it by directly
      invoking the library via a C++ program.
@@ -41,11 +41,11 @@ class TestHartreeFock(NumCompTestCase):
   def test_energies(self):
     for ene in data.ref_energies:
       self.assertAlmostEqual(self._hf_result[ene], data.ref_energies[ene],
-                             tol=data.params["error"],prefix=ene+": ")
+                             tol=data.params["conv_tol"],prefix=ene+": ")
 
   def test_scf_convergence(self):
     self.assertGreaterEqual(data.ref_n_iter,self._hf_result["n_iter"])
-    self.assertLessEqual(self._hf_result["final_error_norm"],data.params["error"])
+    self.assertLessEqual(self._hf_result["final_error_norm"],data.params["conv_tol"])
 
     for key in data.ref_convergence_result:
       self.assertEqual(self._hf_result[key], data.ref_convergence_result[key])
@@ -53,13 +53,13 @@ class TestHartreeFock(NumCompTestCase):
   def test_orbital_energies(self):
     self.assertArrayAlmostEqual(self._hf_result["orben_f"],
                                 data.ref_orbital_energies,
-                                tol=data.params["error"],
+                                tol=data.params["conv_tol"],
                                 prefix="Orbital energies: ")
 
   def test_coefficients(self):
-    self.assertArrayAlmostEqual(self._hf_result["orbcoeff_fb"],
+    self.assertArrayAlmostEqual(self._hf_result["orbcoeff_bf"],
                                 data.ref_coefficients,
-                                tol=data.params["error"],
+                                tol=data.params["conv_tol"],
                                 prefix="Coefficients: ")
 
   def test_fock(self):
@@ -74,7 +74,7 @@ class TestHartreeFock(NumCompTestCase):
           ref_fij = data.ref_fock[i+j]
         except KeyError as e:
           ref_fij = np.zeros((sizemap[i],sizemap[j]))
-        self.assertArrayAlmostEqual(fij, ref_fij, tol=data.params["error"],
+        self.assertArrayAlmostEqual(fij, ref_fij, tol=data.params["conv_tol"],
                                     prefix="Fock "+i+"-"+j+": ")
 
   def test_repulsion_integrals(self):
@@ -93,6 +93,6 @@ class TestHartreeFock(NumCompTestCase):
             except KeyError as e:
               ref_Jijkl = np.zeros( (sizemap[i], sizemap[j], sizemap[k], sizemap[l]) )
 
-            self.assertArrayAlmostEqual(Jijkl, ref_Jijkl, tol=data.params["error"],
+            self.assertArrayAlmostEqual(Jijkl, ref_Jijkl, tol=data.params["conv_tol"],
                                         prefix="Repulsion tensor "+i+"-"+j+"-"+k+\
                                         "-"+l+": ")
