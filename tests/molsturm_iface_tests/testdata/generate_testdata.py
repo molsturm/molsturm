@@ -55,7 +55,7 @@ def run_hf_calculation(name,params):
 
 def job_dump_yaml(name,params):
   """Run a full calculation and dump the result as a yaml file"""
-  output = name+".yaml"
+  output = name+".hf.yaml"
   if not os.path.exists(output):
     res = run_hf_calculation(name,params)
     molsturm.dump_yaml(res,output)
