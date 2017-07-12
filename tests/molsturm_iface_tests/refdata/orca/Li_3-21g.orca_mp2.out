@@ -100,19 +100,23 @@ WARNING: your system is open-shell and RHF/RKS was chosen
 WARNING: TCut can not be >=Thresh
   ===> : TCut is set to 0.01*Thresh
 
+WARNING: Post HF methods need fully converged wavefunctions
+  ===> : Setting SCFConvForced true
+         You can overwrite this default with %scf ConvForced false 
+
+
 INFO   : the flag for use of LIBINT has been found!
 
 ================================================================================
                                        INPUT FILE
 ================================================================================
-NAME = Li_3-21g.in
-|  1> !hf EXTREMESCF nofrozencore largeprint 3-21G
-|  2> 
-|  3> *xyz 0 2
-|  4>  li    0.0  0.0  0.0
-|  5> *
-|  6> 
-|  7>                          ****END OF INPUT****
+NAME = Li_3-21g.orca_mp2.in
+|  1> ! bohrs extremescf nofrozencore nopop noprintmos largeprint mp2 3-21g
+|  2> * xyz 0 2
+|  3> Li  0  0  0
+|  4> *
+|  5> 
+|  6>                          ****END OF INPUT****
 ================================================================================
 
                        ****************************
@@ -207,7 +211,7 @@ Hamiltonian:
 
 
 General Settings:
- Integral files         IntName         .... Li_3-21g
+ Integral files         IntName         .... Li_3-21g.orca_mp2
  Hartree-Fock type      HFTyp           .... UHF
  Total Charge           Charge          ....    0
  Multiplicity           Mult            ....    2
@@ -245,7 +249,7 @@ SCF Procedure:
 
 Convergence Tolerance:
  Convergence Check Mode ConvCheckMode   .... All-Criteria
- Convergence forced     ConvForced      .... 0
+ Convergence forced     ConvForced      .... 1
  Energy Change          TolE            ....  1.000e-14 Eh
  Max Density Change     TolMaxP         ....  1.000e-14
  RMS Density Change     TolRMSP         ....  1.000e-14
@@ -254,11 +258,11 @@ Convergence Tolerance:
 
 Diagonalization of the overlap matrix:
 Smallest eigenvalue                        ... 2.163e-01
-Time for diagonalization                   ...    0.010 sec
+Time for diagonalization                   ...    0.000 sec
 Threshold for overlap eigenvalues          ... 1.000e-08
 Number of eigenvalues below threshold      ... 0
-Time for construction of square roots      ...    0.003 sec
-Total time needed                          ...    0.013 sec
+Time for construction of square roots      ...    0.000 sec
+Total time needed                          ...    0.000 sec
 
 -------------------
 DFT GRID GENERATION
@@ -289,7 +293,7 @@ Average number of large basis fcns per batch ...     8.19 (96.93%)
 Maximum spatial batch extension              ...  27.77, 51.31, 51.31 au
 Average spatial batch extension              ...  14.10, 16.53, 18.99 au
 
-Time for grid setup =    0.018 sec
+Time for grid setup =    0.005 sec
 
 ------------------------------
 INITIAL GUESS: MODEL POTENTIAL
@@ -583,9 +587,9 @@ SCF CONVERGENCE
   Last RMS-Density change    ...    1.6036e-16  Tolerance :   1.0000e-14
   Last DIIS Error            ...    2.7756e-15  Tolerance :   1.0000e-14
 
-             **** THE GBW FILE WAS UPDATED (Li_3-21g.gbw) ****
-             **** DENSITY FILE WAS UPDATED (Li_3-21g.scfp.tmp) ****
-             **** ENERGY FILE WAS UPDATED (Li_3-21g.en.tmp) ****
+             **** THE GBW FILE WAS UPDATED (Li_3-21g.orca_mp2.gbw) ****
+             **** DENSITY FILE WAS UPDATED (Li_3-21g.orca_mp2.scfp.tmp) ****
+             **** ENERGY FILE WAS UPDATED (Li_3-21g.orca_mp2.en.tmp) ****
 ----------------------
 UHF SPIN CONTAMINATION
 ----------------------
@@ -620,64 +624,6 @@ ORBITAL ENERGIES
    6   0.0000       0.228483         6.2174 
    7   0.0000       0.228483         6.2174 
    8   0.0000       0.228483         6.2174 
-------------------
-MOLECULAR ORBITALS
-------------------
-                      0         1         2         3         4         5   
-                  -2.46051  -0.19443   0.02644   0.02644   0.02644   0.16885
-                   1.00000   1.00000   0.00000   0.00000   0.00000   0.00000
-                  --------  --------  --------  --------  --------  --------
-  0Li  1s         0.991216  0.196236  0.000000 -0.000000  0.000000  0.106844
-  0Li  2s         0.063168 -0.375194  0.000000 -0.000000 -0.000000 -1.571171
-  0Li  1pz       -0.000000  0.000000 -0.023715  0.161785  0.102802 -0.000000
-  0Li  1px       -0.000000  0.000000  0.164031  0.070725 -0.073464 -0.000000
-  0Li  1py       -0.000000 -0.000000 -0.099179  0.078286 -0.146082  0.000000
-  0Li  3s        -0.024611 -0.691834  0.000000  0.000000  0.000000  1.450217
-  0Li  2pz        0.000000 -0.000000 -0.107317  0.732134  0.465214 -0.000000
-  0Li  2px        0.000000  0.000000  0.742297  0.320053 -0.332450  0.000000
-  0Li  2py        0.000000  0.000000 -0.448821  0.354270 -0.661071 -0.000000
-                      6         7         8   
-                   0.19741   0.19741   0.19741
-                   0.00000   0.00000   0.00000
-                  --------  --------  --------
-  0Li  1s        -0.000000 -0.000000 -0.000000
-  0Li  2s        -0.000000  0.000000  0.000000
-  0Li  1pz        0.539137  0.962602 -0.524910
-  0Li  1px       -0.700670 -0.147425 -0.990015
-  0Li  1py       -0.843324  0.737879  0.486972
-  0Li  3s         0.000000 -0.000000 -0.000000
-  0Li  2pz       -0.386237 -0.689606  0.376045
-  0Li  2px        0.501959  0.105615  0.709245
-  0Li  2py        0.604156 -0.528615 -0.348866
-
-                      0         1         2         3         4         5   
-                  -2.44387   0.02162   0.05735   0.05735   0.05735   0.21825
-                   1.00000   0.00000   0.00000   0.00000   0.00000   0.00000
-                  --------  --------  --------  --------  --------  --------
-  0Li  1s         0.990742  0.160323  0.000000 -0.000000  0.000000  0.158622
-  0Li  2s         0.065977  0.072976 -0.000000 -0.000000  0.000000 -1.613586
-  0Li  1pz       -0.000000 -0.000000  0.017186  0.007408  0.026034 -0.000000
-  0Li  1px        0.000000 -0.000000 -0.005375 -0.029290  0.011883  0.000000
-  0Li  1py        0.000000  0.000000  0.026529 -0.010734 -0.014458 -0.000000
-  0Li  3s        -0.025495 -1.065159 -0.000000  0.000000 -0.000000  1.202978
-  0Li  2pz        0.000000 -0.000000  0.525708  0.226625  0.796383  0.000000
-  0Li  2px       -0.000000 -0.000000 -0.164421 -0.895981  0.363506 -0.000000
-  0Li  2py       -0.000000 -0.000000  0.811511 -0.328347 -0.442257  0.000000
-                      6         7         8   
-                   0.22848   0.22848   0.22848
-                   0.00000   0.00000   0.00000
-                  --------  --------  --------
-  0Li  1s        -0.000000 -0.000000  0.000000
-  0Li  2s         0.000000  0.000000 -0.000000
-  0Li  1pz       -0.386771 -1.094278  0.426664
-  0Li  1px        0.008963  0.446440  1.153122
-  0Li  1py       -1.174482  0.363766 -0.131706
-  0Li  3s        -0.000000 -0.000000  0.000000
-  0Li  2pz        0.235761  0.667031 -0.260078
-  0Li  2px       -0.005463 -0.272133 -0.702900
-  0Li  2py        0.715920 -0.221738  0.080283
-
-
 -------
 DENSITY
 -------
@@ -724,293 +670,134 @@ DENSITY
       8      -0.000000   0.000000   0.000000
 
 
-
-                    ********************************
-                    * MULLIKEN POPULATION ANALYSIS *
-                    ********************************
-
---------------------------------------------
-MULLIKEN ATOMIC CHARGES AND SPIN POPULATIONS
---------------------------------------------
-   0 Li:   -0.000000    1.000000
-Sum of atomic charges         :   -0.0000000
-Sum of atomic spin populations:    1.0000000
-
----------------------------------------------
-MULLIKEN ORBITAL CHARGES AND SPIN POPULAITONS
----------------------------------------------
-The uncorrected charge+spin densities=density diagonals are given in parenthesis)
-   0:   0Li  1s           1.986136    0.006936 (  2.002587    0.039449)
-   1:   0Li  2s           0.359401    0.330161 (  0.149113    0.140407)
-   2:   0Li  1pz          0.000000    0.000000 (  0.000000    0.000000)
-   3:   0Li  1px          0.000000    0.000000 (  0.000000   -0.000000)
-   4:   0Li  1py          0.000000    0.000000 (  0.000000    0.000000)
-   5:   0Li  3s           0.654463    0.662903 (  0.479891    0.478591)
-   6:   0Li  2pz          0.000000    0.000000 (  0.000000    0.000000)
-   7:   0Li  2px          0.000000    0.000000 (  0.000000   -0.000000)
-   8:   0Li  2py          0.000000    0.000000 (  0.000000    0.000000)
-Sum of orbital charges         :    3.0000000
-Sum of orbital spin populations:    1.0000000
-
------------------------------------------------------
-MULLIKEN REDUCED ORBITAL CHARGES AND SPIN POPULATIONS
------------------------------------------------------
-CHARGE
-  0 Lis       :     3.000000  s :     3.000000
-      pz      :     0.000000  p :     0.000000
-      px      :     0.000000
-      py      :     0.000000
-
-SPIN
-  0 Lis       :     1.000000  s :     1.000000
-      pz      :     0.000000  p :     0.000000
-      px      :     0.000000
-      py      :     0.000000
-
-------------------------
-MULLIKEN OVERLAP CHARGES
-------------------------
-
-
------------------------------------
-MULLIKEN ORBITAL POPULATIONS PER MO
------------------------------------
-THRESHOLD FOR PRINTING IS 0.1%
-SPIN UP
-                      0         1         2         3         4         5   
-                  -2.46051  -0.19443   0.02644   0.02644   0.02644   0.16885
-                   1.00000   1.00000   0.00000   0.00000   0.00000   0.00000
-                  --------  --------  --------  --------  --------  --------
-  0Li  1s             99.0       0.6       0.0      -0.0       0.0       0.3
-  0Li  2s              1.4      33.1       0.0      -0.0       0.0      65.5
-  0Li  1pz             0.0       0.0       0.2       9.6       3.9       0.0
-  0Li  1px             0.0       0.0       9.9       1.8       2.0       0.0
-  0Li  1py             0.0       0.0       3.6       2.2       7.8       0.0
-  0Li  3s             -0.4      66.3       0.0       0.0       0.0      34.1
-  0Li  2pz             0.0      -0.0       1.3      60.6      24.5       0.0
-  0Li  2px            -0.0       0.0      62.3      11.6      12.5       0.0
-  0Li  2py             0.0       0.0      22.8      14.2      49.4       0.0
-
-                      6         7         8   
-                   0.19741   0.19741   0.19741
-                   0.00000   0.00000   0.00000
-                  --------  --------  --------
-  0Li  1pz            16.8      53.6      15.9
-  0Li  1px            28.4       1.3      56.7
-  0Li  1py            41.1      31.5      13.7
-  0Li  2pz             2.7       8.5       2.5
-  0Li  2px             4.5       0.2       9.0
-  0Li  2py             6.5       5.0       2.2
-
-SPIN DOWN
-                      0         1         2         3         4         5   
-                  -2.44387   0.02162   0.05735   0.05735   0.05735   0.21825
-                   1.00000   0.00000   0.00000   0.00000   0.00000   0.00000
-                  --------  --------  --------  --------  --------  --------
-  0Li  1s             99.0       0.4       0.0       0.0       0.0       0.7
-  0Li  2s              1.5      -5.3       0.0      -0.0      -0.0     103.9
-  0Li  1pz             0.0       0.0       0.6       0.1       1.3       0.0
-  0Li  1px             0.0       0.0       0.1       1.6       0.3       0.0
-  0Li  1py             0.0      -0.0       1.3       0.2       0.4       0.0
-  0Li  3s             -0.4     105.0       0.0       0.0       0.0      -4.5
-  0Li  2pz             0.0       0.0      28.2       5.2      64.6       0.0
-  0Li  2px             0.0       0.0       2.8      81.8      13.5      -0.0
-  0Li  2py            -0.0       0.0      67.1      11.0      19.9      -0.0
-
-                      6         7         8   
-                   0.22848   0.22848   0.22848
-                   0.00000   0.00000   0.00000
-                  --------  --------  --------
-  0Li  1pz             9.6      76.8      11.7
-  0Li  1px             0.0      12.8      85.3
-  0Li  1py            88.4       8.5       1.1
-  0Li  2pz             0.2       1.5       0.2
-  0Li  2px             0.0       0.3       1.7
-  0Li  2py             1.8       0.2       0.0
-
-
-                     *******************************
-                     * LOEWDIN POPULATION ANALYSIS *
-                     *******************************
-
--------------------------------------------
-LOEWDIN ATOMIC CHARGES AND SPIN POPULATIONS
--------------------------------------------
-   0 Li:   -0.000000    1.000000
-
---------------------------------------------
-LOEWDIN ORBITAL CHARGES AND SPIN POPULATIONS
---------------------------------------------
-   0:   0Li  1s           1.976214    0.016552
-   1:   0Li  2s           0.417444    0.384518
-   2:   0Li  1pz          0.000000    0.000000
-   3:   0Li  1px          0.000000    0.000000
-   4:   0Li  1py          0.000000    0.000000
-   5:   0Li  3s           0.606342    0.598930
-   6:   0Li  2pz          0.000000    0.000000
-   7:   0Li  2px          0.000000    0.000000
-   8:   0Li  2py          0.000000    0.000000
-
-----------------------------------------------------
-LOEWDIN REDUCED ORBITAL CHARGES AND SPIN POPULATIONS
-----------------------------------------------------
-CHARGE
-  0 Lis       :     3.000000  s :     3.000000
-      pz      :     0.000000  p :     0.000000
-      px      :     0.000000
-      py      :     0.000000
-
-SPIN
-  0 Lis       :     1.000000  s :     1.000000
-      pz      :     0.000000  p :     0.000000
-      px      :     0.000000
-      py      :     0.000000
-
----------------------------------
-LOEWDIN BOND ORDERS (THRESH 0.05)
----------------------------------
-
-
-----------------------------------
-LOEWDIN ORBITAL POPULATIONS PER MO
-----------------------------------
-THRESHOLD FOR PRINTING IS 0.1%
-SPIN UP
-                      0         1         2         3         4         5   
-                  -2.46051  -0.19443   0.02644   0.02644   0.02644   0.16885
-                   1.00000   1.00000   0.00000   0.00000   0.00000   0.00000
-                  --------  --------  --------  --------  --------  --------
-  0Li  1s             98.0       1.6       0.0       0.0       0.0       0.4
-  0Li  2s              1.6      38.5       0.0       0.0       0.0      59.9
-  0Li  1pz             0.0       0.0       0.3      14.5       5.8       0.0
-  0Li  1px             0.0       0.0      14.9       2.8       3.0       0.0
-  0Li  1py             0.0       0.0       5.4       3.4      11.8       0.0
-  0Li  3s              0.4      59.9       0.0       0.0       0.0      39.7
-  0Li  2pz             0.0       0.0       1.2      55.7      22.5       0.0
-  0Li  2px             0.0       0.0      57.2      10.6      11.5       0.0
-  0Li  2py             0.0       0.0      20.9      13.0      45.4       0.0
-
-                      6         7         8   
-                   0.19741   0.19741   0.19741
-                   0.00000   0.00000   0.00000
-                  --------  --------  --------
-  0Li  1pz            15.5      49.3      14.6
-  0Li  1px            26.1       1.2      52.1
-  0Li  1py            37.8      28.9      12.6
-  0Li  2pz             4.0      12.8       3.8
-  0Li  2px             6.8       0.3      13.5
-  0Li  2py             9.8       7.5       3.3
-
-SPIN DOWN
-                      0         1         2         3         4         5   
-                  -2.44387   0.02162   0.05735   0.05735   0.05735   0.21825
-                   1.00000   0.00000   0.00000   0.00000   0.00000   0.00000
-                  --------  --------  --------  --------  --------  --------
-  0Li  1s             98.0       1.1       0.0       0.0       0.0       0.9
-  0Li  2s              1.6      14.6       0.0       0.0       0.0      83.7
-  0Li  1pz             0.0       0.0       3.2       0.6       7.4       0.0
-  0Li  1px             0.0       0.0       0.3       9.3       1.5       0.0
-  0Li  1py             0.0       0.0       7.6       1.3       2.3       0.0
-  0Li  3s              0.4      84.2       0.0       0.0       0.0      15.4
-  0Li  2pz             0.0       0.0      25.5       4.7      58.6       0.0
-  0Li  2px             0.0       0.0       2.5      74.1      12.2       0.0
-  0Li  2py             0.0       0.0      60.8      10.0      18.1       0.0
-
-                      6         7         8   
-                   0.22848   0.22848   0.22848
-                   0.00000   0.00000   0.00000
-                  --------  --------  --------
-  0Li  1pz             8.7      69.6      10.6
-  0Li  1px             0.0      11.6      77.3
-  0Li  1py            80.1       7.7       1.0
-  0Li  2pz             1.1       8.7       1.3
-  0Li  2px             0.0       1.5       9.7
-  0Li  2py            10.1       1.0       0.1
-
-------------------------------------------
-LOEWDIN REDUCED ORBITAL POPULATIONS PER MO
--------------------------------------------
-THRESHOLD FOR PRINTING IS 0.1%
-SPIN UP
-                      0         1         2         3         4         5   
-                  -2.46051  -0.19443   0.02644   0.02644   0.02644   0.16885
-                   1.00000   1.00000   0.00000   0.00000   0.00000   0.00000
-                  --------  --------  --------  --------  --------  --------
- 0 Li s             100.0     100.0       0.0       0.0       0.0     100.0
- 0 Li pz              0.0       0.0       1.5      70.2      28.3       0.0
- 0 Li px              0.0       0.0      72.1      13.4      14.5       0.0
- 0 Li py              0.0       0.0      26.4      16.4      57.2       0.0
-
-                      6         7         8   
-                   0.19741   0.19741   0.19741
-                   0.00000   0.00000   0.00000
-                  --------  --------  --------
- 0 Li pz             19.5      62.1      18.5
- 0 Li px             32.9       1.5      65.7
- 0 Li py             47.6      36.5      15.9
-
-SPIN DOWN
-                      0         1         2         3         4         5   
-                  -2.44387   0.02162   0.05735   0.05735   0.05735   0.21825
-                   1.00000   0.00000   0.00000   0.00000   0.00000   0.00000
-                  --------  --------  --------  --------  --------  --------
- 0 Li s             100.0     100.0       0.0       0.0       0.0     100.0
- 0 Li pz              0.0       0.0      28.7       5.3      65.9       0.0
- 0 Li px              0.0       0.0       2.8      83.5      13.7       0.0
- 0 Li py              0.0       0.0      68.5      11.2      20.3       0.0
-
-                      6         7         8   
-                   0.22848   0.22848   0.22848
-                   0.00000   0.00000   0.00000
-                  --------  --------  --------
- 0 Li pz              9.8      78.3      11.9
- 0 Li px              0.0      13.0      87.0
- 0 Li py             90.2       8.7       1.1
-
-
-                      *****************************
-                      * MAYER POPULATION ANALYSIS *
-                      *****************************
-
-  NA   - Mulliken gross atomic population
-  ZA   - Total nuclear charge
-  QA   - Mulliken gross atomic charge
-  VA   - Mayer's total valence
-  BVA  - Mayer's bonded valence
-  FA   - Mayer's free valence
-
-  ATOM       NA         ZA         QA         VA         BVA        FA
-  0 Li     3.0000     3.0000    -0.0000     1.0000     0.0000     1.0000
-
-  Mayer bond orders larger than 0.1
-
-
 -------
 TIMINGS
 -------
 
 Total SCF time: 0 days 0 hours 0 min 1 sec 
 
-Total time                  ....       1.412 sec
-Sum of individual times     ....       1.395 sec  ( 98.8%)
+Total time                  ....       1.367 sec
+Sum of individual times     ....       1.363 sec  ( 99.7%)
 
-Fock matrix formation       ....       1.284 sec  ( 90.9%)
+Fock matrix formation       ....       1.274 sec  ( 93.2%)
 Diagonalization             ....       0.002 sec  (  0.2%)
 Density matrix formation    ....       0.000 sec  (  0.0%)
-Population analysis         ....       0.001 sec  (  0.1%)
-Initial guess               ....       0.087 sec  (  6.1%)
+Population analysis         ....       0.000 sec  (  0.0%)
+Initial guess               ....       0.082 sec  (  6.0%)
 Orbital Transformation      ....       0.000 sec  (  0.0%)
 Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
-DIIS solution               ....       0.002 sec  (  0.2%)
+DIIS solution               ....       0.001 sec  (  0.1%)
+
+------------------------------------------------------------------------------
+                                ORCA  MP2 
+------------------------------------------------------------------------------
+
+
+----------
+MP2 ENERGY (disk based algorithm)
+----------
+
+Dimension of the basis                    ...    9
+Memory devoted to MP2                     ...  256 MB   
+Data format for buffers                   ... DOUBLE
+Compression type for matrix containers    ... UNCOMPRESSED
+
+-------------------------------
+PARTIAL EXCHANGE TRANSFORMATION
+-------------------------------
+
+Transformation type                        ... two-operators
+Generation of integrals (i,mue|j,nue)      ... ON
+Generation of integrals (mue,kappa|nue,tau)... OFF
+Generation of integrals (i,mue|a,nue)      ... OFF
+Dimension of the basis                     ...    9
+Number of internal alpha-MOs               ...    2 (   0-   1)
+Number of internal beta-MOs                ...    1 (   0-   0)
+Pair cutoff                                ... 3.000e-18 Eh
+Number of AO pairs in the trafo            ...   45
+Total Number of distinct AO pairs          ...   45
+Memory devoted for trafo                   ...  256.0 MB 
+Max. Number of MO pairs treated together   ... 414252      
+Number Format for Storage                  ... Double (8 Byte)
+Integral package used                      ... LIBINT
+
+Starting integral evaluation:
+    ... done with AO integral generation
+Closing buffer AOK[aa] ( 0.00 GB; CompressionRatio= 0.73)
+Closing buffer AOK[bb] ( 0.00 GB; CompressionRatio= 0.40)
+Closing buffer AOK[ab] ( 0.00 GB; CompressionRatio= 0.57)
+Closing buffer AOK[ba] ( 0.00 GB; CompressionRatio= 0.57)
+Collecting buffer AOK 
+Number of alpha/alpha MO pairs in trafo    ...    3
+Number of beta /beta  MO pairs in trafo    ...    1
+Number of alpha/ beta MO pairs in trafo    ...    2
+------------------------
+SORTING OF (i,mue|j,nue)
+------------------------
+
+SORTING OF ALPHA/ALPHA PAIRS
+IBATCH = 1 of  1
+Closing buffer KAO[aa] ( 0.00 GB; CompressionRatio= 0.98)
+Collecting buffer KAO 
+SORTING OF BETA /BETA  PAIRS
+IBATCH = 1 of  1
+Closing buffer KAO[bb] ( 0.00 GB; CompressionRatio= 0.98)
+Collecting buffer KAO 
+SORTING OF ALPHA/BETA  PAIRS
+IBATCH = 1 of  1
+Closing buffer KAO[ab] ( 0.00 GB; CompressionRatio= 0.981818181818)
+Collecting buffer KAO[ab] 
+N(AO-Batches) Done                         ...       300 
+N(AO-Batches) Skipped                      ...        75 
+N(IJ)-pairs Skipped                        ...         0 
+TOTAL TIME for half transformation         ...     0.001 sec
+AO-integral generation                     ...     0.000 sec
+Half transformation                        ...     0.000 sec
+K-integral sorting                         ...     0.000 sec
+
+Finished integral transformation - now doing MP2 part
+
+OPERATOR COMBINATION   0   0: ij=(  0..  1,  0..  1)
+OPERATOR COMBINATION   0   1: ij=(  0..  1,  0..  0)
+OPERATOR COMBINATION   1   1: ij=(  0..  0,  0..  0)
+
+Correlation energy components
+ E2 and T2 for alpha/alpha pairs :     -0.000012983 Eh 
+ E2 and T2 for beta/beta   pairs :      0.000000000 Eh 
+ E2 and T2 for alpha/beta  pairs :     -0.000282319 Eh 
+
+-----------------------------------------------
+ MP2 CORRELATION ENERGY   :     -0.000295302 Eh
+-----------------------------------------------
+
+
+-------
+TIMINGS
+-------
+Total time                :    0.067 sec
+Integral trafo            :    0.001 sec (  2.1%)
+K(i,j)                    :    0.000 sec (  0.0%)
+T(i,j)                    :    0.000 sec (  0.0%)
+
+---------------------------------------
+MP2 TOTAL ENERGY:       -7.381808566 Eh
+---------------------------------------
 
 -------------------------   --------------------
-FINAL SINGLE POINT ENERGY        -7.381513263724
+FINAL SINGLE POINT ENERGY        -7.381808565500
 -------------------------   --------------------
 
 
                             ***************************************
                             *     ORCA property calculations      *
                             ***************************************
+
+
+  WARNING: The energy has been calculated at the MP2 level but the densities
+           used in the property calculations are still SCF densities
+           MP2 response densities have not been calculated 
+           use %mp2 Density relaxed end
+           or  %mp2 Density unrelaxed end
 
                                     ---------------------
                                     Active property flags
@@ -1025,8 +812,8 @@ FINAL SINGLE POINT ENERGY        -7.381513263724
 Dipole Moment Calculation                       ... on
 Quadrupole Moment Calculation                   ... off
 Polarizability Calculation                      ... off
-GBWName                                         ... Li_3-21g.gbw
-Electron density file                           ... Li_3-21g.scfp.tmp
+GBWName                                         ... Li_3-21g.orca_mp2.gbw
+Electron density file                           ... Li_3-21g.orca_mp2.scfp.tmp
 
 -------------
 DIPOLE MOMENT
@@ -1043,8 +830,9 @@ Magnitude (Debye)      :      0.00000
 
 Timings for individual modules:
 
-Sum of individual times         ...        2.612 sec (=   0.044 min)
-GTO integral calculation        ...        0.739 sec (=   0.012 min)  28.3 %
-SCF iterations                  ...        1.872 sec (=   0.031 min)  71.7 %
+Sum of individual times         ...        1.640 sec (=   0.027 min)
+GTO integral calculation        ...        0.174 sec (=   0.003 min)  10.6 %
+SCF iterations                  ...        1.382 sec (=   0.023 min)  84.3 %
+MP2 module                      ...        0.084 sec (=   0.001 min)   5.1 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 0 minutes 3 seconds 122 msec
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 1 seconds 729 msec

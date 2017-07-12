@@ -1,0 +1,4 @@
+! bohrs extremescf nofrozencore nopop noprintmos largeprint mp2 aug-cc-pvdz
+* xyz 0 1
+He  0  0  0
+*

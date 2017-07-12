@@ -106,13 +106,18 @@ Warning: TCutStore was < 0. Adjusted to Thresh (uncritical)
 WARNING: TCut can not be >=Thresh
   ===> : TCut is set to 0.01*Thresh
 
+WARNING: Post HF methods need fully converged wavefunctions
+  ===> : Setting SCFConvForced true
+         You can overwrite this default with %scf ConvForced false 
+
+
 INFO   : the flag for use of LIBINT has been found!
 
 ================================================================================
                                        INPUT FILE
 ================================================================================
-NAME = He_aug-cc-pvdz.in
-|  1> ! bohrs hf EXTREMESCF nofrozencore nopop noprintmos aug-cc-pvdz
+NAME = He_aug-cc-pvdz.orca_mp2.in
+|  1> ! bohrs extremescf nofrozencore nopop noprintmos largeprint mp2 aug-cc-pvdz
 |  2> * xyz 0 1
 |  3> He  0  0  0
 |  4> *
@@ -153,6 +158,27 @@ There are 1 groups of distinct atoms
  Group   1 Type He  : 5s2p contracted to 3s2p pattern {311/11}
 
 Atom   0He   basis set group =>   1
+
+-------------------------
+BASIS SET IN INPUT FORMAT
+-------------------------
+
+ # Basis set for element : He
+ NewGTO He
+ S 3 
+   1      38.3600000000      0.0401760754
+   2       5.7700000000      0.2613680748
+   3       1.2400000000      0.7930712395
+ S 1 
+   1       0.2976000000      1.0000000000
+ S 1 
+   1       0.0725500000      1.0000000000
+ P 1 
+   1       1.2750000000      1.0000000000
+ P 1 
+   1       0.2473000000      1.0000000000
+  end;
+
 ------------------------------------------------------------------------------
                            ORCA GTO INTEGRAL CALCULATION
 ------------------------------------------------------------------------------
@@ -189,7 +215,7 @@ Hamiltonian:
 
 
 General Settings:
- Integral files         IntName         .... He_aug-cc-pvdz
+ Integral files         IntName         .... He_aug-cc-pvdz.orca_mp2
  Hartree-Fock type      HFTyp           .... RHF
  Total Charge           Charge          ....    0
  Multiplicity           Mult            ....    1
@@ -229,7 +255,7 @@ SCF Procedure:
 
 Convergence Tolerance:
  Convergence Check Mode ConvCheckMode   .... All-Criteria
- Convergence forced     ConvForced      .... 0
+ Convergence forced     ConvForced      .... 1
  Energy Change          TolE            ....  1.000e-14 Eh
  Max Density Change     TolMaxP         ....  1.000e-14
  RMS Density Change     TolRMSP         ....  1.000e-14
@@ -295,27 +321,153 @@ Now organizing SCF variables                       ... done
                       ------------------
                       INITIAL GUESS DONE (   0.1 sec)
                       ------------------
+----------------------
+INITIAL GUESS ORBITALS
+----------------------
+                      0         1         2         3         4         5   
+                  -0.54396   0.10964   0.36484   0.36484   0.36484   1.40740
+                   2.00000   0.00000   0.00000   0.00000   0.00000   0.00000
+                  --------  --------  --------  --------  --------  --------
+  0He  1s         0.572227 -0.208897 -0.000000  0.000000 -0.000000 -1.222106
+  0He  2s         0.494707 -0.613813  0.000000 -0.000000  0.000000  1.682948
+  0He  3s         0.063881  1.302714 -0.000000 -0.000000 -0.000000 -0.728241
+  0He  1pz        0.000000 -0.000000 -0.005275  0.000479  0.000000 -0.000000
+  0He  1px        0.000000 -0.000000  0.000479  0.005275  0.000000 -0.000000
+  0He  1py        0.000000 -0.000000  0.000000  0.000000  0.005297 -0.000000
+  0He  2pz       -0.000000 -0.000000 -0.993419  0.090282  0.000000  0.000000
+  0He  2px        0.000000  0.000000  0.090282  0.993419 -0.000000  0.000000
+  0He  2py       -0.000000  0.000000  0.000000  0.000000  0.997513  0.000000
+                      6         7         8   
+                   2.63080   2.63080   2.63080
+                   0.00000   0.00000   0.00000
+                  --------  --------  --------
+  0He  1s        -0.000000  0.000000 -0.000000
+  0He  2s         0.000000 -0.000000  0.000000
+  0He  3s        -0.000000 -0.000000 -0.000000
+  0He  1pz        0.092973 -1.127362  0.000000
+  0He  1px        1.127362  0.092973  0.000000
+  0He  1py        0.000000  0.000000  1.131190
+  0He  2pz       -0.043846  0.531660  0.000000
+  0He  2px       -0.531660 -0.043846 -0.000000
+  0He  2py        0.000000 -0.000000 -0.533465
 --------------
 SCF ITERATIONS
 --------------
-ITER       Energy         Delta-E        Max-DP      RMS-DP      [F,P]     Damp
                ***  Starting incremental Fock matrix formation  ***
-  0     -2.8524177088   0.000000000000 0.01316024  0.00184364  0.0803915 0.7000
-  1     -2.8532744577  -0.000856748944 0.01079863  0.00162888  0.0624519 0.7000
+
+                         ----------------------------
+                         !        ITERATION     0   !
+                         ----------------------------
+   Total Energy        :      -2.852417708802 Eh
+   Energy Change       :      -2.852417708802 Eh
+   MAX-DP              :       0.013160242434
+   RMS-DP              :       0.001843644650
+   Actual Damping      :       0.7000
+   Actual Level Shift  :       0.2500 Eh
+
+
+                         ----------------------------
+                         !        ITERATION     1   !
+                         ----------------------------
+   Total Energy        :      -2.853274457746 Eh
+   Energy Change       :      -0.000856748944 Eh
+   MAX-DP              :       0.010798628450
+   RMS-DP              :       0.001628878047
+   Actual Damping      :       0.7000
+   Actual Level Shift  :       0.2500 Eh
+
                                ***Turning on DIIS***
-  2     -2.8539379614  -0.000663503628 0.02633476  0.00420276  0.0467925 0.0000
-  3     -2.8543409985  -0.000403037154 0.00528096  0.00091364  0.0072078 0.0000
+
+                         ----------------------------
+                         !        ITERATION     2   !
+                         ----------------------------
+   Total Energy        :      -2.853937961374 Eh
+   Energy Change       :      -0.000663503628 Eh
+   MAX-DP              :       0.026334761705
+   RMS-DP              :       0.004202756768
+   Actual Damping      :       0.0000
+   Actual Level Shift  :       0.2500 Eh
+   DIIS-Error          :       0.046792544974
+
+
+                         ----------------------------
+                         !        ITERATION     3   !
+                         ----------------------------
+   Total Energy        :      -2.854340998528 Eh
+   Energy Change       :      -0.000403037154 Eh
+   MAX-DP              :       0.005280955884
+   RMS-DP              :       0.000913636233
+   Actual Damping      :       0.0000
+   Actual Level Shift  :       0.2500 Eh
+   DIIS-Error          :       0.007207837982
+   DIIS coefficients:
+     -0.14543   1.14543
+
                       *** Initiating the SOSCF procedure ***
                            *** Shutting down DIIS ***
                       *** Re-Reading the Fockian *** 
                       *** Removing any level shift *** 
-ITER      Energy       Delta-E        Grad      Rot      Max-DP    RMS-DP
-  4     -2.85537868  -0.0010376800  0.001362  0.001362  0.001676  0.000304
+
+                         ----------------------------
+                         !        ITERATION     4   !
+                         ----------------------------
+   Total Energy        :      -2.855378678562 Eh
+   Energy Change       :      -0.001037680034 Eh
+   MAX-DP              :       0.001676206399
+   RMS-DP              :       0.000303942607
+   Orbital gradient    :       0.001361934440
+   Orbital Rotation    :       0.001361934440
+   Actual Damping      :       0.0000
+
                *** Restarting incremental Fock matrix formation ***
-  5     -2.85570450  -0.0003258231  0.000263  0.000241  0.000397  0.000072
-  6     -2.85570466  -0.0000001577  0.000058  0.000069  0.000121  0.000022
-  7     -2.85570467  -0.0000000083  0.000001  0.000000  0.000001  0.000000
-  8     -2.85570467  -0.0000000000  0.000000  0.000000  0.000000  0.000000
+
+                         ----------------------------
+                         !        ITERATION     5   !
+                         ----------------------------
+   Total Energy        :      -2.855704501658 Eh
+   Energy Change       :      -0.000325823096 Eh
+   MAX-DP              :       0.000396502131
+   RMS-DP              :       0.000071663014
+   Orbital gradient    :       0.000263199295
+   Orbital Rotation    :       0.000241140446
+   Actual Damping      :       0.0000
+
+
+                         ----------------------------
+                         !        ITERATION     6   !
+                         ----------------------------
+   Total Energy        :      -2.855704659366 Eh
+   Energy Change       :      -0.000000157707 Eh
+   MAX-DP              :       0.000120865120
+   RMS-DP              :       0.000021610305
+   Orbital gradient    :       0.000058032396
+   Orbital Rotation    :       0.000068578843
+   Actual Damping      :       0.0000
+
+
+                         ----------------------------
+                         !        ITERATION     7   !
+                         ----------------------------
+   Total Energy        :      -2.855704667705 Eh
+   Energy Change       :      -0.000000008340 Eh
+   MAX-DP              :       0.000000931627
+   RMS-DP              :       0.000000138210
+   Orbital gradient    :       0.000000771288
+   Orbital Rotation    :       0.000000295154
+   Actual Damping      :       0.0000
+
+
+                         ----------------------------
+                         !        ITERATION     8   !
+                         ----------------------------
+   Total Energy        :      -2.855704667706 Eh
+   Energy Change       :      -0.000000000000 Eh
+   MAX-DP              :       0.000000069675
+   RMS-DP              :       0.000000010283
+   Orbital gradient    :       0.000000056311
+   Orbital Rotation    :       0.000000023121
+   Actual Damping      :       0.0000
+
                           ***Energy convergence achieved***
                            ***RMSP convergence achieved***
                            ***MAXP convergence achieved***
@@ -357,9 +509,9 @@ SCF CONVERGENCE
   Last Orbital Gradient      ...    4.3962e-12  Tolerance :   1.0000e-09
   Last Orbital Rotation      ...    0.0000e+00  Tolerance :   1.0000e-09
 
-             **** THE GBW FILE WAS UPDATED (He_aug-cc-pvdz.gbw) ****
-             **** DENSITY FILE WAS UPDATED (He_aug-cc-pvdz.scfp.tmp) ****
-             **** ENERGY FILE WAS UPDATED (He_aug-cc-pvdz.en.tmp) ****
+             **** THE GBW FILE WAS UPDATED (He_aug-cc-pvdz.orca_mp2.gbw) ****
+             **** DENSITY FILE WAS UPDATED (He_aug-cc-pvdz.orca_mp2.scfp.tmp) ****
+             **** ENERGY FILE WAS UPDATED (He_aug-cc-pvdz.orca_mp2.en.tmp) ****
 ----------------
 ORBITAL ENERGIES
 ----------------
@@ -374,6 +526,31 @@ ORBITAL ENERGIES
    6   0.0000       3.024883        82.3113 
    7   0.0000       3.024883        82.3113 
    8   0.0000       3.024883        82.3113 
+-------
+DENSITY
+-------
+                  0          1          2          3          4          5    
+      0       0.706782   0.589819   0.029904   0.000000   0.000000  -0.000000
+      1       0.589819   0.492211   0.024955   0.000000   0.000000  -0.000000
+      2       0.029904   0.024955   0.001265   0.000000   0.000000  -0.000000
+      3       0.000000   0.000000   0.000000   0.000000   0.000000  -0.000000
+      4       0.000000   0.000000   0.000000   0.000000   0.000000  -0.000000
+      5      -0.000000  -0.000000  -0.000000  -0.000000  -0.000000   0.000000
+      6       0.000000   0.000000   0.000000   0.000000   0.000000  -0.000000
+      7      -0.000000  -0.000000  -0.000000  -0.000000  -0.000000   0.000000
+      8      -0.000000  -0.000000  -0.000000  -0.000000  -0.000000   0.000000
+                   6          7          8    
+      0       0.000000  -0.000000  -0.000000
+      1       0.000000  -0.000000  -0.000000
+      2       0.000000  -0.000000  -0.000000
+      3       0.000000  -0.000000  -0.000000
+      4       0.000000  -0.000000  -0.000000
+      5      -0.000000   0.000000   0.000000
+      6       0.000000  -0.000000  -0.000000
+      7      -0.000000   0.000000   0.000000
+      8      -0.000000   0.000000   0.000000
+
+
 --------------------------
 ATOM BASIS FOR ELEMENT He
 --------------------------
@@ -403,27 +580,106 @@ TIMINGS
 
 Total SCF time: 0 days 0 hours 0 min 0 sec 
 
-Total time                  ....       0.869 sec
-Sum of individual times     ....       0.867 sec  ( 99.8%)
+Total time                  ....       0.876 sec
+Sum of individual times     ....       0.874 sec  ( 99.7%)
 
-Fock matrix formation       ....       0.785 sec  ( 90.4%)
+Fock matrix formation       ....       0.791 sec  ( 90.3%)
 Diagonalization             ....       0.000 sec  (  0.0%)
 Density matrix formation    ....       0.000 sec  (  0.0%)
 Population analysis         ....       0.000 sec  (  0.0%)
-Initial guess               ....       0.079 sec  (  9.1%)
+Initial guess               ....       0.080 sec  (  9.1%)
 Orbital Transformation      ....       0.000 sec  (  0.0%)
 Orbital Orthonormalization  ....       0.000 sec  (  0.0%)
 DIIS solution               ....       0.000 sec  (  0.0%)
 SOSCF solution              ....       0.000 sec  (  0.0%)
 
+------------------------------------------------------------------------------
+                                ORCA  MP2 
+------------------------------------------------------------------------------
+
+
+----------
+MP2 ENERGY (disk based algorithm)
+----------
+
+Dimension of the basis                    ...    9
+Memory devoted to MP2                     ...  256 MB   
+Data format for buffers                   ... DOUBLE
+Compression type for matrix containers    ... UNCOMPRESSED
+
+-------------------------------
+PARTIAL EXCHANGE TRANSFORMATION
+-------------------------------
+
+Transformation type                        ... one-operator
+Generation of integrals (i,mue|j,nue)      ... ON
+Generation of integrals (mue,kappa|nue,tau)... OFF
+Generation of integrals (i,mue|a,nue)      ... OFF
+Dimension of the basis                     ...    9
+Number of internal MOs                     ...    1 (   0-   0)
+Pair cutoff                                ... 3.000e-18 Eh
+Number of AO pairs in the trafo            ...   45
+Total Number of distinct AO pairs          ...   45
+Memory devoted for trafo                   ...  256.0 MB 
+Max. Number of MO pairs treated together   ... 414252      
+Number Format for Storage                  ... Double (8 Byte)
+Integral package used                      ... LIBINT
+
+Starting integral evaluation:
+    ... done with AO integral generation
+Closing buffer AOK     ( 0.00 GB; CompressionRatio= 0.40)
+Collecting buffer AOK 
+Number of MO pairs included in the trafo   ...    1
+------------------------
+SORTING OF (i,mue|j,nue)
+------------------------
+
+IBATCH = 1 of  1
+Closing buffer KAO     ( 0.00 GB; CompressionRatio= 0.98)
+Collecting buffer KAO 
+N(AO-Batches) Done                         ...       255 
+N(AO-Batches) Skipped                      ...       120 
+N(IJ)-pairs Skipped                        ...         0 
+TOTAL TIME for half transformation         ...     0.001 sec
+AO-integral generation                     ...     0.000 sec
+Half transformation                        ...     0.000 sec
+K-integral sorting                         ...     0.000 sec
+
+Finished integral transformation - now doing MP2 part
+
+OPERATOR COMBINATION   0   0: ij=(  0..  0,  0..  0)
+-----------------------------------------------
+ MP2 CORRELATION ENERGY   :     -0.026962512 Eh
+-----------------------------------------------
+
+
+-------
+TIMINGS
+-------
+Total time                :    0.066 sec
+Integral trafo            :    0.001 sec (  1.0%)
+K(i,j)                    :    0.000 sec (  0.0%)
+T(i,j)                    :    0.000 sec (  0.0%)
+
+---------------------------------------
+MP2 TOTAL ENERGY:       -2.882667179 Eh
+---------------------------------------
+
 -------------------------   --------------------
-FINAL SINGLE POINT ENERGY        -2.855704667706
+FINAL SINGLE POINT ENERGY        -2.882667179266
 -------------------------   --------------------
 
 
                             ***************************************
                             *     ORCA property calculations      *
                             ***************************************
+
+
+  WARNING: The energy has been calculated at the MP2 level but the densities
+           used in the property calculations are still SCF densities
+           MP2 response densities have not been calculated 
+           use %mp2 Density relaxed end
+           or  %mp2 Density unrelaxed end
 
                                     ---------------------
                                     Active property flags
@@ -438,8 +694,8 @@ FINAL SINGLE POINT ENERGY        -2.855704667706
 Dipole Moment Calculation                       ... on
 Quadrupole Moment Calculation                   ... off
 Polarizability Calculation                      ... off
-GBWName                                         ... He_aug-cc-pvdz.gbw
-Electron density file                           ... He_aug-cc-pvdz.scfp.tmp
+GBWName                                         ... He_aug-cc-pvdz.orca_mp2.gbw
+Electron density file                           ... He_aug-cc-pvdz.orca_mp2.scfp.tmp
 
 -------------
 DIPOLE MOMENT
@@ -456,8 +712,9 @@ Magnitude (Debye)      :      0.00000
 
 Timings for individual modules:
 
-Sum of individual times         ...        1.052 sec (=   0.018 min)
-GTO integral calculation        ...        0.169 sec (=   0.003 min)  16.0 %
-SCF iterations                  ...        0.884 sec (=   0.015 min)  84.0 %
+Sum of individual times         ...        1.148 sec (=   0.019 min)
+GTO integral calculation        ...        0.173 sec (=   0.003 min)  15.1 %
+SCF iterations                  ...        0.891 sec (=   0.015 min)  77.6 %
+MP2 module                      ...        0.083 sec (=   0.001 min)   7.2 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 0 minutes 1 seconds 145 msec
+TOTAL RUN TIME: 0 days 0 hours 0 minutes 1 seconds 237 msec
