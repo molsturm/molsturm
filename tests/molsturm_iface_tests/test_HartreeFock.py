@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -18,23 +19,31 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
+## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-# Info for the data generator script
-include:
-  - dump_yaml
-  - posthf_mp2
+from HartreeFockTestCase import HartreeFockTestCase
+import molsturm
+import testdata
+import unittest
 
-# Info for the test execution
-testing:
-  max_n_iter:        8
-  expensive:         False
-  numeric_tolerance: 1.e-7
+class TestHartreeFock(HartreeFockTestCase):
+  """This test should assure that molsturm results stay the same
+     between code changes or algorithm updates
+  """
 
-# Input:
-atoms:       [ be ]
-coords:      [[ 0,0,0 ]]
-basis_set:   sto-3g
-basis_type:  "gaussian/libint"
-export_repulsion_integrals: True
-export_fock_matrix: True
-conv_tol:    1.e-8
+  @classmethod
+  def setUpClass(cls):
+    cls.cases = testdata.test_cases()
+
+  def test_hf(self):
+    for case in self.cases:
+      testing = case["testing"]
+      params = case["params"]
+
+      if not params["basis_type"] in molsturm.available_basis_types:
+        raise unittest.SkipTest("basis_type " + params["basis_type"]
+                                + " is not available.")
+
+      with self.subTest(label=testing["name"]):
+        hfres = molsturm.hartree_fock(**params)
+        self.compare_hf_results(case, hfres)

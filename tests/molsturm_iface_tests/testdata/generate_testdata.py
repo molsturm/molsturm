@@ -21,6 +21,7 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
+import glob
 import molsturm
 import os
 import yaml
@@ -31,14 +32,10 @@ def build_input_params():
 
   # Build the list of input data
   inputs=dict()
-  for f in os.listdir(dir_of_this_script):
-    fn,ext = os.path.splitext(f)
-
-    # Only consider input files:
-    if ext != ".yaml": continue
-    if fn[-3:] != ".in": continue
-
+  for f in glob.iglob(os.path.join(dir_of_this_script, "*.in.yaml")):
+    fn, _ = os.path.splitext(f)
     key = fn[:-3]
+
     with open(f,"r") as stream:
       inputs[key] = yaml.safe_load(stream)
   return inputs
@@ -71,6 +68,10 @@ if __name__ == "__main__":
     # on this input:
     include = params["include"]
     del params["include"]
+
+    # Remove the testing key since its values are only used
+    # when performing the tests later.
+    del params["testing"]
 
     for job in include:
       try:
