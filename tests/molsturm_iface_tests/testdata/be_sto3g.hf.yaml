@@ -1142,11 +1142,12 @@ input_parameters:
   atoms: [be]
   basis_set: sto-3g
   basis_type: gaussian/libint
+  conv_tol: 1.0e-08
   coords:
   - [0, 0, 0]
   export_fock_matrix: true
   export_repulsion_integrals: true
-meta: {date: '2017-07-12T18:05:15.731448', format_type: yaml, format_version: 1.0.0,
+meta: {date: '2017-07-12T18:20:24.567910', format_type: yaml, format_version: 1.0.0,
   molsturm_version: 0.0.1}
 n_alpha: 2
 n_bas: 5
