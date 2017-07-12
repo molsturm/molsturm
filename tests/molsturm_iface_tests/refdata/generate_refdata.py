@@ -22,6 +22,8 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 import itertools
+import molsturm
+import numpy as np
 import os
 import re
 import subprocess
@@ -121,7 +123,7 @@ def output_find_patterns(output, patterns):
   for patdict in patterns:
     key = patdict["key"]
     match = re.search(patdict["regex"], output)
-    if not patdict["default"] and not match:
+    if patdict["default"] is None and not match:
       raise Exception("Could not find value for " + key + " in orca output. "+
                       "No default is given either.")
     elif not match:
@@ -157,7 +159,7 @@ def orca_extract_orben(output):
       match = re_mo_energy.match(line)
       if match:
         mos.append(float(match.group("value")))
-  return mos
+  return np.array(mos)
 
 # --------------------------------------------------------------------
 
@@ -198,7 +200,7 @@ def job_orca_hf(name, params):
       "convert":  float,
       "default":  None,
     }, {
-      "key":      "energy_nucrep",
+      "key":      "energy_nuclear_repulsion",
       "regex":    "Nuclear Repulsion\s*:\s*(?P<value>" + FLPAT + ") Eh",
       "convert":  float,
       "default":  None,
@@ -211,7 +213,7 @@ def job_orca_hf(name, params):
       "key":      "spin_squared",
       "regex":    "Expectation value of <S\*\*2>\s*:\s*(?P<value>" + FLPAT + ")",
       "convert":  float,
-      "default":  1,
+      "default":  0,
     },
   ]
   reference = output_find_patterns(res, orca_patterns)
@@ -220,8 +222,12 @@ def job_orca_hf(name, params):
   reference["orben_f"] = orca_extract_orben(res)
 
   with open(os.path.join(dir_of_this_script(), name + ".hf.yaml"), "w") as f:
+    # TODO It would be really nice if this was an actual hfres yaml
+    #      data file and not just a faked one as it is now.
+    #      This would require extracting a couple of more keys from
+    #      the ORCA output.
     f.write("# Data from ORCA calculation " + orca_in_file + "\n")
-    yaml.safe_dump(reference, f)
+    molsturm.dump_yaml(reference, f)
 
 
 def job_orca_mp2(name, params):

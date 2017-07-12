@@ -21,33 +21,17 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-import unittest
 import molsturm
-import tempfile
-import os
 import numpy as np
+import os
+import tempfile
+import testdata
+import unittest
 
 class TestSerialisation(unittest.TestCase):
   @classmethod
-  def import_cases(cls):
-    dir_of_this_script = os.path.dirname( os.path.abspath( __file__ ) )
-
-    cls.cases = dict()
-
-    for f in os.listdir(dir_of_this_script+"/testdata"):
-      fn,ext = os.path.splitext(f)
-
-      # Ignore input files and only consider yaml files
-      if ext != ".yaml": continue
-      if fn[-3:] == ".in": continue
-
-      key = os.path.basename(fn)
-      datafile = dir_of_this_script+"/testdata/"+key+".yaml"
-      cls.cases[key] = molsturm.load_yaml(datafile)
-
-  @classmethod
   def setUpClass(cls):
-    cls.import_cases()
+    cls.cases = testdata.test_cases()
 
   def assert_equal(self,d1,d2):
     self.assertListEqual([d1.keys()],[d2.keys()])
@@ -67,26 +51,26 @@ class TestSerialisation(unittest.TestCase):
   # ----------------------------------------------------------
 
   def test_yaml_serialisation(self):
-    for caselal in self.cases:
-      with self.subTest(label=caselal):
-        params = self.cases[caselal]
+    for case in self.cases:
+      with self.subTest(label=case["testing"]["name"]):
+        hfres = case["hf"]
 
         tmp = tempfile.mktemp(suffix=".yaml")
-        molsturm.dump_yaml(params,tmp)
+        molsturm.dump_yaml(hfres, tmp)
         back = molsturm.load_yaml(tmp)
         os.remove(tmp)
 
-        self.assert_equal(params,back)
+        self.assert_equal(hfres, back)
 
   def test_hdf5_serialisation(self):
-    for caselal in self.cases:
-      with self.subTest(label=caselal):
-        params = self.cases[caselal]
+    for case in self.cases:
+      with self.subTest(label=case["testing"]["name"]):
+        hfres = case["hf"]
 
-        tmp = tempfile.mktemp(suffix=".yaml")
-        molsturm.dump_hdf5(params,tmp)
+        tmp = tempfile.mktemp(suffix=".hdf5")
+        molsturm.dump_hdf5(hfres, tmp)
         back = molsturm.load_hdf5(tmp)
         os.remove(tmp)
 
-        self.assert_equal(params,back)
+        self.assert_equal(hfres, back)
 
