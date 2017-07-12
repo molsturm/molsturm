@@ -1,0 +1,13 @@
+# Data from ORCA calculation /home/mfh/Dokumente/Programmierung_Writing/Sturmians/molsturm/tests/molsturm_iface_tests/refdata/orca/Be_cc-pvdz.orca_hf.in
+energy_1e: -19.06194585
+energy_2e: 4.48960822
+energy_ground_state: -14.57233763093
+energy_kinetic: 14.57235358
+energy_nucrep: 0.0
+energy_potential: -29.14469121
+orben_f: [-4.732326, -0.309039, 0.058259, 0.058259, 0.058259, 0.298823, 0.35018, 0.35018,
+  0.35018, 0.644274, 0.644274, 0.644274, 0.644274, 0.644274, -4.732326, -0.309039,
+  0.058259, 0.058259, 0.058259, 0.298823, 0.35018, 0.35018, 0.35018, 0.644274, 0.644274,
+  0.644274, 0.644274, 0.644274]
+restricted: true
+spin_squared: 1

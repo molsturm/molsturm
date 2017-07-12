@@ -1,0 +1,13 @@
+# Data from ORCA calculation /home/mfh/Dokumente/Programmierung_Writing/Sturmians/molsturm/tests/molsturm_iface_tests/refdata/orca/h2o_321g.orca_hf.in
+energy_1e: -122.76990636
+energy_2e: 37.93301319
+energy_ground_state: -75.585413896429
+energy_kinetic: 75.48593055
+energy_nucrep: 9.25147927
+energy_potential: -151.07134445
+orben_f: [-20.422097, -1.326982, -0.697499, -0.528446, -0.476916, 0.266528, 0.366603,
+  1.226759, 1.285413, 1.785185, 1.855704, 2.027887, 3.109652, -20.422097, -1.326982,
+  -0.697499, -0.528446, -0.476916, 0.266528, 0.366603, 1.226759, 1.285413, 1.785185,
+  1.855704, 2.027887, 3.109652]
+restricted: true
+spin_squared: 1
