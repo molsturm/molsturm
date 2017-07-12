@@ -21,6 +21,7 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 import sys
+from ._hartree_fock import compute_derived_hartree_fock_energies
 #
 # Functions to help with printing nicely formatted output
 # of the results obtained
@@ -76,49 +77,27 @@ def print_energies(hfres,out=sys.stdout, indention=6*" ", title="Final energies:
   Print the energies of a calculation obtained with the
   hartree_fock function above.
   """
-  # Prefix all energy keys use:
-  prefix = "energy_"
 
-  # Classify the different keys:
-  zeroElectron = [ "nuclear_repulsion" ]    # No electrons involved
-  twoElectron = [ "coulomb", "exchange" ]   # 2 electron terms
-
-  # Keys with special treatment
-  special = zeroElectron + twoElectron + [ "ground_state" ]
-  oneElectron = sorted([ k[len(prefix):] for k in hfres
-                         if k.startswith(prefix) and \
-                           not k[len(prefix):] in special
-                       ])
-
-  # All energy terms:
-  energies = zeroElectron + oneElectron + twoElectron
+  energies = compute_derived_hartree_fock_energies(hfres)
+  terms = energies["terms"]
 
   # Build print format
-  maxlen = max([ len(k) for k in energies ])+1
+  maxlen = max([ len(k) for k in terms ])+1
   fstr=indention + "{key:"+str(maxlen)+"s} = {val:15.10g}\n"
 
-  # Derived quantities:
-  E1e = sum([ hfres[prefix+ene] for ene in oneElectron ])
-  E2e = sum([ hfres[prefix+ene] for ene in twoElectron ])
-  Eelec = E1e+E2e
-
-  # Compute virial ratio:
-  Epot = sum([ hfres[prefix+ene] for ene in energies if not ene in [ "kinetic" ] ])
-  virial = - Epot / hfres[prefix+"kinetic"]
-
   lines = [ "\n" + title + "\n" ]
-  lines += [ fstr.format(key=k, val=hfres[prefix+k]) for k in energies ]
+  lines += [ fstr.format(key=k, val=terms[k]) for k in sorted(terms) ]
   lines.append("\n")
-  lines.append(fstr.format(key="E_1e", val=E1e))
-  lines.append(fstr.format(key="E_2e", val=E2e))
-  lines.append(fstr.format(key="E electronic", val=Eelec))
+  lines.append(fstr.format(key="E_1e", val=energies["energy_1e"]))
+  lines.append(fstr.format(key="E_2e", val=energies["energy_2e"]))
+  lines.append(fstr.format(key="E electronic", val=energies["energy_electronic"]))
   lines.append("\n")
-  lines.append(fstr.format(key="E_pot", val=Epot))
-  lines.append(fstr.format(key="E_kin", val=hfres[prefix+"kinetic"]))
-  lines.append(fstr.format(key="virial ratio", val=virial))
+  lines.append(fstr.format(key="E_pot", val=energies["energy_potential"]))
+  lines.append(fstr.format(key="E_kin", val=energies["energy_kinetic"]))
+  lines.append(fstr.format(key="virial ratio", val=energies["virial_ratio"]))
   lines.append("\n")
   lines.append((indention+"{key:"+str(maxlen)+"s} = {val:20.15g}") \
-               .format(key="E_total", val=hfres[prefix+"ground_state"])+"\n")
+               .format(key="E_total", val=hfres["energy_ground_state"])+"\n")
   out.writelines(lines)
 
 

@@ -77,10 +77,8 @@ def dump_yaml(hfres, stream):
 
   # Convert numpy arrays to plain list of lists
   for k in HFRES_ARRAY_KEYS:
-    try:
+    if k in res:
       res[k] = res[k].tolist()
-    except KeyError:
-      pass
 
   if HFRES_INPUT_PARAMETER_KEY in res:
     ipkey = HFRES_INPUT_PARAMETER_KEY
