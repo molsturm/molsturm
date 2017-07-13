@@ -21,7 +21,9 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
+from FciTestCase import FciTestCase
 from HartreeFockTestCase import HartreeFockTestCase
+from MP2TestCase import MP2TestCase
 import molsturm
 import molsturm.posthf
 import testdata
@@ -29,7 +31,7 @@ import unittest
 
 @unittest.skipUnless("gaussian/libint" in molsturm.available_basis_types,
                      "gaussian/libint not available. Skipping reference tests")
-class TestReference(HartreeFockTestCase):
+class TestReference(HartreeFockTestCase, MP2TestCase, FciTestCase):
   """This test should ensure, that we our molsturm can reproduce
      data exactly in the way computed with ORCA or another standard
      quantum chemistry program.
@@ -40,46 +42,14 @@ class TestReference(HartreeFockTestCase):
     cls.cases = testdata.reference_cases()
     cls.hf_results = dict()
 
-  def run_mp2(self, case):
-    testing = case["testing"]
-    name    = testing["name"]
-    num_tol = testing["numeric_tolerance"]
-    ref     = case["mp2"]
-
-    if not name in self.hf_results:
-      raise self.fail("HF results not available")
-
-    mp2 = molsturm.posthf.mp2(self.hf_results[name])
-
-    # Compare energies:
-    for key in ref:
-      if not key.startswith("energy_"):
-        continue
-      self.assertAlmostEqual(mp2[key], ref[key], tol=num_tol, prefix=key+": ")
-
-
-  def run_fci(self, case):
-    testing = case["testing"]
-    name    = testing["name"]
-    num_tol = testing["numeric_tolerance"]
-    ref     = case["fci"]
-
-    if not name in self.hf_results:
-      raise self.fail("HF results not available")
-
-    fci = molsturm.posthf.fci(self.hf_results[name])
-
-    for i in range(len(fci)):
-      self.assertAlmostEqual(fci[i]["energy"], ref[i]["energy"], tol=num_tol,
-                             prefix="root " + str(i) + " energy: ")
-
   # --------------------------------------------
 
   def test_0_hf(self):
     for case in self.cases:
-      testing = case["testing"]
 
-      with self.subTest(label=testing):
+      testing = case["testing"]
+      name = testing["name"]
+      with self.subTest(label=name):
         params = case["params"]
 
         # Update parameters if posthf is done
@@ -100,8 +70,14 @@ class TestReference(HartreeFockTestCase):
       if not "mp2" in case:
         continue
 
-      with self.subTest(label=case["testing"]["name"]):
-        self.run_mp2(case)
+      testing = case["testing"]
+      name = testing["name"]
+      with self.subTest(label=name):
+        if not name in self.hf_results:
+          raise self.fail("HF results not available")
+
+        mp2 = molsturm.posthf.mp2(self.hf_results[name])
+        self.compare_mp2_results(case, mp2)
 
 
   @unittest.skipUnless("fci" in molsturm.posthf.available_methods,
@@ -111,5 +87,12 @@ class TestReference(HartreeFockTestCase):
       if not "fci" in case:
         continue
 
-      with self.subTest(label=case["testing"]["name"]):
-        self.run_fci(case)
+      testing = case["testing"]
+      name = testing["name"]
+      with self.subTest(label=name):
+        if not name in self.hf_results:
+          raise self.fail("HF results not available")
+
+        fci = molsturm.posthf.fci(self.hf_results[name])
+        self.compare_fci_results(case, fci)
+
