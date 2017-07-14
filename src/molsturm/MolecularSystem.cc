@@ -28,7 +28,7 @@ MolecularSystem::MolecularSystem(gint::Structure structure_, double charge_,
         n_beta(0),
         charge(std::move(charge_)) {
   // Compute number of electrons to distribute to alpha and beta spin:
-  const double n_elec = structure.total_charge() - charge;
+  const double n_elec       = structure.total_charge() - charge;
   const size_t n_elec_count = static_cast<size_t>(n_elec);
   assert_throw(n_elec - n_elec_count < 1e-12, ExcNonIntegerElectronCount(n_elec));
 
@@ -54,7 +54,7 @@ MolecularSystem::MolecularSystem(gint::Structure structure_, double charge_,
               "The multiplicity should be larger or equal to the electron count (" +
                     std::to_string(n_elec_count) + ") plus 1"));
 
-  const bool even_elec = n_elec_count % 2 == 0;
+  const bool even_elec  = n_elec_count % 2 == 0;
   const bool even_2spin = spin_twice % 2 == 0;
 
   // Odd spin_twice values imply a half-integer total spin
@@ -72,7 +72,7 @@ MolecularSystem::MolecularSystem(gint::Structure structure_, double charge_,
 
   // Compute number of alpha and beta electrons
   n_alpha = (n_elec_count - spin_twice) / 2 + spin_twice;
-  n_beta = n_elec_count - n_alpha;
+  n_beta  = n_elec_count - n_alpha;
 
   // Check that this makes sense
   if (multiplicity_ == linalgwrap::Constants<size_t>::invalid) {

@@ -1,0 +1,4 @@
+# Data from ORCA calculation /home/mfh/Dokumente/Programmierung_Writing/Sturmians/molsturm/tests/molsturm_iface_tests/refdata/orca/He_aug-cc-pvdz.orca_fci.in
+input_parameters: {n_roots: 1}
+states:
+- {civector: null, energy: -2.88954848534985, multiplicity: null, spin_squared: null}

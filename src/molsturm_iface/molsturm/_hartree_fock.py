@@ -23,7 +23,7 @@
 
 import molsturm_iface as iface
 import numpy as np
-from ._constants import HFRES_ARRAY_KEYS, HFRES_INPUT_PARAMETER_KEY
+from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
 from collections import Iterable
 from .scf_guess import extrapolate_from_previous
 
@@ -242,6 +242,46 @@ def hartree_fock(**kwargs):
       out[k] = ary.reshape(target_shape)
 
   # Forward input parameters to output
-  out[HFRES_INPUT_PARAMETER_KEY] = inputargs
+  out[INPUT_PARAMETER_KEY] = inputargs
 
   return out
+
+
+def compute_derived_hartree_fock_energies(hfres):
+  """Compute various derived hartree-fock energy terms."""
+  # TODO It would be better to have this in a hfres class,
+  #      which is returned by the hartree_fock function
+  res=dict()
+
+  # Prefix all energy keys use:
+  prefix = "energy_"
+
+  # Classify the different keys:
+  zeroElectron = [ "nuclear_repulsion" ]    # No electrons involved
+  twoElectron = [ "coulomb", "exchange" ]   # 2 electron terms
+
+  # Keys with special treatment
+  special = zeroElectron + twoElectron + [ "ground_state" ]
+  oneElectron = sorted([ k[len(prefix):] for k in hfres
+                         if k.startswith(prefix) and \
+                           not k[len(prefix):] in special
+                       ])
+
+  # All energy terms:
+  energies = zeroElectron + oneElectron + twoElectron
+
+  # Store individual terms in returned dictionary
+  res["terms"] = { ene : hfres[prefix+ene] for ene in energies }
+
+  # Derived energies:
+  res[prefix + "ground_state"] = hfres[prefix + "ground_state"]
+  res[prefix + "1e"]           = sum([ hfres[prefix+ene] for ene in oneElectron ])
+  res[prefix + "2e"]           = sum([ hfres[prefix+ene] for ene in twoElectron ])
+  res[prefix + "electronic"]   = res[prefix + "1e"] + res[prefix + "2e"]
+  res[prefix + "nuclear"]      = hfres[prefix + "nuclear_repulsion"]
+  res[prefix + "potential"]    = sum([ hfres[prefix+ene] for ene in energies
+                                     if not ene in [ "kinetic" ] ])
+  res[prefix + "kinetic"]      = hfres[prefix + "kinetic"]
+  res["virial_ratio"]          = - res[prefix + "potential"] / res[prefix + "kinetic"]
+
+  return res

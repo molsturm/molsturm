@@ -53,8 +53,8 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_loewdin(
   krims::GenMap eigensolver_params = params.submap(GuessLoewdinKeys::eigensolver_params);
   eigensolver_params.insert_default(EigensystemSolverKeys::which, "LR");
 
-  const auto occa = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
-  const auto occb = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
+  const auto occa        = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
+  const auto occb        = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
   const size_t n_vectors = std::max(occa.size(), occb.size());
 
   // Get alpha-alpha block of the overlap matrix.
@@ -68,7 +68,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_loewdin(
 
     // Eigenvectors and eigenvalues.
     auto& evectors = sol.evectors();
-    auto& evalues = sol.evalues();
+    auto& evalues  = sol.evalues();
 
     assert_internal(evectors.n_vectors() == n_vectors);
     assert_internal(evectors.n_elem() == Sa_bb.n_cols());

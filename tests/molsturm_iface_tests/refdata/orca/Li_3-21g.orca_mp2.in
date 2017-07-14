@@ -1,0 +1,4 @@
+! bohrs extremescf nofrozencore nopop noprintmos largeprint mp2 3-21g
+* xyz 0 2
+Li  0  0  0
+*

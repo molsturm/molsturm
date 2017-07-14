@@ -67,7 +67,7 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
     assert_equal(system.n_beta, system.n_alpha);
 
     // Use only zero coefficients
-    const size_t n_bas = base_type::m_coul_adens.n_rows();
+    const size_t n_bas          = base_type::m_coul_adens.n_rows();
     coefficients_ptr_type zeros = std::make_shared<coefficients_type>(
           n_bas, base_type::m_n_alpha + base_type::m_n_beta);
     base_type::m_coefficients_ptr = zeros;
@@ -104,8 +104,8 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   void extract_block(stored_matrix_type& M, const size_t start_row,
                      const size_t start_col,
                      const linalgwrap::Transposed mode = linalgwrap::Transposed::None,
-                     const scalar_type c_this = 1,
-                     const scalar_type c_M = 0) const override {
+                     const scalar_type c_this          = 1,
+                     const scalar_type c_M             = 0) const override {
     m_operator.extract_block(M, start_row, start_col, mode, c_this, c_M);
   }
 
@@ -273,7 +273,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_operator(
   m_operator = linalgwrap::LazyMatrixSum<StoredMatrix>{};
 
   // Set up one-electron terms of m_fock:
-  auto itterm = std::begin(base_type::m_terms_1e);
+  auto itterm  = std::begin(base_type::m_terms_1e);
   auto itcoeff = std::begin(base_type::m_coeff_1e);
   for (; itterm != std::end(base_type::m_terms_1e); ++itterm, ++itcoeff) {
     // Note: No update for one-electron terms needed, since no dependence on density
@@ -309,11 +309,11 @@ RestrictedClosedIntegralOperator<StoredMatrix>::terms_alpha() const {
 template <typename StoredMatrix>
 void RestrictedClosedIntegralOperator<StoredMatrix>::update_energies(
       const cocc_ptr_type& ca_bo_ptr) {
-  auto& coeff_coul = base_type::m_coeff_coul;
-  auto& coul_adens = base_type::m_coul_adens;  // Coulomb from alpha density
+  auto& coeff_coul   = base_type::m_coeff_coul;
+  auto& coul_adens   = base_type::m_coul_adens;  // Coulomb from alpha density
   auto& coeff_exchge = base_type::m_coeff_exchge;
   auto& exchge_adens = base_type::m_exchge_adens;  // Exchange from alpha density
-  auto& ca_bo = *ca_bo_ptr;
+  auto& ca_bo        = *ca_bo_ptr;
 
   // Here we assume restricted closed-shell HF, since we have just one
   // type of coefficients (alpha) to do the update.
@@ -331,7 +331,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_energies(
   //
   // where Op is an operator whose energy we want to compute and
   // C^{k} is the coefficient of the kth orbital
-  auto itterm = std::begin(base_type::m_terms_1e);
+  auto itterm  = std::begin(base_type::m_terms_1e);
   auto itcoeff = std::begin(base_type::m_coeff_1e);
   for (; itterm != std::end(base_type::m_terms_1e); ++itterm, ++itcoeff) {
     // Calculate energy. Factor 2 because of alpha == beta
@@ -361,7 +361,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_energies(
 
     // Scale energy appropriately and set it in map:
     // 0.5 because those are 2e term and we need to avoid double counting.
-    base_type::m_energies[coul_adens.id()] = 0.5 * coeff_coul * energy_coul;
+    base_type::m_energies[coul_adens.id()]   = 0.5 * coeff_coul * energy_coul;
     base_type::m_energies[exchge_adens.id()] = 0.5 * coeff_exchge * energy_exchge;
   }
 }

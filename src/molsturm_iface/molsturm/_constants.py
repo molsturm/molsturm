@@ -35,5 +35,7 @@ HFRES_OPTIONAL = { "eri_ffff":   "export_repulsion_integrals",
 """Keys which could be numpy arrays in the input Parameters to hartree_fock"""
 INPUT_PARAMETER_ARRAY_KEYS = [ "atom_numbers", "atoms", "coords", "nlm_basis" ]
 
-"""The key used to indicate the input parameters in the dict returned by hartree_fock"""
-HFRES_INPUT_PARAMETER_KEY= "input_parameters"
+"""The key used to indicate the input parameters in the dicts returned by the
+relevant methods.
+"""
+INPUT_PARAMETER_KEY= "input_parameters"

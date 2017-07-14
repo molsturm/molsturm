@@ -37,24 +37,24 @@ struct args_type {
 
   // Sturmians
   bool sturmian = false;
-  double k_exp = 1.0;
-  int n_max = 0;
-  int l_max = 0;
-  int m_max = 0;
+  double k_exp  = 1.0;
+  int n_max     = 0;
+  int l_max     = 0;
+  int m_max     = 0;
   NlmBasis nlm_basis;
 
   // Gaussians
-  bool gaussian = false;
+  bool gaussian         = false;
   std::string basis_set = "<not avail>";
 
   // Convergence
-  size_t max_iter = 25;
-  double error = 5e-7;
-  size_t diis_size = 4;
-  size_t n_eigenpairs = 0;
-  std::string eigensolver = "auto";
+  size_t max_iter           = 25;
+  double error              = 5e-7;
+  size_t diis_size          = 4;
+  size_t n_eigenpairs       = 0;
+  std::string eigensolver   = "auto";
   std::string guess_esolver = "auto";
-  std::string guess_method = "hcore";
+  std::string guess_method  = "hcore";
 };
 
 /** Write the content of args_type to a stream */

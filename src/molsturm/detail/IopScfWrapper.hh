@@ -71,11 +71,11 @@ class IopScfStateWrapper /*final*/ : public InnerState {
   /** Move the most recently obtained error values from another state */
   template <typename OtherState>
   void obtain_last_errors_from(const OtherState& s) {
-    last_step_tot_energy = s.last_step_tot_energy;
-    last_step_1e_energy = s.last_step_1e_energy;
+    last_step_tot_energy       = s.last_step_tot_energy;
+    last_step_1e_energy        = s.last_step_1e_energy;
     base_type::last_error_norm = s.last_error_norm;
-    last_tot_energy_change = s.last_tot_energy_change;
-    last_1e_energy_change = s.last_1e_energy_change;
+    last_tot_energy_change     = s.last_tot_energy_change;
+    last_1e_energy_change      = s.last_1e_energy_change;
   }
 
   size_t n_iter() const override { return m_n_iter_offset + base_type::n_iter(); }
@@ -139,7 +139,7 @@ class IopScfWrapper /*final*/ : public InnerScf {
     max_tot_energy_change =
           map.at(IopScfKeys::max_tot_energy_change, max_tot_energy_change);
     max_1e_energy_change = map.at(IopScfKeys::max_1e_energy_change, max_1e_energy_change);
-    verbosity = map.at(IopScfKeys::verbosity, verbosity);
+    verbosity            = map.at(IopScfKeys::verbosity, verbosity);
   }
 
   /** Get the current settings of all internal control parameters and
@@ -196,10 +196,10 @@ void IopScfWrapper<InnerScf>::after_iteration_step(state_type& s) const {
   const probmat_type& fock_bb = s.problem_matrix();
 
   // Update last step energy values and differences:
-  s.last_1e_energy_change = std::abs(s.last_step_1e_energy - fock_bb.energy_1e_terms());
+  s.last_1e_energy_change  = std::abs(s.last_step_1e_energy - fock_bb.energy_1e_terms());
   s.last_tot_energy_change = std::abs(s.last_step_tot_energy - fock_bb.energy_total());
-  s.last_step_1e_energy = s.problem_matrix().energy_1e_terms();
-  s.last_step_tot_energy = s.problem_matrix().energy_total();
+  s.last_step_1e_energy    = s.problem_matrix().energy_1e_terms();
+  s.last_step_tot_energy   = s.problem_matrix().energy_total();
 
   if (have_common_bit(verbosity, ScfMsgType::IterationProcess)) {
     std::cout.unsetf(std::ios::floatfield);  // Unset floatfield flags

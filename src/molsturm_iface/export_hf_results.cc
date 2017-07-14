@@ -48,7 +48,7 @@ void export_ff_matrix(const bool restricted, const Matrix& in,
   // Shift from the alpha-alpha into the beta-beta block
   // if we are restricted (otherwise this has no meaning)
   const size_t n_orbs_alpha = in.n_cols();
-  const size_t bb_shift = n_orbs_alpha * n_orbs + n_orbs_alpha;
+  const size_t bb_shift     = n_orbs_alpha * n_orbs + n_orbs_alpha;
 
   out.resize(n_orbs * n_orbs);
   for (size_t i = 0; i < in.n_rows(); ++i) {
@@ -70,8 +70,8 @@ void export_ff_matrix(const bool restricted, const Matrix& in,
 template <typename Vector>
 void export_coeff_bf(const bool restricted, const linalgwrap::MultiVector<Vector>& mv,
                      std::vector<scalar_type>& out) {
-  const size_t n_orbs = restricted ? 2 * mv.n_vectors() : mv.n_vectors();
-  const size_t n_bas = restricted ? mv.n_elem() : mv.n_elem() / 2;
+  const size_t n_orbs       = restricted ? 2 * mv.n_vectors() : mv.n_vectors();
+  const size_t n_bas        = restricted ? mv.n_elem() : mv.n_elem() / 2;
   const size_t n_orbs_alpha = restricted ? mv.n_vectors() : mv.n_vectors() / 2;
   assert_internal(n_orbs_alpha * 2 == n_orbs);
 
@@ -79,7 +79,7 @@ void export_coeff_bf(const bool restricted, const linalgwrap::MultiVector<Vector
   out.resize(n_bas * n_orbs);
   for (size_t b = 0; b < n_bas; ++b) {
     for (size_t f = 0; f < n_orbs_alpha; ++f) {
-      const size_t bf = b * n_orbs + f;
+      const size_t bf      = b * n_orbs + f;
       const size_t bf_beta = bf + n_orbs_alpha;
       assert_internal(bf < out.size());
       assert_internal(bf_beta < out.size());
@@ -100,7 +100,7 @@ void export_eri_restricted(const gint::ERITensor_i<scalar_type>& eri,
                            const linalgwrap::MultiVector<Vector>& coeff_bf,
                            std::vector<scalar_type>& out) {
   const size_t n_orbs_alpha = coeff_bf.n_vectors();
-  const size_t n_orbs = 2 * n_orbs_alpha;
+  const size_t n_orbs       = 2 * n_orbs_alpha;
 
   // Form the alpha-alpha-alpha-alpha spin block by contraction
   // and copy it to all the other non-zero places
@@ -149,7 +149,7 @@ template <typename Vector>
 std::pair<linalgwrap::MultiVector<Vector>, linalgwrap::MultiVector<Vector>> coeff_blocks(
       const linalgwrap::MultiVector<Vector>& coeff_bf_full) {
   const size_t n_orbs_alpha = coeff_bf_full.n_vectors() / 2;  // == n_orbs_beta
-  const size_t n_bas = coeff_bf_full.n_elem() / 2;
+  const size_t n_bas        = coeff_bf_full.n_elem() / 2;
   assert_internal(n_orbs_alpha * 2 == coeff_bf_full.n_vectors());
   assert_internal(2 * n_bas == coeff_bf_full.n_elem());
 
@@ -183,11 +183,13 @@ void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
   using linalgwrap::MultiVector;
 
   const size_t n_orbs_alpha = coeff_bf.n_vectors() / 2;  // == n_orbs_beta
-  const size_t n_orbs = 2 * n_orbs_alpha;
+  const size_t n_orbs       = 2 * n_orbs_alpha;
+#ifdef DEBUG
   const size_t n_bas = coeff_bf.n_elem() / 2;
 
   assert_internal(n_orbs == coeff_bf.n_vectors());
   assert_internal(2 * n_bas == coeff_bf.n_elem());
+#endif  // DEBUG
 
   // Build the relevant blocks of the eri tensor
   std::vector<double> eri_aaaa(n_orbs_alpha * n_orbs_alpha * n_orbs_alpha * n_orbs_alpha);
@@ -277,12 +279,12 @@ typename Vector::scalar_type compute_spin_squared(
 
   // Build the alpha-beta block of the overlap matrix in MO basis
   const auto& Sa_bb = S_bb.block_alpha();
-  auto Sab_ff = linalgwrap::dot(cob_bf, Sa_bb * coa_bf);
+  auto Sab_ff       = linalgwrap::dot(cob_bf, Sa_bb * coa_bf);
 
   // Compute the exact value for <S^2> which we would expect for this
   // system if the determinant was an eigenfunction of S^2
   assert_internal(n_alpha >= n_beta);
-  const double spin_total = (n_alpha - n_beta) / 2.;
+  const double spin_total         = (n_alpha - n_beta) / 2.;
   const double spin_squared_exact = spin_total * (1 + spin_total);
 
   // According to Szabo-Ostlund, p. 107 (2.271) this is the actual value for <S^2>
@@ -294,13 +296,13 @@ typename Vector::scalar_type compute_spin_squared(
 template <typename State>
 HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_type>& eri,
                             const Parameters& params) {
-  const auto& fbb = state.problem_matrix();
-  const auto& soln = state.eigensolution();
+  const auto& fbb       = state.problem_matrix();
+  const auto& soln      = state.eigensolution();
   const bool restricted = fbb.restricted();
 
-  const size_t n_bas = restricted ? fbb.n_rows() : fbb.n_rows() / 2;
+  const size_t n_bas        = restricted ? fbb.n_rows() : fbb.n_rows() / 2;
   const size_t n_orbs_alpha = restricted ? soln.n_ep() : soln.n_ep() / 2;
-  const size_t n_orbs_beta = restricted ? n_orbs_alpha : soln.n_ep() / 2;
+  const size_t n_orbs_beta  = restricted ? n_orbs_alpha : soln.n_ep() / 2;
 #ifdef DEBUG
   const size_t n_orbs = n_orbs_alpha + n_orbs_beta;
 #endif
@@ -308,19 +310,19 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   HfResults ret;
 
   // Size information
-  ret.n_beta = fbb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA).length();
-  ret.n_alpha = fbb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA).length();
-  ret.n_bas = n_bas;
-  ret.restricted = fbb.restricted();
+  ret.n_beta       = fbb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA).length();
+  ret.n_alpha      = fbb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA).length();
+  ret.n_bas        = n_bas;
+  ret.restricted   = fbb.restricted();
   ret.n_orbs_alpha = n_orbs_alpha;
-  ret.n_orbs_beta = n_orbs_beta;
+  ret.n_orbs_beta  = n_orbs_beta;
 
   // SCF statistics
-  ret.n_iter = state.n_iter();
-  ret.n_mtx_applies = state.n_mtx_applies();
-  ret.final_error_norm = state.last_error_norm;
+  ret.n_iter                  = state.n_iter();
+  ret.n_mtx_applies           = state.n_mtx_applies();
+  ret.final_error_norm        = state.last_error_norm;
   ret.final_tot_energy_change = state.last_tot_energy_change;
-  ret.final_1e_energy_change = state.last_1e_energy_change;
+  ret.final_1e_energy_change  = state.last_1e_energy_change;
 
   // SCF analysis:
   ret.spin_squared = compute_spin_squared(restricted, state.overlap_matrix(),
@@ -345,7 +347,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
         continue;
     }
   }
-  ret.energy_ground_state = fbb.energy_total();
+  ret.energy_ground_state      = fbb.energy_total();
   ret.energy_nuclear_repulsion = fbb.energy_nuclear_repulsion();
 
   // Insert alpha and beta orbital energies and the coefficient matrices

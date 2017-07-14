@@ -135,10 +135,10 @@ bool parse_nlm_basis(const std::string& str, NlmBasis& basis) {
   // Tuple format
   for (size_t pos = 0; pos < str.size(); ++pos) {
     if (str[pos] != '(') continue;
-    const size_t start = pos;
-    const size_t sep1 = str.find(',', start);
-    const size_t sep2 = str.find(',', sep1);
-    const size_t end = str.find(')', sep2);
+    const size_t start    = pos;
+    const size_t sep1     = str.find(',', start);
+    const size_t sep2     = str.find(',', sep1);
+    const size_t end      = str.find(')', sep2);
     const size_t nextopen = str.find('(', sep1);
 
     // Errors
@@ -185,36 +185,36 @@ bool parse_nlm_basis(const std::string& str, NlmBasis& basis) {
 
 bool parse_args(int argc, char** argv, args_type& parsed) {
   // System
-  bool had_Z_charge = false;
-  bool had_xyz = false;
-  bool had_alpha = false;
-  bool had_beta = false;
-  bool had_charge = false;
+  bool had_Z_charge     = false;
+  bool had_xyz          = false;
+  bool had_alpha        = false;
+  bool had_beta         = false;
+  bool had_charge       = false;
   bool had_multiplicity = false;
-  bool had_atomic_xyz = false;
-  bool had_restricted = false;
+  bool had_atomic_xyz   = false;
+  bool had_restricted   = false;
 
   // Basis
   bool had_basis_type = false;
-  bool had_basis_set = false;
-  bool had_k_exp = false;
-  bool had_n_max = false;
-  bool had_l_max = false;
-  bool had_m_max = false;
-  bool had_nlm_basis = false;
+  bool had_basis_set  = false;
+  bool had_k_exp      = false;
+  bool had_n_max      = false;
+  bool had_l_max      = false;
+  bool had_m_max      = false;
+  bool had_nlm_basis  = false;
 
   // Convergence
-  bool had_error = false;
-  bool had_max_iter = false;
-  bool had_diis_size = false;
+  bool had_error        = false;
+  bool had_max_iter     = false;
+  bool had_diis_size    = false;
   bool had_n_eigenpairs = false;
 
   // Temporary
   gint::Structure structure;
-  size_t n_alpha = 0;
-  size_t n_beta = 0;
+  size_t n_alpha      = 0;
+  size_t n_beta       = 0;
   size_t multiplicity = 0;
-  size_t charge = 0;
+  size_t charge       = 0;
 
   // Parsing
   for (int i = 1; i < argc; ++i) {
@@ -368,7 +368,7 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
         return false;
       }
     } else if (flag == std::string("--basis_set")) {
-      had_basis_set = true;
+      had_basis_set    = true;
       parsed.basis_set = argument;
     } else if (flag == std::string("--basis_type")) {
       had_basis_type = true;
@@ -382,12 +382,12 @@ bool parse_args(int argc, char** argv, args_type& parsed) {
                                           std::end(valid_gaussian_basis), argument);
 
       if (res_atomic != std::end(valid_atomic_basis)) {
-        parsed.sturmian = true;
-        parsed.gaussian = false;
+        parsed.sturmian   = true;
+        parsed.gaussian   = false;
         parsed.basis_type = "sturmian/atomic/" + argument;
       } else if (res_gaussian != std::end(valid_gaussian_basis)) {
-        parsed.gaussian = true;
-        parsed.sturmian = false;
+        parsed.gaussian   = true;
+        parsed.sturmian   = false;
         parsed.basis_type = "gaussian/" + argument;
       } else {
         std::cerr << "Invalid argument provided to --basis_type:   " << argument

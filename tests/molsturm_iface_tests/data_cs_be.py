@@ -35,9 +35,9 @@ params = {
   "k_exp":          1.0,
   #
   "n_eigenpairs":   8,
-  "error":          1e-9,
+  "conv_tol":       1e-9,
   "eigensolver":    "lapack",
-  "guess_method":   "loewdin",
+  "guess":          "loewdin",
   "guess_esolver":  "lapack",
   #
   "export_repulsion_integrals": True,
@@ -58,7 +58,7 @@ ref_n_iter = 13
 ref_energies = {
   "energy_coulomb":              5.203944879648532,
   "energy_exchange":            -1.706882550460353,
-  "energy_total":                -11.6237892481597,
+  "energy_ground_state":        -11.6237892481597,
   "energy_kinetic":              5.715093431464893,
   "energy_nuclear_attraction":  -20.83594500881277,
   "energy_nuclear_repulsion":    0.0,
@@ -81,7 +81,7 @@ ref_coefficients = np.array([
   2*[-4.368646933475374e-14,1.079848195402297e-10,-9.087532021389557e-18,1.532680547196292e-18],
   2*[0,0,-5.228186199318049e-18,0],
   2*[0,0,7.966901144546446e-18,1.394176490338577e-17],
-]).transpose()
+])
 
 def __make_ref_fock_aa():
   n_a = params["n_eigenpairs"]//2

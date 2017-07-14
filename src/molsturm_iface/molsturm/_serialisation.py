@@ -22,7 +22,7 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from molsturm_iface import Version
-from ._constants import HFRES_ARRAY_KEYS, HFRES_INPUT_PARAMETER_KEY
+from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
 from ._constants import INPUT_PARAMETER_ARRAY_KEYS
 from ._hdf5 import emplace_dict, extract_group, h5py
 
@@ -77,19 +77,18 @@ def dump_yaml(hfres, stream):
 
   # Convert numpy arrays to plain list of lists
   for k in HFRES_ARRAY_KEYS:
-    try:
+    if k in res:
       res[k] = res[k].tolist()
-    except KeyError:
-      pass
 
-  if HFRES_INPUT_PARAMETER_KEY in res:
-    ipkey = HFRES_INPUT_PARAMETER_KEY
+  if INPUT_PARAMETER_KEY in res:
+    ipkey = INPUT_PARAMETER_KEY
     for k in INPUT_PARAMETER_ARRAY_KEYS:
       if not k in res[ipkey]: continue
       if not isinstance(res[ipkey][k], np.ndarray): continue
       res[ipkey][k] = res[ipkey][k].tolist()
 
-  yaml_dump(res,stream)
+  yaml_dump(res, stream)
+
 
 def load_yaml(stream):
   """Read an input file or stream in the molsturm yaml format

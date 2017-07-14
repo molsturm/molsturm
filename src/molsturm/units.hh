@@ -24,15 +24,15 @@ namespace molsturm {
 namespace units {
 // Taken from http://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0
 // DOI: 10.5281/zenodo.22826
-static constexpr double bohr_radius = 0.52917721067e-10;
+static constexpr double bohr_radius      = 0.52917721067e-10;
 static constexpr double bohr_to_angstrom = 1e10 * bohr_radius;
 static constexpr double angstrom_to_bohr = 1 / bohr_to_angstrom;
 
 // http://physics.nist.gov/cgi-bin/cuu/Value?threv
 // DOI: 10.5281/zenodo.22826
 static constexpr double hartree_energy = 27.21138602;  // eV
-static constexpr double hartree_to_eV = hartree_energy;
-static constexpr double eV_to_hartree = 1 / hartree_to_eV;
+static constexpr double hartree_to_eV  = hartree_energy;
+static constexpr double eV_to_hartree  = 1 / hartree_to_eV;
 
 }  // namespace units
 

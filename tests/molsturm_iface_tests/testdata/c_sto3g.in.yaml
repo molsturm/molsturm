@@ -1,0 +1,20 @@
+# Info for the data generator script
+include:
+  - dump_yaml
+  - posthf_mp2
+  - posthf_fci:
+      n_roots: 2
+
+# Info for the test execution
+testing:
+  max_n_iter:        8
+  expensive:         False
+  numeric_tolerance: 1.e-7
+
+# Input:
+atoms:       c
+basis_set:   sto-3g
+basis_type:  "gaussian/libint"
+export_repulsion_integrals: True
+export_fock_matrix: True
+conv_tol:    1.e-8

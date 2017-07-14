@@ -22,7 +22,7 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from .._constants import HFRES_OPTIONAL
-from .._constants import HFRES_INPUT_PARAMETER_KEY
+from .._constants import INPUT_PARAMETER_KEY
 from .._basis import has_real_harmonics
 
 try:
@@ -54,8 +54,7 @@ def run_fci_pyscf(hfres, **params):
 
   # If the underlying basis uses complex harmonics than we cannot
   # assume that (ij|kl) = (ji|kl) (Shell-pair, Mullikan notation)
-  basis_type = hfres[HFRES_INPUT_PARAMETER_KEY]["basis_type"]
-  real_harmonics = has_real_harmonics(basis_type)
+  real_harmonics = has_real_harmonics(**hfres[INPUT_PARAMETER_KEY])
 
   if rhf and real_harmonics:
     fci = pyscf.fci.direct_spin1.FCI()
@@ -115,7 +114,7 @@ def run_fci_pyscf(hfres, **params):
   # TODO I do not quite understand the ci vector object
   #      and what it means at the moment.
 
-  res=[]
+  res={ "states": [], INPUT_PARAMETER_KEY: params }
   for i in range(len(result[0])):
     civector = result[1][i]
     state = {
@@ -124,7 +123,7 @@ def run_fci_pyscf(hfres, **params):
     }
     state["spin_squared"], state["multiplicity"] = \
         spin_square_multipl(civector, n_orbs, n_elec)
-    res.append(state)
+    res["states"].append(state)
 
   return res
 

@@ -21,26 +21,37 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-def has_real_harmonics(basis_type):
+import molsturm_iface as iface
+
+available_basis_types = [ t for t in iface.available_basis_types() ]
+
+def has_real_harmonics(**basis_args):
   """
   Does the basis have real spherical harmonics in the angular part(True)
   or complex ones(False)
 
   By default complex is assumed.
   """
+  basis_type = basis_args["basis_type"]
   if basis_type == "gaussian/libint":
     return True
+  elif basis_type.startswith("sturmian/atomic/"):
+    m_max = basis_args.get("m_max", -1)
+    # For m_max == 0 the harmonics are real because
+    # the e^{I m \phi} term is identially 1 for all
+    # basis functions.
+    return m_max == 0
   else:
     return False
 
-def is_sturmian(basis_type):
+def is_sturmian(**basis_args):
   """
   Is the basis a Sturmian basis.
   """
-  return basis_type.startswith("sturmian/")
+  return basis_args["basis_type"].startswith("sturmian/")
 
-def is_gaussian(basis_type):
+def is_gaussian(**basis_args):
   """
   Is the basis a Gaussian basis.
   """
-  return basis_type.startswith("gaussian/")
+  return basis_args["basis_type"].startswith("gaussian/")

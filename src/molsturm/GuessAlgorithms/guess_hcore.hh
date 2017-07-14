@@ -68,8 +68,8 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_hcore(
     }
   }
 
-  const auto occa = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
-  const auto occb = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
+  const auto occa        = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_ALPHA);
+  const auto occb        = fock_bb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA);
   const size_t n_vectors = std::max(occa.length(), occb.length());
 
   // Get alpha-alpha block of the overlap matrix.

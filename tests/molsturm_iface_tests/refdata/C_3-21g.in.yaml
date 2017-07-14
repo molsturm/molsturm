@@ -1,0 +1,28 @@
+# Info for the data generator script
+include:
+  - orca_hf
+  - orca_mp2
+
+# Info for the test execution
+testing:
+  max_n_iter:        10
+  expensive:         False
+  # TODO 1e-9 would be nice below, but does not work, since
+  #      ORCA does not print the results this accurate
+  numeric_tolerance: 1.e-8
+  # TODO Need lower tolerance since ORCA does not print
+  #      with enough accuracy
+  orben_tolerance:   1.e-6
+  # TODO Need lower tolerance since ORCA does not print
+  #      with enough accuracy
+  spin_squared_tolerance: 1.e-6
+
+# Input
+atoms:           [ "C" ]
+coords:          [ [0,0,0] ]
+multiplicity:    3
+guess:           "hcore"
+basis_type:      "gaussian/libint"
+basis_set:       "3-21g"
+max_iter:        15
+conv_tol:        1.e-9

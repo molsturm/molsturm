@@ -23,6 +23,7 @@
 
 from ._adcc import run_adcc_adcman, adcc_found
 from ._pyscf import pyscf_found, run_fci_pyscf
+from .._constants import INPUT_PARAMETER_KEY
 
 def __build_available_methods():
   ret=[]
@@ -39,6 +40,12 @@ def __assert_available(method):
     raise RuntimeError("molsturm.posthf did not find a way to do an " + method +
                        " calculation. Check that this method is available.")
 
+def __forward_to_adcc(hfres, method, **params):
+  ret = run_adcc_adcman(hfres, method=method, **params)
+  del ret[INPUT_PARAMETER_KEY]["method"]
+  return ret
+
+
 def mp2(hfres, **params):
   """
   Take hf results and extra parameters as an input
@@ -47,7 +54,7 @@ def mp2(hfres, **params):
   Return the resulting dictionary of computed data.
   """
   __assert_available("mp2")
-  return run_adcc_adcman(hfres, method="mp2", **params)
+  return __forward_to_adcc(hfres, "mp2", **params)
 
 def mp3(hfres, **params):
   """
@@ -57,7 +64,7 @@ def mp3(hfres, **params):
   Return the resulting dictionary of computed data.
   """
   __assert_available("mp3")
-  return run_adcc_adcman(hfres, method="mp3", **params)
+  return __forward_to_adcc(hfres, "mp3", **params)
 
 def adc0(hfres, **params):
   """
@@ -68,7 +75,7 @@ def adc0(hfres, **params):
   Return the resulting dictionary of computed data.
   """
   __assert_available("adc0")
-  return run_adcc_adcman(hfres, method="adc0", **params)
+  return __forward_to_adcc(hfres, "adc0", **params)
 
 def adc1(hfres, **params):
   """
@@ -79,7 +86,7 @@ def adc1(hfres, **params):
   Return the resulting dictionary of computed data.
   """
   __assert_available("adc1")
-  return run_adcc_adcman(hfres, method="adc1", **params)
+  return __forward_to_adcc(hfres, "adc1", **params)
 
 def adc2s(hfres, **params):
   """
@@ -90,7 +97,7 @@ def adc2s(hfres, **params):
   Return the resulting dictionary of computed data.
   """
   __assert_available("adc2s")
-  return run_adcc_adcman(hfres, method="adc2s", **params)
+  return __forward_to_adcc(hfres, "adc2s", **params)
 
 def adc2x(hfres, **params):
   """
@@ -101,7 +108,7 @@ def adc2x(hfres, **params):
   Return the resulting dictionary of computed data.
   """
   __assert_available("adc2x")
-  return run_adcc_adcman(hfres, method="adc2x", **params)
+  return __forward_to_adcc(hfres, "adc2x", **params)
 
 def adc3(hfres, **params):
   """
@@ -112,7 +119,7 @@ def adc3(hfres, **params):
   Return the resulting dictionary of computed data.
   """
   __assert_available("adc3")
-  return run_adcc_adcman(hfres, method="adc2x", **params)
+  return __forward_to_adcc(hfres, "adc3", **params)
 
 def fci(hfres, **kwargs):
   """

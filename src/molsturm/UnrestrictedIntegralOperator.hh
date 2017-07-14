@@ -152,7 +152,7 @@ UnrestrictedIntegralOperator<StoredMatrix, BlockType>::UnrestrictedIntegralOpera
         m_coul_bdens{integral_terms.coulomb_term},
         m_exchge_bdens{integral_terms.exchange_term} {
   // Use only zero coefficients
-  const size_t n_bas = base_type::m_coul_adens.n_rows();
+  const size_t n_bas      = base_type::m_coul_adens.n_rows();
   const size_t n_max_elec = std::max(base_type::m_n_alpha, base_type::m_n_beta);
   coefficients_ptr_type zeros =
         std::make_shared<coefficients_type>(2 * n_bas, 2 * n_max_elec);
@@ -169,8 +169,8 @@ UnrestrictedIntegralOperator<StoredMatrix, BlockType>::indices_orbspace(
   const size_t n_orbs = base_type::m_coefficients_ptr->n_vectors();
   assert_internal(n_orbs % 2 == 0);
   const size_t n_orbs_alpha = n_orbs / 2;
-  const size_t n_alpha = base_type::m_n_alpha;
-  const size_t n_beta = base_type::m_n_beta;
+  const size_t n_alpha      = base_type::m_n_alpha;
+  const size_t n_beta       = base_type::m_n_beta;
 
   switch (osp) {
     case OrbitalSpace::OCC_ALPHA:
@@ -191,11 +191,11 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_state(
       const coefficients_ptr_type& coeff_bf_ptr, bool include_energies) {
   assert_coefficient_structure(coeff_bf_ptr);
 
-  auto& coeff_bf = *coeff_bf_ptr;
+  auto& coeff_bf            = *coeff_bf_ptr;
   const size_t n_orbs_alpha = coeff_bf_ptr->n_vectors() / 2;
-  const size_t n_bas = m_coul_bdens.n_rows();
-  const size_t n_alpha = base_type::m_n_alpha;
-  const size_t n_beta = base_type::m_n_beta;
+  const size_t n_bas        = m_coul_bdens.n_rows();
+  const size_t n_alpha      = base_type::m_n_alpha;
+  const size_t n_beta       = base_type::m_n_beta;
   assert_size(coeff_bf_ptr->n_elem(), 2 * n_bas);
 
   // Since the eigenvectors from the Block-Diagonal eigensolver are padded with zeros
@@ -232,10 +232,10 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_state(
 template <typename StoredMatrix, typename BlockType>
 void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_operator(
       const cocc_ptr_type& ca_bo_ptr, const cocc_ptr_type& cb_bo_ptr) {
-  auto& blocka = this->diag_blocks()[0];  // alpha-alpha block
-  auto& blockb = this->diag_blocks()[1];  // beta-beta block
-  auto& coeff_coul = base_type::m_coeff_coul;
-  auto& coul_adens = base_type::m_coul_adens;  // Coulomb from alpha density
+  auto& blocka       = this->diag_blocks()[0];  // alpha-alpha block
+  auto& blockb       = this->diag_blocks()[1];  // beta-beta block
+  auto& coeff_coul   = base_type::m_coeff_coul;
+  auto& coul_adens   = base_type::m_coul_adens;  // Coulomb from alpha density
   auto& coeff_exchge = base_type::m_coeff_exchge;
   auto& exchge_adens = base_type::m_exchge_adens;  // Exchange from alpha density
 
@@ -244,7 +244,7 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_operator(
   blockb = linalgwrap::LazyMatrixSum<StoredMatrix>{};
 
   // Set up one-electron terms:
-  auto itterm = std::begin(base_type::m_terms_1e);
+  auto itterm  = std::begin(base_type::m_terms_1e);
   auto itcoeff = std::begin(base_type::m_coeff_1e);
   for (; itterm != std::end(base_type::m_terms_1e); ++itterm, ++itcoeff) {
     // Note: No update for one-electron terms needed, since no dependence on density
@@ -306,12 +306,12 @@ UnrestrictedIntegralOperator<StoredMatrix, BlockType>::terms_beta() const {
 template <typename StoredMatrix, typename BlockType>
 void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_energies(
       const cocc_ptr_type& ca_bo_ptr, const cocc_ptr_type& cb_bo_ptr) {
-  auto& coeff_coul = base_type::m_coeff_coul;
-  auto& coul_adens = base_type::m_coul_adens;  // Coulomb from alpha density
+  auto& coeff_coul   = base_type::m_coeff_coul;
+  auto& coul_adens   = base_type::m_coul_adens;  // Coulomb from alpha density
   auto& coeff_exchge = base_type::m_coeff_exchge;
   auto& exchge_adens = base_type::m_exchge_adens;  // Exchange from alpha density
-  const auto& ca_bo = *ca_bo_ptr;
-  const auto& cb_bo = *cb_bo_ptr;
+  const auto& ca_bo  = *ca_bo_ptr;
+  const auto& cb_bo  = *cb_bo_ptr;
 
   // Calculate the energies of the 1e terms:
   //
@@ -322,12 +322,12 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_energies(
   //
   // where Op is an operator whose energy we want to compute and
   // C^{k} is the coefficient of the kth orbital
-  auto itterm = std::begin(base_type::m_terms_1e);
+  auto itterm  = std::begin(base_type::m_terms_1e);
   auto itcoeff = std::begin(base_type::m_coeff_1e);
   for (; itterm != std::end(base_type::m_terms_1e); ++itterm, ++itcoeff) {
     // Calculate energies:
     const scalar_type energy_alpha = trace(outer_prod_sum((*itterm) * ca_bo, ca_bo));
-    const scalar_type energy_beta = trace(outer_prod_sum((*itterm) * cb_bo, cb_bo));
+    const scalar_type energy_beta  = trace(outer_prod_sum((*itterm) * cb_bo, cb_bo));
     // TODO Rethink this once we have the stored multivectors
 
     // Scale energy appropriately and set it in map:
@@ -355,7 +355,7 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_energies(
 
     // Scale energy appropriately and set it in map:
     // 0.5 because those are 2e term and we need to avoid double counting.
-    base_type::m_energies[coul_adens.id()] = 0.5 * coeff_coul * energy_coul;
+    base_type::m_energies[coul_adens.id()]   = 0.5 * coeff_coul * energy_coul;
     base_type::m_energies[exchge_adens.id()] = 0.5 * coeff_exchge * energy_exchge;
   }
 }
@@ -365,9 +365,9 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::assert_coefficient_s
       const coefficients_ptr_type& coeff_bf_ptr) const {
 #ifdef DEBUG
   const size_t n_orbs = coeff_bf_ptr->n_vectors();
-  const size_t n_orbs_alpha = n_orbs / 2;
-  const size_t n_bas = m_coul_bdens.n_rows();
+  const size_t n_bas  = m_coul_bdens.n_rows();
   assert_internal(n_orbs % 2 == 0);
+  const size_t n_orbs_alpha = n_orbs / 2;
 
   auto is_zero = [](scalar_type v) { return v == 0.; };
 
@@ -382,6 +382,7 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::assert_coefficient_s
   // beta-alpha block:
   for (size_t i = n_orbs_alpha; i < n_orbs; ++i) {
     auto& vec = (*coeff_bf_ptr)[i];
+
     const bool all_zero = std::all_of(vec.begin(), vec.begin() + n_bas, is_zero);
     assert_internal(all_zero);
   }

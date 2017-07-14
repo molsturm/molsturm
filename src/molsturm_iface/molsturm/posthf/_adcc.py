@@ -22,7 +22,7 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from .._constants import HFRES_OPTIONAL
-from .._constants import HFRES_INPUT_PARAMETER_KEY
+from .._constants import INPUT_PARAMETER_KEY
 import numpy as np
 
 try:
@@ -72,7 +72,7 @@ def generate_adcc_adcman_input(hfres):
     params.update({ __adcc_remap_keys[k][0] : __adcc_remap_keys[k][1](hfres[k])
                     for k in __adcc_remap_keys })
 
-    params.update("threshold", 5*hfres["final_error_norm"])
+    params["threshold"] = 5*hfres["final_error_norm"]
   except KeyError as e:
     raise ValueError("The hartree_fock result dictionary does not contain the required " +
                      "key '" + e.args[0] + ".")
@@ -107,5 +107,10 @@ def run_adcc_adcman(hfres,**params):
       resp[remap[0]] = remap[1](params[p])
     else:
       resp[p] = params[p]
-  return adcc.adcman(**resp)
+
+  res = adcc.adcman(**resp)
+
+  # Store a copy of the input parameters:
+  res[INPUT_PARAMETER_KEY] = params
+  return res
 

@@ -1,0 +1,20 @@
+# Info for the data generator script
+include:
+  - dump_yaml
+
+# Info for the test execution
+testing:
+  max_n_iter:        14
+  expensive:         False
+  numeric_tolerance: 1.e-7
+
+# Input:
+atoms:        "Be"
+coords:       [ 0,0,0 ]
+basis_type:   "sturmian/atomic/cs_static14"
+n_max:        3
+l_max:        2
+k_exp:        1.4
+export_repulsion_integrals: False
+export_fock_matrix: True
+guess_esolver: lapack

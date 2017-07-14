@@ -48,8 +48,9 @@ gint::Structure read_xyz(std::istream& f, double angstrom_to_bohr) {
 
     if (gint::is_element_symbol(symbol)) {
       // Convert units and place into molecule
-      molec.push_back(gint::Atom(symbol, {{x * angstrom_to_bohr, y * angstrom_to_bohr,
-                                           z * angstrom_to_bohr}}));
+      molec.push_back(gint::Atom(
+            symbol,
+            {{x * angstrom_to_bohr, y * angstrom_to_bohr, z * angstrom_to_bohr}}));
     } else {
       assert_throw(false, ExcInvalidXyz("Error at line: Unknown element symbol \"" +
                                         symbol + "\"."));

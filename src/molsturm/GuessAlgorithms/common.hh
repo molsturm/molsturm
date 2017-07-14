@@ -49,9 +49,9 @@ template <typename Solution>
 Solution replicate_block(Solution solution) {
   typedef typename Solution::evector_type evector_type;
 
-  auto& evecs = solution.evectors();
+  auto& evecs               = solution.evectors();
   const size_t n_orbs_alpha = evecs.n_vectors();
-  const size_t n_bas = evecs.n_elem();
+  const size_t n_bas        = evecs.n_elem();
 
   linalgwrap::MultiVector<evector_type> guess(2 * n_bas, 2 * n_orbs_alpha);
   for (size_t f = 0; f < n_orbs_alpha; ++f) {
