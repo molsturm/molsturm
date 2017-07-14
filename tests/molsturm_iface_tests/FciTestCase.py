@@ -25,12 +25,35 @@ from NumCompTestCase import NumCompTestCase
 
 class FciTestCase(NumCompTestCase):
   def compare_fci_0_energies(self, case, fci):
-    num_tol = case["testing"]["numeric_tolerance"]
-    ref     = case["fci"]
+    num_tol     = case["testing"]["numeric_tolerance"]
+    ref         = case["fci"]
+    ref_states  = case["fci"]["states"]
+    fci_states  = fci["states"]
 
-    for i in range(len(fci)):
-      self.assertAlmostEqual(fci[i]["energy"], ref[i]["energy"], tol=num_tol,
+    self.assertEqual(len(fci_states), len(ref_states))
+    for i in range(len(fci_states)):
+      self.assertAlmostEqual(fci_states[i]["energy"], ref_states[i]["energy"],
+                             tol=num_tol,
                              prefix="root " + str(i) + " energy: ")
+
+
+  def compare_fci_1_spin(self, case, fci):
+    num_tol     = case["testing"]["numeric_tolerance"]
+    ref         = case["fci"]
+    ref_states  = case["fci"]["states"]
+    fci_states  = fci["states"]
+
+    self.assertEqual(len(fci_states), len(ref_states))
+    for i in range(len(fci_states)):
+      for key in [ "multiplicity", "spin_squared" ]:
+        if ref_states[i][key] is None:
+          print("Skipping FCI test for " + key + " for " + case["testing"]["name"]
+                + ", since no reference data available.")
+          continue # Skip keys where the reference value is not available.
+
+        self.assertAlmostEqual(fci_states[i][key], ref_states[i][key],
+                               tol=num_tol,
+                               prefix="root " + str(i) + " " + key + " ")
 
 
   def compare_fci_results(self, case, fci):
@@ -43,6 +66,5 @@ class FciTestCase(NumCompTestCase):
 
       if fun.startswith("compare_fci_"):
         getattr(self, fun) (case, fci)
-
 
 

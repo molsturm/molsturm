@@ -1,2 +1,4 @@
 # Data from ORCA calculation /home/mfh/Dokumente/Programmierung_Writing/Sturmians/molsturm/tests/molsturm_iface_tests/refdata/orca/C_3-21g.orca_mp2.in
-{energy_ground_state: -37.506085764792, energy_mp2: -0.025015932}
+energy_ground_state: -37.506085764792
+energy_mp2: -0.025015932
+input_parameters: {}

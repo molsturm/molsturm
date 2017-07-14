@@ -217,6 +217,7 @@ def job_orca_hf(name, params):
     },
   ]
   reference = output_find_patterns(res, orca_patterns)
+  print("TODO: It would be nice if the MO coefficients would be extracted from ORCA, too.")
 
   # Extra parsing
   reference["orben_f"] = orca_extract_orben(res)
@@ -249,6 +250,7 @@ def job_orca_mp2(name, params):
     }
   ]
   reference = output_find_patterns(res, orca_patterns)
+  reference[molsturm.INPUT_PARAMETER_KEY] = {}
 
   with open(os.path.join(dir_of_this_script(), name + ".mp2.yaml"), "w") as f:
     f.write("# Data from ORCA calculation " + orca_in_file + "\n")
@@ -269,12 +271,15 @@ def job_orca_fci(name, params):
   ]
   parsed = output_find_patterns(res, orca_patterns)
 
-  reference = [ {
-    "energy":        parsed["energy_root0"],
-    "civector":      None,  # TODO No clue how to get that
-    "spin_squared":  None,  # TODO No clue how to get that
-    "multiplicity":  None,  # TODO No clue how to get that
-  } ]
+  reference = {
+    molsturm.INPUT_PARAMETER_KEY: { "n_roots": 1 },
+    "states": [ {
+      "energy":        parsed["energy_root0"],
+      "civector":      None,  # TODO No clue how to get that
+      "spin_squared":  None,  # TODO No clue how to get that
+      "multiplicity":  None,  # TODO No clue how to get that
+    } ],
+  }
   with open(os.path.join(dir_of_this_script(), name + ".fci.yaml"), "w") as f:
     f.write("# Data from ORCA calculation " + orca_in_file + "\n")
     yaml.safe_dump(reference, f)

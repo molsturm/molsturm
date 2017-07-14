@@ -24,6 +24,7 @@
 import os
 import yaml
 import molsturm
+import molsturm.yaml_utils
 
 def dir_of_this_script():
   return os.path.dirname( os.path.abspath( __file__ ) )
@@ -50,7 +51,12 @@ def __parse_test_case(infile):
   ret = { "testing": { "name": os.path.basename(basepath) }, }
 
   # Load "hf" subtree from hf file
-  ret["hf"] = molsturm.load_yaml(basepath + ".hf.yaml")
+  if os.path.exists(basepath + ".hf.yaml"):
+    ret["hf"] = molsturm.load_yaml(basepath + ".hf.yaml")
+  elif os.path.exists(basepath + ".hf.hdf5"):
+    ret["hf"] = molsturm.load_hdf5(basepath + ".hf.hdf5")
+  else:
+    raise ValueError("No hf results found for " + infile)
 
   # Load "params" and "testing" subtree from in file
   with open(basepath + ".in.yaml", "r") as f:
@@ -66,6 +72,7 @@ def __parse_test_case(infile):
     del ret["params"]["testing"]
 
   # Read posthf subcases:
+  molsturm.yaml_utils.install_constructors()
   for sub in posthf_cases:
     yamlfile = basepath + "." + sub + ".yaml"
     if os.path.isfile(yamlfile):
@@ -77,15 +84,30 @@ def __parse_test_case(infile):
 
   return ret
 
-
+__reference_cases_cache = None
 def reference_cases():
-  return [ __parse_test_case(os.path.join(REFERENCE_DIR,fname))
-          for fname in os.listdir(REFERENCE_DIR)
-           if fname.endswith(".in.yaml") ]
+  global __reference_cases_cache
+
+  """Return the list of test cases against reference data"""
+  if __reference_cases_cache is None:
+    __reference_cases_cache = [
+      __parse_test_case(os.path.join(REFERENCE_DIR,fname))
+      for fname in os.listdir(REFERENCE_DIR)
+      if fname.endswith(".in.yaml")
+    ]
+  return __reference_cases_cache
 
 
+__test_cases_cache = None
 def test_cases():
-  return [ __parse_test_case(os.path.join(TESTDATA_DIR,fname))
-          for fname in os.listdir(TESTDATA_DIR)
-           if fname.endswith(".in.yaml") ]
+  """Return the list of test cases against previously computed data"""
+  global __test_cases_cache
+
+  if __test_cases_cache is None:
+    __test_cases_cache = [
+      __parse_test_case(os.path.join(TESTDATA_DIR,fname))
+      for fname in os.listdir(TESTDATA_DIR)
+      if fname.endswith(".in.yaml")
+    ]
+  return __test_cases_cache
 

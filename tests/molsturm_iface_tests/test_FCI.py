@@ -24,8 +24,9 @@
 from FciTestCase import FciTestCase
 import testdata
 import molsturm.posthf
+from molsturm import INPUT_PARAMETER_KEY
 
-class TestMP2(FciTestCase):
+class TestFCI(FciTestCase):
   """This test should assure that molsturm results stay the same
      between code changes or algorithm updates
   """
@@ -38,9 +39,11 @@ class TestMP2(FciTestCase):
     for case in self.cases:
       testing   = case["testing"]
       hf        = case["hf"]
-      fciparams = {}
 
-      if not "fci" in case:
+      try:
+        fciparams = case["fci"][INPUT_PARAMETER_KEY]
+      except KeyError:
+        # No fci test data available for this case
         continue
 
       fci = molsturm.posthf.fci(hf, **fciparams)

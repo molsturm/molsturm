@@ -24,6 +24,7 @@
 from FciTestCase import FciTestCase
 from HartreeFockTestCase import HartreeFockTestCase
 from MP2TestCase import MP2TestCase
+from molsturm import INPUT_PARAMETER_KEY
 import molsturm
 import molsturm.posthf
 import testdata
@@ -72,11 +73,12 @@ class TestReference(HartreeFockTestCase, MP2TestCase, FciTestCase):
 
       testing = case["testing"]
       name = testing["name"]
+      params = case["mp2"][INPUT_PARAMETER_KEY]
       with self.subTest(label=name):
         if not name in self.hf_results:
           raise self.fail("HF results not available")
 
-        mp2 = molsturm.posthf.mp2(self.hf_results[name])
+        mp2 = molsturm.posthf.mp2(self.hf_results[name], **params)
         self.compare_mp2_results(case, mp2)
 
 
@@ -89,10 +91,11 @@ class TestReference(HartreeFockTestCase, MP2TestCase, FciTestCase):
 
       testing = case["testing"]
       name = testing["name"]
+      params = case["fci"][INPUT_PARAMETER_KEY]
       with self.subTest(label=name):
         if not name in self.hf_results:
           raise self.fail("HF results not available")
 
-        fci = molsturm.posthf.fci(self.hf_results[name])
+        fci = molsturm.posthf.fci(self.hf_results[name], **params)
         self.compare_fci_results(case, fci)
 

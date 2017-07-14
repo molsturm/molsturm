@@ -24,6 +24,7 @@
 from MP2TestCase import MP2TestCase
 import testdata
 import molsturm.posthf
+from molsturm import INPUT_PARAMETER_KEY
 
 class TestMP2(MP2TestCase):
   """This test should assure that molsturm results stay the same
@@ -38,9 +39,11 @@ class TestMP2(MP2TestCase):
     for case in self.cases:
       testing   = case["testing"]
       hf        = case["hf"]
-      mp2params = {}
 
-      if not "mp2" in case:
+      try:
+        mp2params = case["mp2"][INPUT_PARAMETER_KEY]
+      except KeyError:
+        # No mp2 test data available for this case
         continue
 
       mp2 = molsturm.posthf.mp2(hf, **mp2params)

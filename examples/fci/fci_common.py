@@ -71,21 +71,21 @@ def run_fci_for(atom, n_roots, experimental_ground_state, **kwargs):
       raise ValueError("Unknown multiplity: " + str(multiplity))
 
   print("\nFCI energies:")
-  E_GS = res_fci[0]["energy"]
+  E_GS = res_fci["states"][0]["energy"]
   eV =  27.21138602  # au zu eV
   count_system=dict()
   for i in range(n_roots):
-    spin = spin_string(res_fci[i]["multiplicity"])
+    spin = spin_string(res_fci["states"][i]["multiplicity"])
     cnt = count_system.get(spin,0)
     count_system[spin] = cnt+1
-    en = res_fci[i]["energy"]
+    en = res_fci["states"][i]["energy"]
     print( "{0:2d} {1:3s}  {2:7.5g} a.u.   Δ = {3:7.5g} a.u. = {4:7.5g} eV".format(
       i, spin + str(cnt), en, en - E_GS, eV*(en - E_GS)))
 
   with open(atom + "_cs_fci.yaml", "w") as f:
     yaml.safe_dump([{
-        "energy":        float(res_fci[i]["energy"]),
-        "multiplicity":  float(res_fci[i]["multiplicity"]),
+        "energy":        float(res_fci["states"][i]["energy"]),
+        "multiplicity":  float(res_fci["states"][i]["multiplicity"]),
       } for i in range(n_roots) ], f)
 
   print()

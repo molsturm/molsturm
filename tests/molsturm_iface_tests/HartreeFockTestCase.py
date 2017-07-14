@@ -54,6 +54,10 @@ class HartreeFockTestCase(NumCompTestCase):
       if k in ref:
         self.assertArrayAlmostEqual(hfres["orben_f"], ref["orben_f"], tol=orben_tol,
                                     prefix=k + ": ")
+      else:
+        print("Skipping HF test for " + k + " for " + case["testing"]["name"]
+              + ", since no reference data available.")
+
 
 
   def compare_hf_2_convergence(self, case, hfres):
