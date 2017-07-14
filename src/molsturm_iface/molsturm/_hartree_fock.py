@@ -23,7 +23,7 @@
 
 import molsturm_iface as iface
 import numpy as np
-from ._constants import HFRES_ARRAY_KEYS, HFRES_INPUT_PARAMETER_KEY
+from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
 from collections import Iterable
 from .scf_guess import extrapolate_from_previous
 
@@ -242,7 +242,7 @@ def hartree_fock(**kwargs):
       out[k] = ary.reshape(target_shape)
 
   # Forward input parameters to output
-  out[HFRES_INPUT_PARAMETER_KEY] = inputargs
+  out[INPUT_PARAMETER_KEY] = inputargs
 
   return out
 

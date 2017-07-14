@@ -23,7 +23,7 @@
 
 from .._sturmian import build_basis_projector, build_nlm_basis
 from .._basis import is_sturmian, is_gaussian
-from .._constants import HFRES_INPUT_PARAMETER_KEY
+from .._constants import INPUT_PARAMETER_KEY
 import numpy as np
 
 def __crop_orben_orbcoeff(restricted, n_alpha, n_beta, orben, orbcoeff):
@@ -46,7 +46,7 @@ def __crop_orben_orbcoeff(restricted, n_alpha, n_beta, orben, orbcoeff):
 
 
 def __extrapolate_from_previous_gaussian(old_hfres, kwargs):
-  old_kwargs  = old_hfres[HFRES_INPUT_PARAMETER_KEY]
+  old_kwargs  = old_hfres[INPUT_PARAMETER_KEY]
   old_orben    = old_hfres["orben_f"]
   old_orbcoeff = old_hfres["orbcoeff_bf"]
 
@@ -58,7 +58,7 @@ def __extrapolate_from_previous_gaussian(old_hfres, kwargs):
                                old_hfres["n_beta"], old_orben, old_orbcoeff)
 
 def __extrapolate_from_previous_sturmian(old_hfres, kwargs):
-  old_kwargs  = old_hfres[HFRES_INPUT_PARAMETER_KEY]
+  old_kwargs  = old_hfres[INPUT_PARAMETER_KEY]
   old_orben    = old_hfres["orben_f"]
   old_orbcoeff = old_hfres["orbcoeff_bf"]
 
@@ -103,7 +103,7 @@ def extrapolate_from_previous(old_hfres, kwargs):
   Extrapolate the old SCF results onto the new parameters to build a
   guess for the new SCF procedure
   """
-  old_kwargs  = old_hfres[HFRES_INPUT_PARAMETER_KEY]
+  old_kwargs  = old_hfres[INPUT_PARAMETER_KEY]
 
   def check_agreement(key):
     both_have_key = key in old_kwargs and key in kwargs

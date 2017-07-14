@@ -28,4 +28,5 @@ from ._print import *
 from ._serialisation import dump_hdf5, load_hdf5, metadata_hdf5
 from ._serialisation import dump_yaml, load_yaml, metadata_yaml
 from molsturm_iface import Version
+from ._constants import INPUT_PARAMETER_KEY
 
