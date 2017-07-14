@@ -21,11 +21,14 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from MP2TestCase import MP2TestCase
-import testdata
-import molsturm.posthf
 from molsturm import INPUT_PARAMETER_KEY
+from MP2TestCase import MP2TestCase
+import molsturm.posthf
+import testdata
+import unittest
 
+@unittest.skipUnless("mp2" in molsturm.posthf.available_methods,
+                     "mp2 not available => Skipping mp2 tests")
 class TestMP2(MP2TestCase):
   """This test should assure that molsturm results stay the same
      between code changes or algorithm updates

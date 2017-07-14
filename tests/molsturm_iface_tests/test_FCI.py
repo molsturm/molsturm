@@ -22,10 +22,13 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from FciTestCase import FciTestCase
-import testdata
-import molsturm.posthf
 from molsturm import INPUT_PARAMETER_KEY
+import molsturm.posthf
+import testdata
+import unittest
 
+@unittest.skipUnless("fci" in molsturm.posthf.available_methods,
+                     "fci not available => Skipping fci tests")
 class TestFCI(FciTestCase):
   """This test should assure that molsturm results stay the same
      between code changes or algorithm updates
