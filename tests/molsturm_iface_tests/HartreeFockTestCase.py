@@ -75,6 +75,7 @@ class HartreeFockTestCase(NumCompTestCase):
     num_tol          = testing["numeric_tolerance"]
     ref              = case["hf"]
 
+    self.assertEqual(hfres["restricted"], ref["restricted"])
     spin_squared_tol = testing.get("spin_squared_tolerance", num_tol)
     self.assertAlmostEqual(hfres["spin_squared"], ref["spin_squared"], tol=spin_squared_tol,
                            prefix="spin squared: ")
