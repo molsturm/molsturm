@@ -2,8 +2,6 @@
 include:
   - dump_yaml
   - posthf_mp2
-  - posthf_fci:
-      n_roots: 2
 
 # Info for the test execution
 testing:
@@ -17,4 +15,5 @@ basis_set:   sto-3g
 basis_type:  "gaussian/libint"
 export_repulsion_integrals: True
 export_fock_matrix: True
-conv_tol:    1.e-8
+conv_tol:     1.e-8
+multiplicity: 3

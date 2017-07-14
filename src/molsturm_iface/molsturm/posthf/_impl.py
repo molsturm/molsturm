@@ -24,11 +24,12 @@
 from ._adcc import run_adcc_adcman, adcc_found
 from ._pyscf import pyscf_found, run_fci_pyscf
 from .._constants import INPUT_PARAMETER_KEY
+from .._mp2 import mp2 as run_mp2
 
 def __build_available_methods():
-  ret=[]
+  ret=[ "mp2" ]
   if adcc_found:
-    ret += [ "mp2", "mp3", "adc0", "adc1", "adc2s", "adc2x", "adc3" ]
+    ret += [ "mp3", "adc0", "adc1", "adc2s", "adc2x", "adc3" ]
   if pyscf_found:
     ret += [ "fci" ]
   return ret
@@ -54,7 +55,12 @@ def mp2(hfres, **params):
   Return the resulting dictionary of computed data.
   """
   __assert_available("mp2")
-  return __forward_to_adcc(hfres, "mp2", **params)
+  e_mp2, _ = run_mp2(hfres, **params)
+  return {
+    "energy_mp2":           e_mp2,
+    "energy_ground_state":  hfres["energy_ground_state"] + e_mp2,
+    INPUT_PARAMETER_KEY:    params,
+  }
 
 def mp3(hfres, **params):
   """
