@@ -115,16 +115,17 @@ script:
   - cmake --version
   - ninja --version
   #
-  # Use libint from cache if available
+  # Use libint from cache if it available
   - if [ -e "$HOME/cache_libint/lib/libint2.a" ]; then
         LIBINT_OPTS="-DGINT_LIBINT_USE_SYSTEM=ON
            -DLIBINT_INCLUDE_DIR=$HOME/cache_libint/include
            -DLIBINT_LIBRARY=$HOME/cache_libint/lib/libint2.a"
+        GEN_OPTS="-GNinja"
     ;else
         LIBINT_OPTS="-DGINT_LIBINT_MAX_AM=3 -DDEP_BUILD_libint_NJOBS=2"
     ;fi
   #
-  # Configure build and test
+  # Configure and build.
   - mkdir ${TRAVIS_BUILD_DIR}/build && cd ${TRAVIS_BUILD_DIR}/build
   - cmake -DCMAKE_CXX_COMPILER=${CXX_COMP} -DCMAKE_C_COMPILER=${CC_COMP}
            -DCMAKE_BUILD_TYPE=DebugRelease ${EXTRA_OPTS}
@@ -136,7 +137,7 @@ script:
            -DGINT_ENABLE_TESTS=OFF -DGINT_ENABLE_EXAMPLES=OFF
            -DGINT_ENABLE_STATIC_INTEGRALS=ON
            -DGINT_ENABLE_LIBINT=ON ${LIBINT_OPTS}
-           -GNinja ..
+           ${GEN_OPTS} ..
   - cmake --build  . --target ${BUILD_TARGET:-all} -- -j ${CORES}
   - if [ "${TESTS}" != "0" ]; then
         ctest -j ${CORES} --output-on-failure -R "${TESTS_REGEX}"
