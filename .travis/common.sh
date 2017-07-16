@@ -1,4 +1,3 @@
-#!/bin/bash
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -20,14 +19,9 @@
 ##
 ## ---------------------------------------------------------------------
 
-. update_from_sisters.lib.sh || exit 1
+# The directory where the libint cached files should live
+LIBINT_CACHE_DIR="$HOME/cache_libint"
 
-update_file "gint" ".travis/update_cached_libint.sh" || exit 1
+# Place where the libint files are installed by ExternalProject_add
+LIBINT_INSTALL_DIR="${TRAVIS_BUILD_DIR}/build/modules/gint/external/libint"
 
-update_file "linalgwrap" "templates/cc.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/cmake.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/hh.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/README.md" || exit 1
-
-update_file "krims" ".clang-format" || exit 1
-update_file "linalgwrap" "update_from_sisters.lib.sh" || exit 1
