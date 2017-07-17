@@ -5,7 +5,7 @@ include:
 
 # Info for the test execution
 testing:
-  max_n_iter:        8
+  max_n_iter:        9
   expensive:         False
   # TODO 1e-9 would be nice below, but does not work, since
   #      ORCA does not print the results this accurate
