@@ -33,19 +33,19 @@ error = 1e-7
 
 # Parameters for the molsturm caluclation:
 params = {
-  "atom_numbers": [4],
-  "coords":       [[0,0,0]],
+  "atom_numbers":  [4],
+  "coords":        [[0,0,0]],
   #
-  "basis_type":   "sturmian/atomic/cs_dummy",
-  "n_max":        3,
-  "l_max":        2,
-  "k_exp":        1.3,
+  "basis_type":    "sturmian/atomic/cs_static14",
+  "n_max":         3,
+  "l_max":         2,
+  "k_exp":         1.3,
   #
   "eigensolver":   "lapack",
   "guess_esolver": "lapack",
   #
-  "max_iter":     200,
-  "error":        error,
+  "max_iter":      200,
+  "conv_tol":      error,
 }
 # ----------------------------------------------------
 
@@ -60,9 +60,9 @@ except NotImplementedError:
 # and the number of iterations to the main process
 def run_molsturm(x):
   amended = dict(params)
-  amended["guess_method"] = "random"
+  amended["guess"] = "random"
   res = molsturm.hartree_fock(**amended)
-  return (res["n_iter"], res["energy_total"])
+  return (res["n_iter"], res["energy_ground_state"])
 
 # Use tqdm to keep track of the progress if it is installed.
 try:
