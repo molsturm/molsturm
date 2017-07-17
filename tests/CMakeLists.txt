@@ -66,5 +66,5 @@ set_tests_properties(molsturm_iface_tests
 	PROPERTIES
 	ENVIRONMENT "PYTHONPATH=${molsturm_SOURCE_DIR}/src/molsturm_iface:\
 ${molsturm_BINARY_DIR}/src/molsturm_iface"
-	TIMEOUT 300
+	TIMEOUT 600 # This one is quite a lot and hence takes longer
 )
