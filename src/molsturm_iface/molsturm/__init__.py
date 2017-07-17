@@ -24,6 +24,7 @@
 from ._basis import available_basis_types
 from ._hartree_fock import hartree_fock, hartree_fock_keys
 from ._hartree_fock import compute_derived_hartree_fock_energies
+from ._hartree_fock import compute_exchange_ff, compute_coulomb_ff
 from ._print import *
 from ._serialisation import dump_hdf5, load_hdf5, metadata_hdf5
 from ._serialisation import dump_yaml, load_yaml, metadata_yaml
