@@ -40,10 +40,11 @@ class TestHartreeFock(HartreeFockTestCase):
       testing = case["testing"]
       params = case["params"]
 
-      if not params["basis_type"] in molsturm.available_basis_types:
-        raise unittest.SkipTest("basis_type " + params["basis_type"]
-                                + " is not available.")
-
       with self.subTest(label=testing["name"]):
+        if not params["basis_type"] in molsturm.available_basis_types:
+          raise unittest.SkipTest("Skipped subtest " + testing["name"] + ", since"
+                                  + " basis_type " + params["basis_type"]
+                                  + " is not available.")
+
         hfres = molsturm.hartree_fock(**params)
         self.compare_hf_results(case, hfres)

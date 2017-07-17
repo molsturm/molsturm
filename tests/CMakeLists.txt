@@ -59,7 +59,7 @@ ENDFOREACH()
 set(Python_ADDITIONAL_VERSIONS 3)
 find_package(PythonInterp REQUIRED)
 add_test(NAME molsturm_iface_tests
-	COMMAND ${PYTHON_EXECUTABLE} -m unittest discover
+	COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -v
 -s "${CMAKE_CURRENT_LIST_DIR}/molsturm_iface_tests"
 )
 set_tests_properties(molsturm_iface_tests

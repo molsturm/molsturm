@@ -40,6 +40,15 @@ env:
     # The regex for tests to run (disable running tests by TESTS=0)
     - TESTS=1  TESTS_REGEX="molsturm"
 
+# Cache the directory cache_libint, such that libint does not need
+# to be rebuild each time.
+cache:
+  directories:
+    $HOME/cache_libint
+before_cache:
+  - cd ${TRAVIS_BUILD_DIR}
+  - .travis/update_cached_libint.sh
+
 before_install:
     - travis_retry pip3 install --user pyyaml numpy h5py
 
@@ -56,6 +65,9 @@ addons:
       - libboost-dev
       - liblapack-dev
       - libblas-dev
+      #
+      # Packages for libint
+      - libeigen3-dev
       #
       # Packages for python interface
       - swig
@@ -102,6 +114,18 @@ matrix:
 script:
   - cmake --version
   - ninja --version
+  #
+  # Use libint from cache if it available
+  - if [ -e "$HOME/cache_libint/lib/libint2.a" ]; then
+        LIBINT_OPTS="-DGINT_LIBINT_USE_SYSTEM=ON
+           -DLIBINT_INCLUDE_DIR=$HOME/cache_libint/include
+           -DLIBINT_LIBRARY=$HOME/cache_libint/lib/libint2.a"
+        GEN_OPTS="-GNinja"
+    ;else
+        LIBINT_OPTS="-DGINT_LIBINT_MAX_AM=3 -DDEP_BUILD_libint_NJOBS=2"
+    ;fi
+  #
+  # Configure and build.
   - mkdir ${TRAVIS_BUILD_DIR}/build && cd ${TRAVIS_BUILD_DIR}/build
   - cmake -DCMAKE_CXX_COMPILER=${CXX_COMP} -DCMAKE_C_COMPILER=${CC_COMP}
            -DCMAKE_BUILD_TYPE=DebugRelease ${EXTRA_OPTS}
@@ -112,7 +136,8 @@ script:
            -DGSCF_ENABLE_TESTS=OFF -DGSCF_ENABLE_EXAMPLES=OFF
            -DGINT_ENABLE_TESTS=OFF -DGINT_ENABLE_EXAMPLES=OFF
            -DGINT_ENABLE_STATIC_INTEGRALS=ON
-           -GNinja ..
+           -DGINT_ENABLE_LIBINT=ON ${LIBINT_OPTS}
+           ${GEN_OPTS} ..
   - cmake --build  . --target ${BUILD_TARGET:-all} -- -j ${CORES}
   - if [ "${TESTS}" != "0" ]; then
         ctest -j ${CORES} --output-on-failure -R "${TESTS_REGEX}"
