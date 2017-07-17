@@ -47,7 +47,7 @@ cache:
     $HOME/cache_libint
 before_cache:
   - cd ${TRAVIS_BUILD_DIR}
-  - . .travis/update_cached_libint.sh
+  - .travis/update_cached_libint.sh
 
 before_install:
     - travis_retry pip3 install --user pyyaml numpy h5py
