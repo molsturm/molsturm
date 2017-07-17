@@ -285,3 +285,25 @@ def compute_derived_hartree_fock_energies(hfres):
   res["virial_ratio"]          = - res[prefix + "potential"] / res[prefix + "kinetic"]
 
   return res
+
+def compute_coulomb_ff(hfres):
+  """Compute the coulomb matrix in MO space"""
+  noa   = hfres["n_orbs_alpha"]
+  na    = hfres["n_alpha"]
+  nb    = hfres["n_beta"]
+  jirep = hfres["eri_ffff"]
+
+  return np.trace(jirep[   :na,          :na,       :, : ], axis1=0, axis2=1) + \
+         np.trace(jirep[noa:noa + nb, noa:noa + nb, :, : ], axis1=0, axis2=1)
+
+
+def compute_exchange_ff(hfres):
+  """Compute the exchange matrix in MO space"""
+  noa   = hfres["n_orbs_alpha"]
+  na    = hfres["n_alpha"]
+  nb    = hfres["n_beta"]
+  jirep = hfres["eri_ffff"]
+
+  return np.trace(jirep[   :na      , :, :,    :na      ], axis1=0, axis2=3) + \
+         np.trace(jirep[noa:noa + nb, :, :, noa:noa + nb], axis1=0, axis2=3)
+
