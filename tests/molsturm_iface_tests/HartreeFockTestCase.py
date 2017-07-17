@@ -32,7 +32,8 @@ class HartreeFockTestCase(NumCompTestCase):
     # Compute derived energies:
     hfene = molsturm.compute_derived_hartree_fock_energies(hfres)
 
-    for key in ref:
+    # Compare energies. Always compare energy_ground_state first
+    for key in [ "energy_ground_state" ] + sorted(ref):
       if not key.startswith("energy_"):
         continue
 
@@ -57,7 +58,6 @@ class HartreeFockTestCase(NumCompTestCase):
       else:
         print("Skipping HF test for " + k + " for " + case["testing"]["name"]
               + ", since no reference data available.")
-
 
 
   def compare_hf_2_convergence(self, case, hfres):
