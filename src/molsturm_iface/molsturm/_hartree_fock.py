@@ -134,7 +134,7 @@ def __setup_guess(kwargs, inputargs):
                     " or a string describing a valid guess method.")
 
   inputargs["guess_external_orben_f"], inputargs["guess_external_orbcoeff_bf"] = \
-      extrapolate_from_previous(guess, kwargs)
+      extrapolate_from_previous(guess, **kwargs)
   inputargs["guess"] = "external"
 
 

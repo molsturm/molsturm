@@ -44,6 +44,14 @@ def __crop_orben_orbcoeff(restricted, n_alpha, n_beta, orben, orbcoeff):
         np.concatenate( (orbcoeff[:,:n], orbcoeff[:, n_orbs_alpha:n_orbs_alpha+n]),
                        axis=1)
 
+def __restricted_to_unrestricted(guess):
+  """
+  Transform a guess for a restricted calculation to a guess for an unrestricted
+  calculation
+  """
+  orben, orbcoeff = guess
+  return np.concatenate(orben, orben), np.concatenate((orbcoeff,orbcoeff), axis=1)
+
 
 def __extrapolate_from_previous_gaussian(old_hfres, kwargs):
   old_kwargs  = old_hfres[INPUT_PARAMETER_KEY]
@@ -98,7 +106,7 @@ def __extrapolate_from_previous_sturmian(old_hfres, kwargs):
                                  old_hfres["n_beta"], old_orben,
                                  np.matmul(proj, old_orbcoeff))
 
-def extrapolate_from_previous(old_hfres, kwargs):
+def extrapolate_from_previous(old_hfres, **kwargs):
   """
   Extrapolate the old SCF results onto the new parameters to build a
   guess for the new SCF procedure
@@ -114,13 +122,21 @@ def extrapolate_from_previous(old_hfres, kwargs):
       raise ValueError("Cannot extrapolate an SCF guess if the old and new "
                        "value for '" + key + "' differ.")
 
+  if not old_hfres["restricted"] and "restricted" in kwargs and kwargs["restricted"]:
+    raise ValueError("Cannot extrapolate from an unrestricted to a "
+                     "restricted calculation")
+
   check_agreement("basis_type")
   if is_gaussian(**kwargs):
     check_agreement("basis_set")
-    return __extrapolate_from_previous_gaussian(old_hfres, kwargs)
+    guess = __extrapolate_from_previous_gaussian(old_hfres, kwargs)
   elif is_sturmian(**kwargs):
-    return __extrapolate_from_previous_sturmian(old_hfres, kwargs)
+    guess = __extrapolate_from_previous_sturmian(old_hfres, kwargs)
   else:
-    raise ValueError("Did not understand basis_type: '"+basis_type+"'.")
+    raise ValueError("Did not understand basis_type: '" + basis_type + "'.")
 
+  if "restricted" in kwargs and not kwargs["restricted"] and old_hfres["restricted"]:
+    return __restricted_to_unrestricted(guess)
+  else:
+    return guess
 

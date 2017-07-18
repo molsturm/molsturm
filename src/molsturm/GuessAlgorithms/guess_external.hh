@@ -77,7 +77,6 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_external(
   const size_t n_vectors = std::max(occa.length(), occb.length());
 
   // Restricted open-shell is not yet implemented
-  assert_internal(occa == occb || !fock_bb.restricted());
   if (fock_bb.restricted()) {
     assert_throw(
           evectors.n_vectors() == n_vectors,
@@ -86,14 +85,33 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_external(
                                                   "exactly max(n_alpha,n_beta) == " +
                                                   std::to_string(n_vectors)));
   } else {
-    assert_throw(
-          evectors.n_vectors() == n_vectors || evectors.n_vectors() == 2 * n_vectors,
-          ExcInvalidScfGuessParametersEncountered(
-                "For unrestricted the number of eigenvectors either needs to be "
-                "max(n_alpha,n_beta) == " +
-                std::to_string(n_vectors) +
-                " or twice this value. In the former case the "
-                "guess will be duplicated into the beta block."));
+    assert_throw(evectors.n_vectors() == 2 * n_vectors,
+                 ExcInvalidScfGuessParametersEncountered(
+                       "For unrestricted the number of eigenvectors either needs to be "
+                       "2*max(n_alpha,n_beta) == " +
+                       std::to_string(n_vectors) + "."));
+
+    // Check the structure of the evectors is block-diagonal as it should.
+    const size_t n_bas = fock_bb.n_rows() / 2;
+    auto is_zero       = [](scalar_type v) { return v == 0.; };
+    std::string msg =
+          "For unresticted hartree fock the guess coefficients need to be "
+          "block-diagonal, i.e. the alpha-beta and beta-alpha blocks "
+          "still need to be given explicitly with zero values.";
+
+    // alpha-beta block:
+    for (size_t i = 0; i < n_vectors; ++i) {
+      const bool all_zero = std::all_of(evectors[i].begin() + n_bas,
+                                        evectors[i].begin() + 2 * n_bas, is_zero);
+      assert_throw(all_zero, ExcInvalidScfGuessParametersEncountered(msg));
+    }
+
+    // beta-alpha block:
+    for (size_t i = n_vectors; i < 2 * n_vectors; ++i) {
+      const bool all_zero =
+            std::all_of(evectors[i].begin(), evectors[i].begin() + n_bas, is_zero);
+      assert_throw(all_zero, ExcInvalidScfGuessParametersEncountered(msg));
+    }
   }
 
   // Copy into the datastructure we use and replicate the block if needed
@@ -106,11 +124,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_external(
     sol.evectors().push_back(std::move(nvec));
   }
 
-  if (fock_bb.restricted() || sol.evectors().n_vectors() == 2 * n_vectors) {
-    return sol;
-  } else {
-    return replicate_block(sol);
-  }
+  return sol;
 }
 
 }  // namespace molsturm
