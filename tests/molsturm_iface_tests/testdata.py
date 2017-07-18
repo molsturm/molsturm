@@ -21,10 +21,11 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-import os
-import yaml
 import molsturm
 import molsturm.yaml_utils
+import os
+import re
+import yaml
 
 def dir_of_this_script():
   return os.path.dirname( os.path.abspath( __file__ ) )
@@ -110,4 +111,17 @@ def test_cases():
       if fname.endswith(".in.yaml")
     ]
   return __test_cases_cache
+
+
+def test_cases_by_pred(pred):
+  """Return those test cases matching a given predicate"""
+  return [ case for case in test_cases() if pred(case) ]
+
+
+def test_cases_by_name(nameRegex):
+  """Return the test case which matches the given name"""
+
+  if isinstance(nameRegex, str):
+    nameRegex = re.compile(nameRegex)
+  return test_cases_by_pred(lambda x : nameRegex.match(x["testing"]["name"]))
 

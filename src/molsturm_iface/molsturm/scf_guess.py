@@ -21,9 +21,9 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from .._sturmian import build_basis_projector, build_nlm_basis
-from .._basis import is_sturmian, is_gaussian
-from .._constants import INPUT_PARAMETER_KEY
+from ._basis import is_sturmian, is_gaussian
+from ._constants import INPUT_PARAMETER_KEY
+from . import sturmian
 import numpy as np
 
 def __crop_orben_orbcoeff(restricted, n_alpha, n_beta, orben, orbcoeff):
@@ -43,6 +43,14 @@ def __crop_orben_orbcoeff(restricted, n_alpha, n_beta, orben, orbcoeff):
     return np.concatenate( (orben[:n], orben[n_orbs_alpha:n_orbs_alpha+n]) ), \
         np.concatenate( (orbcoeff[:,:n], orbcoeff[:, n_orbs_alpha:n_orbs_alpha+n]),
                        axis=1)
+
+def __restricted_to_unrestricted(guess):
+  """
+  Transform a guess for a restricted calculation to a guess for an unrestricted
+  calculation
+  """
+  orben, orbcoeff = guess
+  return np.concatenate(orben, orben), np.concatenate((orbcoeff,orbcoeff), axis=1)
 
 
 def __extrapolate_from_previous_gaussian(old_hfres, kwargs):
@@ -79,7 +87,7 @@ def __extrapolate_from_previous_sturmian(old_hfres, kwargs):
     n = kwargs["n_max"]
     l = kwargs["l_max"] if "l_max" in kwargs else None
     m = kwargs["m_max"] if "m_max" in kwargs else None
-    return build_nlm_basis(n,l,m,order=order)
+    return sturmian.CoulombSturmianBasis(kwargs["k_exp"], n, l, m, order=order)
 
   old_nlm_basis = get_nlm_basis(old_kwargs)
   nlm_basis     = get_nlm_basis(kwargs)
@@ -93,12 +101,12 @@ def __extrapolate_from_previous_sturmian(old_hfres, kwargs):
     return __crop_orben_orbcoeff(old_hfres["restricted"], old_hfres["n_alpha"],
                                  old_hfres["n_beta"], old_orben, old_orbcoeff)
   else:
-    proj = build_basis_projector(old_nlm_basis,nlm_basis)
+    proj = old_nlm_basis.obtain_projection_to(nlm_basis)
     return __crop_orben_orbcoeff(old_hfres["restricted"], old_hfres["n_alpha"],
                                  old_hfres["n_beta"], old_orben,
                                  np.matmul(proj, old_orbcoeff))
 
-def extrapolate_from_previous(old_hfres, kwargs):
+def extrapolate_from_previous(old_hfres, **kwargs):
   """
   Extrapolate the old SCF results onto the new parameters to build a
   guess for the new SCF procedure
@@ -114,12 +122,21 @@ def extrapolate_from_previous(old_hfres, kwargs):
       raise ValueError("Cannot extrapolate an SCF guess if the old and new "
                        "value for '" + key + "' differ.")
 
+  if not old_hfres["restricted"] and "restricted" in kwargs and kwargs["restricted"]:
+    raise ValueError("Cannot extrapolate from an unrestricted to a "
+                     "restricted calculation")
+
   check_agreement("basis_type")
   if is_gaussian(**kwargs):
     check_agreement("basis_set")
-    return __extrapolate_from_previous_gaussian(old_hfres, kwargs)
+    guess = __extrapolate_from_previous_gaussian(old_hfres, kwargs)
   elif is_sturmian(**kwargs):
-    return __extrapolate_from_previous_sturmian(old_hfres, kwargs)
+    guess = __extrapolate_from_previous_sturmian(old_hfres, kwargs)
   else:
-    raise ValueError("Did not understand basis_type: '"+basis_type+"'.")
+    raise ValueError("Did not understand basis_type: '" + basis_type + "'.")
+
+  if "restricted" in kwargs and not kwargs["restricted"] and old_hfres["restricted"]:
+    return __restricted_to_unrestricted(guess)
+  else:
+    return guess
 

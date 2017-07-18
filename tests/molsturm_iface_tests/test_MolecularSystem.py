@@ -21,5 +21,25 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from ._impl import extrapolate_from_previous
+import molsturm
+import unittest
+import testdata
+from HartreeFockTestCase import HartreeFockTestCase
+from molsturm.MolecularSystem import MolecularSystem
+
+@unittest.skipUnless("sturmian/atomic/cs_static14" in molsturm.available_basis_types,
+                     "Required basis type sturmian/atomic/cs_static14 is not available")
+class TestFromPrevious(HartreeFockTestCase):
+  def test_dummy(self):
+    case = testdata.test_cases_by_name("be_cs32")[0]
+    params = case["params"]
+    params_copy = dict(params)
+
+    system = MolecularSystem(**{ k : params.get(k,None) for k in MolecularSystem._fields })
+    for k in MolecularSystem._fields:
+      if k in params_copy:
+        del params_copy[k]
+
+    hfres = molsturm.hartree_fock(system, **params_copy)
+    self.compare_hf_results_small(case, hfres)
 

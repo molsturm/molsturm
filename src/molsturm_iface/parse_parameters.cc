@@ -183,8 +183,9 @@ krims::GenMap build_int_params(const Parameters& params, const MolecularSystem& 
 }
 
 krims::GenMap build_guess_params(const Parameters& params,
-                                 const MolecularSystem& /*system*/) {
+                                 const MolecularSystem& system) {
   using linalgwrap::EigensystemSolverKeys;
+  const bool restricted = parse_restricted(params, system);
 
   krims::GenMap guess_params{{ScfGuessKeys::method, params.guess}};
   guess_params.update(ScfGuessKeys::eigensolver_params,
@@ -215,15 +216,36 @@ krims::GenMap build_guess_params(const Parameters& params,
                                       " are not compatible, since the latter is not an "
                                       "integer multiple of the former."));
 
+    // If we are unrestricted we need to build the block-diagonal structure inside
+    // the eigensolution we pass onto the guess_external method and hence the
+    // initial Fock matrix
+    //
+    // Hence the number of elements of each vector in the guess eigensolution
+    // is twice the number of basis functions for unrestricted, and once the
+    // number for restricted.
+    assert_throw(
+          restricted || n_orbs % 2 == 0,
+          ExcInvalidParameters("For restricted calculations the number of orbitals in "
+                               "guess_external_orben_f and guess_external_orbcoeff_bf "
+                               "needs to be divisible by 2"));
+    const size_t n_orbs_alpha = restricted ? n_orbs : n_orbs / 2;
+    const size_t n_evec_elem  = restricted ? n_bas : 2 * n_bas;
+
     linalgwrap::Eigensolution<double, linalgwrap::SmallVector<double>> esolution;
     esolution.evalues() = orben_f;
     esolution.evectors() =
-          linalgwrap::MultiVector<linalgwrap::SmallVector<double>>(n_bas, n_orbs, false);
+          linalgwrap::MultiVector<linalgwrap::SmallVector<double>>(n_evec_elem, n_orbs);
+
     for (size_t b = 0; b < n_bas; ++b) {
-      for (size_t f = 0; f < n_orbs; ++f) {
+      for (size_t f = 0; f < n_orbs_alpha; ++f) {
         esolution.evectors()[f][b] = orbcoeff_bf[b * n_orbs + f];
-      }  // f
-    }    // b
+      }
+
+      // This loop will not be executed for external guesses for restricted hartree fock
+      for (size_t f = n_orbs_alpha; f < n_orbs; ++f) {
+        esolution.evectors()[f][b + n_bas] = orbcoeff_bf[b * n_orbs + f];
+      }
+    }  // b
 
     guess_params.update(GuessExternalKeys::eigensolution, std::move(esolution));
   }  // method == external
