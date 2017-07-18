@@ -53,6 +53,8 @@ for file in $PWD/../../pyscf/__init__.py; do
 	fi
 done
 
+export PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH"
+
 python3 <<- EOF
 from molsturm.posthf import available_methods
 print("Available post-HF methods:")
