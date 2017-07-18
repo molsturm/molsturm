@@ -21,14 +21,28 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from ._basis import available_basis_types
-from ._hartree_fock import hartree_fock, hartree_fock_keys
-from ._hartree_fock import compute_derived_hartree_fock_energies
-from ._hartree_fock import compute_exchange_ff, compute_coulomb_ff
-from ._print import *
-from ._serialisation import dump_hdf5, load_hdf5, metadata_hdf5
-from ._serialisation import dump_yaml, load_yaml, metadata_yaml
-from molsturm_iface import Version
-from ._constants import INPUT_PARAMETER_KEY
-from .MolecularSystem import MolecularSystem
+class MolecularSystem():
+  """
+  Class representing a molecular system
+  """
+  _fields = [ "atoms", "atom_numbers", "multiplicity", "charge" ]
 
+  def __init__(self, atoms=None, atom_numbers=None, multiplicity=None, charge=None):
+    self.atoms = atoms
+    self.atom_numbers = atom_numbers
+    self.multiplicity = multiplicity
+    self.charge = charge
+
+    if atoms is None and atom_numbers is None:
+      raise ValueError("One of the parameters atoms or atom_numbers is required")
+    if not atoms is None and not atom_numbers is None:
+      raise ValueError("Only one of the parameters atoms or atom_numbers may be provided")
+
+
+  def as_hartree_fock_parameters(self):
+    """
+    Return a dict which represents exactly this system as parameters
+    for the hartree_fock function.
+    """
+    return { key : getattr(self, key) for key in self._fields
+             if getattr(self, key) is not None }

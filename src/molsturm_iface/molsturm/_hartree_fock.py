@@ -26,6 +26,8 @@ import numpy as np
 from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
 from collections import Iterable
 from .scf_guess import extrapolate_from_previous
+from .MolecularSystem import MolecularSystem
+from .sturmian import CoulombSturmianBasis
 
 def __to_double_vector(val):
   ret = iface.DoubleVector()
@@ -168,7 +170,7 @@ HF_PARAMS_EXCLUDE_KEYS = [ "all" ] + [ k for k in dir(iface.Parameters)
 hartree_fock_keys = HF_EXTRA_KEYS + [ k for k in dir(iface.Parameters)
                                       if not k in HF_PARAMS_EXCLUDE_KEYS ]
 
-def hartree_fock(**kwargs):
+def hartree_fock(molecular_system=None, basis=None, **kwargs):
   """
   Run a Hartree-Fock calculation with molsturm. The list of valid input
   parameters can be retrieved by the means of the list "hartree_fock_keys".
@@ -182,10 +184,20 @@ def hartree_fock(**kwargs):
   #
   # Input
   #
+  inputargs = dict()
+  if molecular_system:
+    if not isinstance(molecular_system, MolecularSystem):
+      raise TypeError("molecular_system needs to be of type MolecularSystem")
+    inputargs.update(molecular_system.as_hartree_fock_parameters())
+
+  if basis:
+    if not isinstance(basis, CoulombSturmianBasis):
+      raise TypeError("basis needs to be of type CoulombSturmianBasis")
+    inputargs.update(basis.as_hartree_fock_parameters())
+
   # Keys which need to be parsed *after* all other ones have been.
   delayed_keys = [ "guess", "guess_external_orben_f", "guess_external_orbcoeff_bf" ]
 
-  inputargs = dict()
   for key in kwargs:
     if not key in hartree_fock_keys:
       raise ValueError("Keyword " + key + " is unknown to hartree_fock")

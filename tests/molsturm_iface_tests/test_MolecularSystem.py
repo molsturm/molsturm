@@ -21,14 +21,25 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from ._basis import available_basis_types
-from ._hartree_fock import hartree_fock, hartree_fock_keys
-from ._hartree_fock import compute_derived_hartree_fock_energies
-from ._hartree_fock import compute_exchange_ff, compute_coulomb_ff
-from ._print import *
-from ._serialisation import dump_hdf5, load_hdf5, metadata_hdf5
-from ._serialisation import dump_yaml, load_yaml, metadata_yaml
-from molsturm_iface import Version
-from ._constants import INPUT_PARAMETER_KEY
-from .MolecularSystem import MolecularSystem
+import molsturm
+import unittest
+import testdata
+from HartreeFockTestCase import HartreeFockTestCase
+from molsturm.MolecularSystem import MolecularSystem
+
+@unittest.skipUnless("sturmian/atomic/cs_static14" in molsturm.available_basis_types,
+                     "Required basis type sturmian/atomic/cs_static14 is not available")
+class TestFromPrevious(HartreeFockTestCase):
+  def test_dummy(self):
+    case = testdata.test_cases_by_name("be_cs32")[0]
+    params = case["params"]
+    params_copy = dict(params)
+
+    system = MolecularSystem(**{ k : params.get(k,None) for k in MolecularSystem._fields })
+    for k in MolecularSystem._fields:
+      if k in params_copy:
+        del params_copy[k]
+
+    hfres = molsturm.hartree_fock(system, **params_copy)
+    self.compare_hf_results_small(case, hfres)
 
