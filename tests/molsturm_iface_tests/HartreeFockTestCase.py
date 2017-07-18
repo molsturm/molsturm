@@ -244,6 +244,16 @@ class HartreeFockTestCase(NumCompTestCase):
 # ----------------------------------------------------------------
 #
 
+  def compare_hf_results_small(self, case, hfres):
+    """
+    Compare the most important properties one after another
+    """
+    self.compare_hf_0_energies(case, hfres)
+    self.compare_hf_1_orben_orbcoeff(case, hfres)
+    self.compare_hf_2_convergence(case, hfres)
+    self.compare_hf_3_spin(case, hfres)
+
+
   def compare_hf_results(self, case, hfres):
     """
     Call all compare functions after another

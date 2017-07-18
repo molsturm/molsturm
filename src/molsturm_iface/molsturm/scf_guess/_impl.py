@@ -79,7 +79,7 @@ def __extrapolate_from_previous_sturmian(old_hfres, kwargs):
     n = kwargs["n_max"]
     l = kwargs["l_max"] if "l_max" in kwargs else None
     m = kwargs["m_max"] if "m_max" in kwargs else None
-    return sturmian.CoulombSturmianBasis(n, l, m, order=order)
+    return sturmian.CoulombSturmianBasis(kwargs["k_exp"], n, l, m, order=order)
 
   old_nlm_basis = get_nlm_basis(old_kwargs)
   nlm_basis     = get_nlm_basis(kwargs)
