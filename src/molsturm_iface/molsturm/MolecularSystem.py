@@ -25,11 +25,12 @@ class MolecularSystem():
   """
   Class representing a molecular system
   """
-  _fields = [ "atoms", "atom_numbers", "multiplicity", "charge" ]
+  _fields = [ "atoms", "atom_numbers", "coords", "multiplicity", "charge" ]
 
-  def __init__(self, atoms=None, atom_numbers=None, multiplicity=None, charge=None):
+  def __init__(self, atoms=None, atom_numbers=None, coords=None, multiplicity=None, charge=None):
     self.atoms = atoms
     self.atom_numbers = atom_numbers
+    self.coords = coords
     self.multiplicity = multiplicity
     self.charge = charge
 
