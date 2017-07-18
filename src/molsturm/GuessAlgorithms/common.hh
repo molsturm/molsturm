@@ -39,6 +39,43 @@ DefException1(ExcInvalidScfGuessParametersEncountered, std::string,
                  "parameters passed is not valid. Details: "
               << arg1);
 
+/** Take separate guesses for the alpha and the beta block
+ * and combine them to a single solution by padding with
+ * zeros.
+ *
+ * This will make the guess suitable for unrestricted calculations
+ */
+template <typename Solution>
+Solution make_block_diagonal(const Solution& solution_alpha,
+                             const Solution& solution_beta) {
+  typedef typename Solution::evector_type evector_type;
+
+  Solution solution;
+  auto& evecs_alpha   = solution_alpha.evectors();
+  auto& evecs_beta    = solution_beta.evectors();
+  const size_t n_orbs = evecs_alpha.n_vectors();
+  const size_t n_bas  = evecs_alpha.n_elem();
+  assert_size(n_orbs, evecs_beta.n_vectors());
+  assert_size(n_bas, evecs_beta.n_elem());
+
+  linalgwrap::MultiVector<evector_type> guess(2 * n_bas, 2 * n_orbs);
+  for (size_t f = 0; f < n_orbs; ++f) {
+    std::copy(evecs_alpha[f].begin(), evecs_alpha[f].end(), guess[f].begin());
+    std::copy(evecs_beta[f].begin(), evecs_beta[f].end(),
+              guess[f + n_orbs].begin() + n_bas);
+  }
+  solution.evectors() = guess;
+
+  auto& evals_alpha = solution_alpha.evalues();
+  auto& evals_beta  = solution_beta.evalues();
+  solution.evalues().resize(2 * n_orbs);
+  auto it = std::copy(evals_alpha.begin(), evals_alpha.end(), solution.evalues().begin());
+  it      = std::copy(evals_beta.begin(), evals_beta.end(), it);
+  assert_internal(it == solution.evalues().end());
+
+  return solution;
+}
+
 /** Replicate a guess solution for a restricted closed operator
  * such that it exists twice on the diagonal.
  * with zeros padded before and after in the coefficients.
@@ -46,25 +83,8 @@ DefException1(ExcInvalidScfGuessParametersEncountered, std::string,
  * This will make the guess suitable for unrestricted calculations
  */
 template <typename Solution>
-Solution replicate_block(Solution solution) {
-  typedef typename Solution::evector_type evector_type;
-
-  auto& evecs               = solution.evectors();
-  const size_t n_orbs_alpha = evecs.n_vectors();
-  const size_t n_bas        = evecs.n_elem();
-
-  linalgwrap::MultiVector<evector_type> guess(2 * n_bas, 2 * n_orbs_alpha);
-  for (size_t f = 0; f < n_orbs_alpha; ++f) {
-    std::copy(evecs[f].begin(), evecs[f].end(), guess[f].begin());
-    std::copy(evecs[f].begin(), evecs[f].end(), guess[f + n_orbs_alpha].begin() + n_bas);
-  }
-  solution.evectors() = guess;
-
-  auto& evals = solution.evalues();
-  evals.resize(2 * n_orbs_alpha);
-  std::copy(evals.begin(), evals.begin() + n_orbs_alpha, evals.begin() + n_orbs_alpha);
-
-  return solution;
+Solution replicate_block(const Solution& solution) {
+  return make_block_diagonal(solution, solution);
 }
 
 }  // namespace molsturm
