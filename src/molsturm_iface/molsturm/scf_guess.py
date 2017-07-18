@@ -21,9 +21,9 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from .._basis import is_sturmian, is_gaussian
-from .._constants import INPUT_PARAMETER_KEY
-from .. import sturmian
+from ._basis import is_sturmian, is_gaussian
+from ._constants import INPUT_PARAMETER_KEY
+from . import sturmian
 import numpy as np
 
 def __crop_orben_orbcoeff(restricted, n_alpha, n_beta, orben, orbcoeff):
@@ -122,4 +122,5 @@ def extrapolate_from_previous(old_hfres, kwargs):
     return __extrapolate_from_previous_sturmian(old_hfres, kwargs)
   else:
     raise ValueError("Did not understand basis_type: '"+basis_type+"'.")
+
 
