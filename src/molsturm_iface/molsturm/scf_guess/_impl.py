@@ -21,9 +21,9 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from .._sturmian import build_basis_projector, build_nlm_basis
 from .._basis import is_sturmian, is_gaussian
 from .._constants import INPUT_PARAMETER_KEY
+from .. import sturmian
 import numpy as np
 
 def __crop_orben_orbcoeff(restricted, n_alpha, n_beta, orben, orbcoeff):
@@ -79,7 +79,7 @@ def __extrapolate_from_previous_sturmian(old_hfres, kwargs):
     n = kwargs["n_max"]
     l = kwargs["l_max"] if "l_max" in kwargs else None
     m = kwargs["m_max"] if "m_max" in kwargs else None
-    return build_nlm_basis(n,l,m,order=order)
+    return sturmian.CoulombSturmianBasis(n, l, m, order=order)
 
   old_nlm_basis = get_nlm_basis(old_kwargs)
   nlm_basis     = get_nlm_basis(kwargs)
@@ -93,7 +93,7 @@ def __extrapolate_from_previous_sturmian(old_hfres, kwargs):
     return __crop_orben_orbcoeff(old_hfres["restricted"], old_hfres["n_alpha"],
                                  old_hfres["n_beta"], old_orben, old_orbcoeff)
   else:
-    proj = build_basis_projector(old_nlm_basis,nlm_basis)
+    proj = old_nlm_basis.obtain_projection_to(nlm_basis)
     return __crop_orben_orbcoeff(old_hfres["restricted"], old_hfres["n_alpha"],
                                  old_hfres["n_beta"], old_orben,
                                  np.matmul(proj, old_orbcoeff))
