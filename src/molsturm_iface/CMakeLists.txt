@@ -43,6 +43,10 @@ else()
 	message(FATAL_ERROR "The value of MOLSTURM_IFACE_BUILD_TYPE needs to be either \"Debug\" or \"Release\".")
 endif()
 
+if (NOT MOLSTURM_IFACE_BUILD_TYPE STREQUAL GINT_INTERFACE_BUILD_TYPE)
+	message(FATAL_ERROR "MOLSTURM_IFACE_BUILD_TYPE and GINT_INTERFACE_BUILD_TYPE need to agree.")
+endif()
+
 #
 # Find swig and python
 #
