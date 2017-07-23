@@ -59,7 +59,7 @@ def dump_yaml(hfres, stream):
 
      This is mainly intended for debugging and
      to 'look' at the data at hand. For archiving
-     and transferring data dump_hd5 should be preferred
+     and transferring data dump_hdf5 should be preferred.
 
      stream:   Path or file stream to write the data to
   """
