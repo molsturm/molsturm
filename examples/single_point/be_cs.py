@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,29 +20,34 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 import molsturm
 
-params = {
-  "atom_numbers": [4],
-  "coords":       [[0,0,0]],
-  #
-  "basis_type":   "sturmian/atomic/cs_reference_pc",
-  "k_exp":        1.3,
-  #
-  "eigensolver":   "lapack",
-  "guess_esolver": "lapack",
-}
 
 def run(**extra):
-  params.update(extra)
-  res = molsturm.hartree_fock(**params)
-  molsturm.print_convergence_summary(res)
-  molsturm.print_energies(res)
-  molsturm.print_mo_occupation(res)
-  molsturm.print_quote(res)
-  return res
+    params = {
+        "atom_numbers": [4],
+        "coords":       [[0, 0, 0]],
+        #
+        "basis_type":   "sturmian/atomic/cs_reference_pc",
+        "k_exp":        2.1,
+        #
+        "eigensolver":   "lapack",
+        "guess_esolver": "lapack",
+    }
+    params.update(extra)
+    res = molsturm.hartree_fock(**params)
+
+    molsturm.print_convergence_summary(res)
+    molsturm.print_energies(res)
+    molsturm.print_mo_occupation(res)
+    molsturm.print_quote(res)
+    return res
+
+
+def run_matrix_free(**extra):
+    return run(n_eigenpairs=8, eigensolver="arpack", guess_esolver="arpack", **extra)
+
 
 if __name__ == "__main__":
-  run(n_max=4,l_max=1)
+    run_matrix_free(n_max=4, l_max=1)
