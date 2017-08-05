@@ -41,5 +41,14 @@ constexpr int version_minor {@PROJECT_VERSION_MINOR@};
 constexpr int version_patch {@PROJECT_VERSION_PATCH@};
 }  // namespace detail
 
+//
+// Definitions of features
+//
+#ifndef CXX_STANDARD
+#define CXX_STANDARD @CMAKE_CXX_STANDARD@
+#endif
+#cmakedefine MOLSTURM_HAVE_CXX14
+#cmakedefine MOLSTURM_HAVE_CXX17
+
   /* clang-format on */
 }  // namespace molsturm

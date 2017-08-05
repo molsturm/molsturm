@@ -66,7 +66,7 @@ install(DIRECTORY .
 	COMPONENT devel
 	FILES_MATCHING PATTERN "*.hh"
 )
-install(FILES "${molsturm_BINARY_DIR}/src/molsturm/version_defs.hh"
+install(FILES "${molsturm_BINARY_DIR}/src/molsturm/config.hh"
 	DESTINATION "include/molsturm"
 	COMPONENT devel
 )
