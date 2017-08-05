@@ -41,30 +41,41 @@ provided that your standard compiler is recent enough.
 
 ## Building ``molsturm``
 The **recommended build** enables the Gaussian integral backend
-via Edward Valeev's [``libint``](https://github.com/evaleev/libint) library.
-
-In order to achieve this, just execute
-```
+via Edward Valeev's [``libint``](https://github.com/evaleev/libint) library
+and makes ``molsturm`` available via a `python` module:
+```sh
 mkdir build && cd build
 cmake -DAUTOCHECKOUT_MISSING_REPOS=ON -DGINT_ENABLE_LIBINT=ON ..
 cmake --build .
 ctest
+cmake --build . --target install
 ```
 Note that this will automatically download and build ``libint`` as well as
 [``rapidcheck``](https://github.com/emil-e/rapidcheck) and
 [``Catch``](https://github.com/philsquared/Catch/)
 (both required for testing) along with ``molsturm``.
 
-To build without tests (not recommended), run
-```
+In order to configure the build further there are a couple of options,
+which can be passed to the first invocation of `cmake`. For example
+- `-DCMAKE_INSTALL_PREFIX=<dir>`: Choose a different installation prefix to
+  install ``molsturm`` (default: ``/usr/local``)
+- `-DENABLE_TESTS=OFF`: Disable building the unit test executables
+- `-DENABLE_EXAMPLES=OFF`: Disable building the example executables
+- `-DENABLE_DOCUMENTATION=ON`: Build and install the *sparse*
+  [doxygen](http://www.stack.nl/~dimitri/doxygen/index.html)-generated
+  in-source documentation.
+
+For example
+```sh
 mkdir build && cd build
 cmake -DAUTOCHECKOUT_MISSING_REPOS=ON -DGINT_ENABLE_LIBINT=ON \
-  -DMOLSTURM_ENABLE_TESTS=OFF -DGINT_ENABLE_TESTS=OFF -DGSCF_ENABLE_TESTS=OFF \
-  -DLINALGWRAP_ENABLE_TESTS=OFF -DKRIMS_ENABLE_TESTS=OFF ..
-cmake --build .
+  -DENABLE_TESTS=OFF ..
+cmake --build . --target install
 ```
+will only build the python module, but not the examples or tests.
 
-Note that installing `molsturm` is not yet fully functional.
+Note that installing `molsturm` is still experimental.
+Every feedback is welcomed to improve the process.
 
 ## Using `molsturm` from `python`
 In order to use the `molsturm` module the following other `python`
@@ -89,12 +100,17 @@ pip3 install h5py numpy pyyaml
 ### Running calculations
 To get started with using molsturm take a look at the [examples](examples/)
 subfolder. A good starting point are especially the [single_point](examples/single_point)
-scripts. For example run
-```
-# Setup environment to run molsturm
-cd examples
-. setup_environment.sh
+scripts.
 
-# Run a water sto-3g calculation
-./single_point/water_sto3g.py
+In principle a calculation is a sequence of calls to the
+appropriate `python` functions of the module.
+The snippet
+```python
+import molsturm
+hfres = molsturm.hartree_fock(basis_set="sto-3g",
+                              basis_type="gaussian/libint",
+                              atoms="Be")
+print("Be HF energy", hfres["energy_ground_state"])
 ```
+just performs a Hartree-Fock calculation on a beryllium atom and
+prints the resulting SCF energy.
