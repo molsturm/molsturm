@@ -1,0 +1,4 @@
+# Data from ORCA calculation orca/C_3-21g.orca_mp2.in
+energy_ground_state: -37.506085764792
+energy_mp2: -0.025015932
+input_parameters: {}

@@ -1,0 +1,4 @@
+# Data from ORCA calculation orca/Be_cc-pvdz.orca_mp2.in
+energy_ground_state: -14.598673569952
+energy_mp2: -0.026335939
+input_parameters: {}

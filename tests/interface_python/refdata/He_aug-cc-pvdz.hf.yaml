@@ -1,4 +1,4 @@
-# Data from ORCA calculation /home/mfh/Dokumente/Programmierung_Writing/Sturmians/molsturm/tests/molsturm_iface_tests/refdata/orca/He_aug-cc-pvdz.orca_hf.in
+# Data from ORCA calculation orca/He_aug-cc-pvdz.orca_hf.in
 energy_1e: -3.87716137
 energy_2e: 1.0214567
 energy_ground_state: -2.855704667706

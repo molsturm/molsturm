@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,7 +20,6 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 import itertools
 import molsturm
@@ -32,6 +32,7 @@ import yaml
 
 def dir_of_this_script():
   return os.path.dirname( os.path.abspath( __file__ ) )
+
 
 FLPAT = "[-.0-9eE]+"  # Pattern for floating point numbers
 ORCADIR = os.path.join(dir_of_this_script(), "orca")
@@ -227,7 +228,7 @@ def job_orca_hf(name, params):
     #      data file and not just a faked one as it is now.
     #      This would require extracting a couple of more keys from
     #      the ORCA output.
-    f.write("# Data from ORCA calculation " + orca_in_file + "\n")
+    f.write("# Data from ORCA calculation " + os.path.relpath(orca_in_file) + "\n")
     molsturm.dump_yaml(reference, f)
 
 
@@ -253,7 +254,7 @@ def job_orca_mp2(name, params):
   reference[molsturm.INPUT_PARAMETER_KEY] = {}
 
   with open(os.path.join(dir_of_this_script(), name + ".mp2.yaml"), "w") as f:
-    f.write("# Data from ORCA calculation " + orca_in_file + "\n")
+    f.write("# Data from ORCA calculation " + os.path.relpath(orca_in_file) + "\n")
     yaml.safe_dump(reference, f)
 
 def job_orca_fci(name, params):

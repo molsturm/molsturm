@@ -1,4 +1,4 @@
-# Data from ORCA calculation /home/mfh/Dokumente/Programmierung_Writing/Sturmians/molsturm/tests/molsturm_iface_tests/refdata/orca/Li_3-21g.orca_hf.in
+# Data from ORCA calculation orca/Li_3-21g.orca_hf.in
 energy_1e: -9.6642107
 energy_2e: 2.28269744
 energy_ground_state: -7.381513263724

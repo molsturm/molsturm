@@ -1,4 +1,4 @@
-# Data from ORCA calculation /home/mfh/Dokumente/Programmierung_Writing/Sturmians/molsturm/tests/molsturm_iface_tests/refdata/orca/h2o_321g.orca_hf.in
+# Data from ORCA calculation orca/h2o_321g.orca_hf.in
 energy_1e: -122.76990636
 energy_2e: 37.93301319
 energy_ground_state: -75.585413896429
