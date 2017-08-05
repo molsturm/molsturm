@@ -34,15 +34,8 @@ list(APPEND CMAKE_MODULE_PATH  "${CMAKE_CURRENT_LIST_DIR}/modules/krims/cmake/mo
 include(DebugReleaseBuild)
 drb_init()
 
-##########################################################################
-# Global options
-
-# Path where cmake wants the modules and config packages:
-set(PackageModuleLocation share/cmake)
-
-# setup global options (needs to be done before call to project())
-option(MOLSTURM_ENABLE_TESTS "Build molsturm tests" ON)
-option(MOLSTURM_ENABLE_EXAMPLES "Build molsturm examples" ON)
+# Prefer shared to static libs (cmake does the reverse by default.
+# We to set this option *before* calling the first 'project')
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static ones" ON)
 
 ##########################################################################
@@ -57,6 +50,18 @@ include_directories("${PROJECT_BINARY_DIR}/src")
 
 # enable testing of this project
 enable_testing()
+
+##########################################################################
+# Global options
+
+# Path where cmake wants the modules and config packages:
+set(PackageModuleLocation share/cmake)
+
+# setup global options
+include(GlobalOption)
+global_option(ENABLE_DOCUMENTATION "Build documentation"         OFF )
+global_option(ENABLE_EXAMPLES      "Build example executables"   ON  )
+global_option(ENABLE_TESTS         "Build unit test executables" ON  )
 
 ##########################################################################
 # Setup hard and optional dependencies and find components
@@ -101,6 +106,10 @@ endif()
 # Add subdirectories for the examples.
 if(MOLSTURM_ENABLE_EXAMPLES)
 	add_subdirectory(examples)
+endif()
+
+if(MOLSTURM_ENABLE_DOCUMENTATION)
+	add_subdirectory(doc)
 endif()
 
 ##########################################################################

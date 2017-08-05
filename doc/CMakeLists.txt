@@ -1,4 +1,3 @@
-#!/bin/bash
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -20,18 +19,19 @@
 ##
 ## ---------------------------------------------------------------------
 
-. update_from_sisters.lib.sh || exit 1
+include(Documentation)
 
-update_file "gint" ".travis/update_cached_libint.sh" || exit 1
+# Exclude patterns for the actual Doxyfile generated with configure_file
+set(DOXY_EXCLUDE_PATTERNS "")
+set(DOXY_LATEX "OFF")
+if (DOCUMENTATION_DOXYGEN_LATEX)
+	set(DOXY_LATEX "ON")
+endif()
 
-update_file "linalgwrap" "templates/py.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/cc.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/cmake.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/hh.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/README.md" || exit 1
+configure_file("Doxyfile.in" "Doxyfile" @ONLY)
+setup_doxygen(doc-molsturm-doxygen "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+	      "${CMAKE_CURRENT_BINARY_DIR}/codedoc"
+	      "share/doc/molsturm")
 
-update_file "krims" "doc/Doxyfile.in" || exit 1
-
-update_file "krims" ".clang-format" || exit 1
-update_file "krims" ".clang-tidy" || exit 1
-update_file "linalgwrap" "update_from_sisters.lib.sh" || exit 1
+add_custom_target(doc-molsturm ALL)
+add_dependencies(doc-molsturm doc-molsturm-doxygen)
