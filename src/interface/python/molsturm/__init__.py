@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -18,12 +19,15 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
+## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-add_subdirectory(molsturm)
-
-#
-# Interfacing with python and co
-#
-if(MOLSTURM_INTERFACE_PYTHON)
-	add_subdirectory(interface/python)
-endif()
+from ._basis import available_basis_types
+from ._hartree_fock import hartree_fock, hartree_fock_keys
+from ._hartree_fock import compute_derived_hartree_fock_energies
+from ._hartree_fock import compute_exchange_ff, compute_coulomb_ff
+from ._print import *
+from ._serialisation import dump_hdf5, load_hdf5, metadata_hdf5
+from ._serialisation import dump_yaml, load_yaml, metadata_yaml
+from ._iface import Version
+from ._constants import INPUT_PARAMETER_KEY
+from .MolecularSystem import MolecularSystem

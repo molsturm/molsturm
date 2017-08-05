@@ -59,9 +59,10 @@ set(PackageModuleLocation share/cmake)
 
 # setup global options
 include(GlobalOption)
-global_option(ENABLE_DOCUMENTATION "Build documentation"         OFF )
-global_option(ENABLE_EXAMPLES      "Build example executables"   ON  )
-global_option(ENABLE_TESTS         "Build unit test executables" ON  )
+global_option(ENABLE_DOCUMENTATION "Build documentation"                       OFF )
+global_option(ENABLE_EXAMPLES      "Build example executables"                 ON  )
+global_option(ENABLE_TESTS         "Build unit test executables"               ON  )
+global_option(INTERFACE_PYTHON     "Build and install python interface module" ON  )
 
 ##########################################################################
 # Setup hard and optional dependencies and find components
@@ -74,15 +75,12 @@ if (CMAKE_VERSION VERSION_GREATER 3.5.0)
 	set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 endif()
 
-if (NOT BUILD_SHARED_LIBS)
-	# Since the python interface goes via a shared library
-	# we need to enable -fPIC even if we are actually building
-	# the libraries statically.
-	# TODO Do not do this for executables ... there we strictly
-	#      speaking do not need this ... but then in fact
-	#      we don't really have any other executables than the
-	#      examples and the tests
-	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# If a user wants a python module, setup the interface helper class
+# This might alter the compiler flags in order for the compiled
+# code to be compatible with the interfacing, hence this call is
+# needed right here.
+if (MOLSTURM_INTERFACE_PYTHON)
+	include(CppInterface)
 endif()
 
 # setup hard dependencies

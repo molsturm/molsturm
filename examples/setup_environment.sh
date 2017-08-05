@@ -24,7 +24,7 @@ BUILD_PATH="../build"
 
 # ------------------------------------------------
 
-for dir in $PWD/../src/molsturm_iface $PWD/$BUILD_PATH/src/molsturm_iface; do
+for dir in $PWD/../src/interface/python $PWD/$BUILD_PATH/src/interface/python; do
 	dir=$(readlink -f $dir)
 	if [ ! -d "$dir" ]; then
 		echo "Not a valid path:  $dir" >&2

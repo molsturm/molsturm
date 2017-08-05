@@ -21,7 +21,7 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from molsturm_iface import Version
+from ._iface import Version
 from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
 from ._constants import INPUT_PARAMETER_ARRAY_KEYS
 from ._hdf5 import emplace_dict, extract_group, h5py

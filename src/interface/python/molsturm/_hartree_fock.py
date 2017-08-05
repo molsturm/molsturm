@@ -21,7 +21,7 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-import molsturm_iface as iface
+from . import _iface as iface
 import numpy as np
 from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
 from collections import Iterable

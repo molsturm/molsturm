@@ -19,11 +19,3 @@
 ##
 ## ---------------------------------------------------------------------
 
-add_subdirectory(molsturm)
-
-#
-# Interfacing with python and co
-#
-if(MOLSTURM_INTERFACE_PYTHON)
-	add_subdirectory(interface/python)
-endif()
