@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,33 +20,35 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 import h5py
 import numpy as np
 from os.path import basename
 
+
 def __emplace_ndarray(keyval, group, typ, **kwargs):
   dset = group.create_dataset(keyval[0], data=keyval[1], **kwargs)
   dset.attrs["type"] = "ndarray"
 
+
 def __extract_ndarray(dataset):
-  #dtype = __dtype_array_from_hdf5(dataset.dtype)
-  arr = np.empty(dataset.shape,dtype=dataset.dtype)
+  # dtype = __dtype_array_from_hdf5(dataset.dtype)
+  arr = np.empty(dataset.shape, dtype=dataset.dtype)
   dataset.read_direct(arr)
   return (basename(dataset.name), arr)
 
 
 def __emplace_listlike(keyval, group, typ, **kwargs):
-  dtype=None
+  dtype = None
   # Usually the heuristic for doing the conversion is pretty
   # good here, but there are some exceptions.
-  if all( isinstance(v,str) for v in keyval[1] ):
-    dtype=h5py.special_dtype(vlen=str)
+  if all(isinstance(v, str) for v in keyval[1]):
+    dtype = h5py.special_dtype(vlen=str)
 
-  ary=np.array(keyval[1], dtype=dtype)
+  ary = np.array(keyval[1], dtype=dtype)
   dset = group.create_dataset(keyval[0], data=ary, **kwargs)
   dset.attrs["type"] = "list"
+
 
 def __extract_listlike(dataset):
   key, arr = __extract_ndarray(dataset)
@@ -53,8 +56,9 @@ def __extract_listlike(dataset):
 
 
 def __emplace_none(keyval, group, typ, **kwargs):
-  dset = group.create_dataset(keyval[0], data=h5py.Empty("f"),**kwargs)
+  dset = group.create_dataset(keyval[0], data=h5py.Empty("f"), **kwargs)
   dset.attrs["type"] = "none"
+
 
 def __extract_none(dataset):
   return (basename(dataset.name), None)
@@ -64,29 +68,31 @@ def __extract_none(dataset):
 # If type not found here, we have an error
 # in the direction python -> hdf5, else we ignore it.
 __scalar_transform = [
-  ( str,     h5py.special_dtype(vlen=str) ),
-  ( bool,    np.dtype("b1")               ),
-  ( complex, np.dtype("c16")              ),
-  ( float,   np.dtype("f8")               ),
-  ( int,     np.dtype("int64")            ),
+  (str,     h5py.special_dtype(vlen=str) ),
+  (bool,    np.dtype("b1")               ),
+  (complex, np.dtype("c16")              ),
+  (float,   np.dtype("f8")               ),
+  (int,     np.dtype("int64")            ),
 ]
 
+
 def __emplace_scalar(keyval, group, typ, **kwargs):
-  dtype = None # Indicate no target type found
+  dtype = None  # Indicate no target type found
   for t in __scalar_transform:
     if isinstance(keyval[1], t[0]):
-      dtype=t[1]
+      dtype = t[1]
       break
   if dtype is None:
     raise TypeError("Encountered unknown data type '" + str(type(keyval[1])) + "'")
 
   # Make a np array with one element and insert
-  dset = group.create_dataset(keyval[0], data=np.array([ keyval[1] ], dtype=dtype),
+  dset = group.create_dataset(keyval[0], data=np.array([keyval[1]], dtype=dtype),
                               dtype=dtype, **kwargs)
   dset.attrs["type"] = "scalar"
 
+
 def __extract_scalar(dataset):
-  dtype = None # Target type to transform to
+  dtype = None  # Target type to transform to
   for t in __scalar_transform:
     if dataset.dtype == t[1]:
       dtype = t[0]
