@@ -1,0 +1,4 @@
+# Data from ORCA calculation orca/Be_321g.orca_fci.in
+input_parameters: {n_roots: 1}
+states:
+- {civector: null, energy: -14.53144437906257, multiplicity: null, spin_squared: null}

@@ -20,4 +20,10 @@
 ## ---------------------------------------------------------------------
 
 add_subdirectory(molsturm)
-add_subdirectory(molsturm_iface)
+
+#
+# Interfacing with python and co
+#
+if(MOLSTURM_INTERFACE_PYTHON)
+	add_subdirectory(interface/python)
+endif()

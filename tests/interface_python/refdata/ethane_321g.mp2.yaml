@@ -1,0 +1,4 @@
+# Data from ORCA calculation orca/ethane_321g.orca_mp2.in
+energy_ground_state: -78.984876912917
+energy_mp2: -0.191344399
+input_parameters: {}

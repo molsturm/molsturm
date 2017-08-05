@@ -58,13 +58,13 @@ ENDFOREACH()
 #
 set(Python_ADDITIONAL_VERSIONS 3)
 find_package(PythonInterp REQUIRED)
-add_test(NAME molsturm_iface_tests
+add_test(NAME molsturm_interface_python_tests
 	COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -v
--s "${CMAKE_CURRENT_LIST_DIR}/molsturm_iface_tests"
+-s "${CMAKE_CURRENT_LIST_DIR}/interface_python"
 )
-set_tests_properties(molsturm_iface_tests
+set_tests_properties(molsturm_interface_python_tests
 	PROPERTIES
-	ENVIRONMENT "PYTHONPATH=${molsturm_SOURCE_DIR}/src/molsturm_iface:\
-${molsturm_BINARY_DIR}/src/molsturm_iface"
+	ENVIRONMENT "PYTHONPATH=${molsturm_SOURCE_DIR}/src/interface/python:\
+${molsturm_BINARY_DIR}/src/interface/python"
 	TIMEOUT 600 # This one is quite a lot and hence takes longer
 )

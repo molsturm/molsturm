@@ -1,0 +1,4 @@
+# Data from ORCA calculation orca/h2o_sto3g.orca_mp2.in
+energy_ground_state: -74.99357808902
+energy_mp2: -0.034258802
+input_parameters: {}

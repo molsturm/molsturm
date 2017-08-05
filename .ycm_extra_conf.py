@@ -42,12 +42,6 @@ def BuildBaseFlags():
     '-fexceptions',
     # Compile debug code as well
     '-DDEBUG',
-    # C++14 code blocks:
-    '-DKRIMS_HAVE_CXX14',
-    '-DSTURMINT_HAVE_CXX14',
-    '-DGINT_HAVE_CXX14',
-    '-DGSCF_HAVE_CXX14',
-    '-DMOLSTURM_HAVE_CXX14',
     # Compile as c++14
     '-std=c++14',
     #

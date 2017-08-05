@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env python3
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,19 +19,15 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
+## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-. update_from_sisters.lib.sh || exit 1
-
-update_file "gint" ".travis/update_cached_libint.sh" || exit 1
-
-update_file "linalgwrap" "templates/py.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/cc.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/cmake.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/hh.template" "keep_header" || exit 1
-update_file "linalgwrap" "templates/README.md" || exit 1
-
-update_file "krims" "doc/Doxyfile.in" || exit 1
-
-update_file "krims" ".clang-format" || exit 1
-update_file "krims" ".clang-tidy" || exit 1
-update_file "linalgwrap" "update_from_sisters.lib.sh" || exit 1
+from ._basis import available_basis_types
+from ._hartree_fock import hartree_fock, hartree_fock_keys
+from ._hartree_fock import compute_derived_hartree_fock_energies
+from ._hartree_fock import compute_exchange_ff, compute_coulomb_ff
+from ._print import *
+from ._serialisation import dump_hdf5, load_hdf5, metadata_hdf5
+from ._serialisation import dump_yaml, load_yaml, metadata_yaml
+from ._iface import Version
+from ._constants import INPUT_PARAMETER_KEY
+from .MolecularSystem import MolecularSystem
