@@ -1,3 +1,4 @@
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -18,7 +19,6 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 import sys
 from ._hartree_fock import compute_derived_hartree_fock_energies
@@ -66,10 +66,11 @@ def print_mo_occupation(hfres, out=sys.stdout, indention=6*" ", title="Orbital o
       "ena": "",
       "enb": "",
     }
+    numfmt="{0:12.8g}"
     if i < hfres["n_orbs_alpha"]:
-      kw["ena"] = hfres["orben_f"][i]
+      kw["ena"] = numfmt.format(hfres["orben_f"][i])
     if i < hfres["n_orbs_beta"]:
-      kw["enb"] = hfres["orben_f"][i+hfres["n_orbs_alpha"]]
+      kw["enb"] = numfmt.format(hfres["orben_f"][i+hfres["n_orbs_alpha"]])
     out.write(fstr.format(**kw))
 
 def print_energies(hfres,out=sys.stdout, indention=6*" ", title="Final energies:"):
