@@ -24,10 +24,12 @@
 
 update_file "gint" ".travis/update_cached_libint.sh" || exit 1
 
+update_file "linalgwrap" "templates/py.template" "keep_header" || exit 1
 update_file "linalgwrap" "templates/cc.template" "keep_header" || exit 1
 update_file "linalgwrap" "templates/cmake.template" "keep_header" || exit 1
 update_file "linalgwrap" "templates/hh.template" "keep_header" || exit 1
 update_file "linalgwrap" "templates/README.md" || exit 1
 
 update_file "krims" ".clang-format" || exit 1
+update_file "krims" ".clang-tidy" || exit 1
 update_file "linalgwrap" "update_from_sisters.lib.sh" || exit 1
