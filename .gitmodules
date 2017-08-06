@@ -1,6 +1,3 @@
-[submodule "modules/linalgwrap"]
-	path = modules/linalgwrap
-	url = https://github.com/linalgwrap/linalgwrap
 [submodule "modules/gscf"]
 	path = modules/gscf
 	url = https://github.com/molsturm/gscf
@@ -9,7 +6,10 @@
 	url = https://github.com/molsturm/gint
 [submodule "modules/krims"]
 	path = modules/krims
-	url = https://github.com/linalgwrap/krims
+	url = https://github.com/lazyten/krims
 [submodule "modules/rapidcheck"]
 	path = modules/rapidcheck
 	url = https://github.com/emil-e/rapidcheck
+[submodule "modules/lazyten"]
+	path = modules/lazyten
+	url = https://github.com/lazyten/lazyten

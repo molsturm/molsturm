@@ -60,7 +60,7 @@ addons:
     packages:
       - ninja-build
       #
-      # Packages for linalgwrap
+      # Packages for lazyten
       - libarmadillo-dev
       - libboost-dev
       - liblapack-dev

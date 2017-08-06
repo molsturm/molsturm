@@ -24,14 +24,14 @@ provided that *all* of the following requirements are met:
 - To build the compiled part of the ``molsturm`` python module:
 	- [``swig``](http://swig.org/) >= 2.0.11
 	- [``python``](https://www.python.org/) >= 3.4, including the development headers
-- To build the [``linalgwrap``](https://linalgwrap.org) linear algebra library
+- To build the [``lazyten``](https://lazyten.org) linear algebra library
   you will need
 	- A BLAS implementation, e.g. [OpenBLAS](https://github.com/xianyi/OpenBLAS/)
 	- A LAPACK compatible library, e.g. [LAPACK](http://netlib.org/lapack)
 	- [armadillo](http://arma.sourceforge.net/)
 
-  See [github.com/linalgwrap/linalgwrap](https://github.com/linalgwrap/linalgwrap/blob/master/README.md)
-  for more details about ``linalgwrap``'s dependencies.
+  See [github.com/lazyten/lazyten](https://github.com/lazyten/lazyten/blob/master/README.md)
+  for more details about ``lazyten``'s dependencies.
 
 On a recent **Debian/Ubuntu** the following should install the required packages
 ```
