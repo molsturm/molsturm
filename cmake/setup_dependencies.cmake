@@ -39,13 +39,12 @@ Try \"git submodule update --init --recursive\"")
 		LIMIT_COUNT 1)
 	string(REGEX MATCH "[0-9.]+" ${LIBRARY}_VERSION "${VERSION_RAW}")
 
-# TODO due to inconsistency in linalgwrap/lazyten this check is disabled for now.
-#	# Compare against what is needed
-#	if("${${LIBRARY}_VERSION}" VERSION_LESS "${VERSION}")
-#		message(FATAL_ERROR "Inconsistency in the repo: Version ${VERSION} of ${LIBRARY} \
-#was requested, but only version ${${LIBRARY}_VERSION} was found. Maybe a \
-#\"git submodule update --init ${${LIBRARY}_SOURCE_DIR}\" helps?")
-#	endif()
+	# Compare against what is needed
+	if("${${LIBRARY}_VERSION}" VERSION_LESS "${VERSION}")
+		message(FATAL_ERROR "Inconsistency in the repo: Version ${VERSION} of ${LIBRARY} \
+was requested, but only version ${${LIBRARY}_VERSION} was found. Maybe a \
+\"git submodule update --init ${${LIBRARY}_SOURCE_DIR}\" helps?")
+	endif()
 
 	# Set the project up:
 	add_subdirectory("${${LIBRARY}_SOURCE_DIR}")
