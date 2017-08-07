@@ -22,7 +22,7 @@ endif()
 set(rapidcheck_TARGET rapidcheck)
 
 # Set option such that rapidcheck tests are built.
-set(RC_ENABLE_TESTS ON CACHE BOOL "Build RapidCheck tests")
+set(RC_ENABLE_TESTS ${ENABLE_TESTS} CACHE BOOL "Build RapidCheck tests")
 
 # Change compiler flags (CMAKE_CXX_FLAGS) to make fresh build config
 set(CMAKE_CXX_FLAGS_STORED_TMP ${CMAKE_CXX_FLAGS})
