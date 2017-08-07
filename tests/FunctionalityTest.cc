@@ -21,8 +21,8 @@
 #include <gint/IntegralLookup.hh>
 #include <gint/IntegralLookupKeys.hh>
 #include <gint/OrbitalType.hh>
-#include <linalgwrap/SmallMatrix.hh>
-#include <linalgwrap/TestingUtils.hh>
+#include <lazyten/SmallMatrix.hh>
+#include <lazyten/TestingUtils.hh>
 #include <molsturm/IopScf.hh>
 #include <molsturm/MolecularSystem.hh>
 #include <molsturm/RestrictedClosedIntegralOperator.hh>
@@ -32,7 +32,7 @@ namespace molsturm {
 namespace tests {
 using namespace gscf;
 using namespace gint;
-using namespace linalgwrap;
+using namespace lazyten;
 using namespace krims;
 
 TEST_CASE("HF functionality test", "[hf functionality]") {
@@ -156,7 +156,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
    * TODO the guess builder is currently pretty bad and unreliable
    *      ... so short circuit it here.
    *
-   * auto guess_bf_ptr = std::make_shared<linalgwrap::MultiVector<vector_type>>(
+   * auto guess_bf_ptr = std::make_shared<lazyten::MultiVector<vector_type>>(
    *    loewdin_guess(S_bb, n_eigenpairs));
    */
 
@@ -191,7 +191,7 @@ TEST_CASE("HF functionality test", "[hf functionality]") {
   // TODO For comparing all of them one needs to take rotations
   //      inside degenerate subspaces into account
   for (size_t i = 0; i < sys.n_alpha; ++i) {
-    linalgwrap::adjust_phase(evectors[i], evec_expected[i]);
+    lazyten::adjust_phase(evectors[i], evec_expected[i]);
     CHECK(evectors[i] == numcomp(evec_expected[i]).tolerance(100. * tolerance));
   }
 

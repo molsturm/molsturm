@@ -20,15 +20,14 @@
 #pragma once
 #include "IntegralOperatorBase.hh"
 #include <gint/IntegralUpdateKeys.hh>
-#include <linalgwrap/BlockDiagonalMatrix.hh>
+#include <lazyten/BlockDiagonalMatrix.hh>
 
 namespace molsturm {
 
 template <typename StoredMatrix,
-          typename BlockType = linalgwrap::LazyMatrixSum<StoredMatrix>>
-class UnrestrictedIntegralOperator
-      : public IntegralOperatorBase<StoredMatrix>,
-        public linalgwrap::BlockDiagonalMatrix<BlockType, 2> {
+          typename BlockType = lazyten::LazyMatrixSum<StoredMatrix>>
+class UnrestrictedIntegralOperator : public IntegralOperatorBase<StoredMatrix>,
+                                     public lazyten::BlockDiagonalMatrix<BlockType, 2> {
  public:
   typedef IntegralOperatorBase<StoredMatrix> base_type;
   typedef typename base_type::coefficients_ptr_type coefficients_ptr_type;
@@ -38,7 +37,7 @@ class UnrestrictedIntegralOperator
   typedef typename base_type::vector_type vector_type;
   typedef typename base_type::int_term_type int_term_type;
 
-  typedef typename linalgwrap::BlockDiagonalMatrix<
+  typedef typename lazyten::BlockDiagonalMatrix<
         BlockType, 2>::lazy_matrix_expression_ptr_type lazy_matrix_expression_ptr_type;
 
   constexpr bool restricted() const { return false; }
@@ -74,13 +73,13 @@ class UnrestrictedIntegralOperator
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of alpha
    * spin. */
-  std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+  std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
   terms_alpha() const override final;
 
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of beta
    * spin. */
-  std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+  std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
   terms_beta() const override final;
   ///@}
 
@@ -98,8 +97,8 @@ class UnrestrictedIntegralOperator
  private:
   //@{
   /** Types used to pass occupied coefficients to the exchange and coulomb parts */
-  typedef const linalgwrap::MultiVector<const vector_type> cocc_type;
-  typedef std::shared_ptr<const linalgwrap::MultiVector<const vector_type>> cocc_ptr_type;
+  typedef const lazyten::MultiVector<const vector_type> cocc_type;
+  typedef std::shared_ptr<const lazyten::MultiVector<const vector_type>> cocc_ptr_type;
   //@}
 
   /** The beta coulomb term
@@ -146,7 +145,7 @@ UnrestrictedIntegralOperator<StoredMatrix, BlockType>::UnrestrictedIntegralOpera
         // We need to initialise the BlockDiagonalMatrix with something,
         // which will later resemble the actual operator, so we will use
         // the first 1e term as a dummy here
-        linalgwrap::BlockDiagonalMatrix<BlockType, 2>{
+        lazyten::BlockDiagonalMatrix<BlockType, 2>{
               {{BlockType{integral_terms.integral_terms_1e[0]},
                 BlockType{integral_terms.integral_terms_1e[0]}}}},
         m_coul_bdens{integral_terms.coulomb_term},
@@ -204,7 +203,7 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_state(
   //
   // TODO Right now the only way to do this is by copying
 
-  linalgwrap::MultiVector<vector_type> reduced_coeff_bf(n_bas, n_alpha + n_beta, false);
+  lazyten::MultiVector<vector_type> reduced_coeff_bf(n_bas, n_alpha + n_beta, false);
   // Copy alpha-alpha block
   for (size_t v = 0; v < n_alpha; ++v) {
     std::copy(coeff_bf[v].begin(), coeff_bf[v].begin() + n_bas,
@@ -240,8 +239,8 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_operator(
   auto& exchge_adens = base_type::m_exchge_adens;  // Exchange from alpha density
 
   // Clear the current terms
-  blocka = linalgwrap::LazyMatrixSum<StoredMatrix>{};
-  blockb = linalgwrap::LazyMatrixSum<StoredMatrix>{};
+  blocka = lazyten::LazyMatrixSum<StoredMatrix>{};
+  blockb = lazyten::LazyMatrixSum<StoredMatrix>{};
 
   // Set up one-electron terms:
   auto itterm  = std::begin(base_type::m_terms_1e);
@@ -278,11 +277,11 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_operator(
 }
 
 template <typename StoredMatrix, typename BlockType>
-std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
 UnrestrictedIntegralOperator<StoredMatrix, BlockType>::terms_alpha() const {
   auto ret = base_type::terms_1e();
-  linalgwrap::LazyMatrixProduct<StoredMatrix> total_coul(base_type::m_coul_adens +
-                                                         m_coul_bdens);
+  lazyten::LazyMatrixProduct<StoredMatrix> total_coul(base_type::m_coul_adens +
+                                                      m_coul_bdens);
   ret.insert(std::make_pair(base_type::m_coul_adens.id(),
                             base_type::m_coeff_coul * total_coul));
   ret.insert(std::make_pair(base_type::m_exchge_adens.id(),
@@ -291,11 +290,11 @@ UnrestrictedIntegralOperator<StoredMatrix, BlockType>::terms_alpha() const {
 }
 
 template <typename StoredMatrix, typename BlockType>
-std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
 UnrestrictedIntegralOperator<StoredMatrix, BlockType>::terms_beta() const {
   auto ret = base_type::terms_1e();
-  linalgwrap::LazyMatrixProduct<StoredMatrix> total_coul(base_type::m_coul_adens +
-                                                         m_coul_bdens);
+  lazyten::LazyMatrixProduct<StoredMatrix> total_coul(base_type::m_coul_adens +
+                                                      m_coul_bdens);
   ret.insert(std::make_pair(base_type::m_coul_adens.id(),
                             base_type::m_coeff_coul * total_coul));
   ret.insert(std::make_pair(m_exchge_bdens.id(),  //

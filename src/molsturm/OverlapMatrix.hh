@@ -21,7 +21,7 @@
 #include "RestrictionType.hh"
 #include <gint/Integral.hh>
 #include <krims/TypeUtils/UsingLibrary.hh>
-#include <linalgwrap/BlockDiagonalMatrix.hh>
+#include <lazyten/BlockDiagonalMatrix.hh>
 
 namespace molsturm {
 
@@ -38,11 +38,11 @@ class OverlapMatrix {
 
 template <typename StoredMatrix>
 class OverlapMatrix<StoredMatrix, RestrictionType::Unrestricted>
-      : public linalgwrap::BlockDiagonalMatrix<gint::Integral<StoredMatrix>, 2> {
+      : public lazyten::BlockDiagonalMatrix<gint::Integral<StoredMatrix>, 2> {
  public:
   typedef gint::Integral<StoredMatrix> int_term_type;
   OverlapMatrix(int_term_type S_bb)
-        : linalgwrap::BlockDiagonalMatrix<int_term_type, 2>{{{S_bb, S_bb}}} {}
+        : lazyten::BlockDiagonalMatrix<int_term_type, 2>{{{S_bb, S_bb}}} {}
   const int_term_type& block_alpha() const { return this->diag_blocks()[0]; }
   const int_term_type& block_beta() const { return this->diag_blocks()[1]; }
 };

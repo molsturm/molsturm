@@ -78,7 +78,7 @@ endif()
 #-- Other libraries --#
 #######################
 
-add_submodule_dependency(krims 0.0.0)
-add_submodule_dependency(lazyten 0.2.0)
+add_submodule_dependency(krims 0.1.0)
+add_submodule_dependency(lazyten 0.3.0)
 add_submodule_dependency(gint 0.0.0)
-add_submodule_dependency(gscf 0.0.0)
+add_submodule_dependency(gscf 0.1.0)

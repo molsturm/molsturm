@@ -19,7 +19,7 @@
 
 #pragma once
 #include <gint/Integral.hh>
-#include <linalgwrap/Constants.hh>
+#include <lazyten/Constants.hh>
 
 namespace molsturm {
 
@@ -58,12 +58,12 @@ struct IntegralTermContainer {
   IntegralTermContainer(std::vector<int_term_type> integral_terms_1e_,
                         int_term_type coulomb_term_, int_term_type exchange_term_)
         : integral_terms_1e{std::move(integral_terms_1e_)},
-          coefficients_1e{std::vector<scalar_type>(
-                integral_terms_1e.size(), linalgwrap::Constants<scalar_type>::one)},
+          coefficients_1e{std::vector<scalar_type>(integral_terms_1e.size(),
+                                                   lazyten::Constants<scalar_type>::one)},
           coulomb_term{std::move(coulomb_term_)},
-          coefficient_coulomb{linalgwrap::Constants<scalar_type>::one},
+          coefficient_coulomb{lazyten::Constants<scalar_type>::one},
           exchange_term{std::move(exchange_term_)},
-          coefficient_exchange{-linalgwrap::Constants<scalar_type>::one} {}
+          coefficient_exchange{-lazyten::Constants<scalar_type>::one} {}
 };
 
 }  // namespace molsturm

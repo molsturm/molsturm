@@ -53,9 +53,9 @@ class ScfErrorLibrary {
 
 #ifdef DEBUG
     typedef typename OverlapMatrix::real_type real_type;
-    const real_type tol = 100 * linalgwrap::Constants<real_type>::default_tolerance;
-    assert_dbg(overlap_bb.is_symmetric(tol), linalgwrap::ExcMatrixNotSymmetric());
-    assert_dbg(fock_bb.is_symmetric(tol), linalgwrap::ExcMatrixNotSymmetric());
+    const real_type tol = 100 * lazyten::Constants<real_type>::default_tolerance;
+    assert_dbg(overlap_bb.is_symmetric(tol), lazyten::ExcMatrixNotSymmetric());
+    assert_dbg(fock_bb.is_symmetric(tol), lazyten::ExcMatrixNotSymmetric());
 #endif
 
     // Lambda to compute the error for a block (alpha-alpha or beta-beta)

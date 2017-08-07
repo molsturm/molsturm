@@ -36,7 +36,7 @@ typedef GuessAlgorithmsKeysBase GuessExtendedHueckelKeys;
  * \throws ExcObtainingScfGuessFailed if obtaining the guess failed.
  */
 template <typename IntegralOperator, typename OverlapMatrix>
-linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_extended_hueckel(
+lazyten::EigensolutionTypeFor<true, IntegralOperator> guess_extended_hueckel(
       const MolecularSystem& system, const IntegralOperator& fock_bb,
       const OverlapMatrix& S_bb, const krims::GenMap& params) {
 
@@ -54,7 +54,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_extended_hueckel(
   (void)S_bb;
   (void)params;
 
-  return linalgwrap::EigensolutionTypeFor<true, IntegralOperator>{};
+  return lazyten::EigensolutionTypeFor<true, IntegralOperator>{};
 }
 
 }  // namespace molsturm

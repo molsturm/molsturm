@@ -45,7 +45,7 @@ struct ScfGuessKeys : public GuessAlgorithmsKeysBase {
  * Keys object or their function documentation for details.
  */
 template <typename IntegralOperator, typename OverlapMatrix>
-linalgwrap::EigensolutionTypeFor<true, IntegralOperator> scf_guess(
+lazyten::EigensolutionTypeFor<true, IntegralOperator> scf_guess(
       const MolecularSystem& system, const IntegralOperator& fock_bb,
       const OverlapMatrix& S_bb, const krims::GenMap& params = krims::GenMap{}) {
   const std::string method = params.at<std::string>(ScfGuessKeys::method, "hcore");
@@ -66,7 +66,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> scf_guess(
     assert_throw(false, ExcInvalidScfGuessParametersEncountered(
                               "The method '" + method +
                               "' is not known. Did you spell it wrong?"));
-    return linalgwrap::EigensolutionTypeFor<true, IntegralOperator>{};
+    return lazyten::EigensolutionTypeFor<true, IntegralOperator>{};
   }
 }
 

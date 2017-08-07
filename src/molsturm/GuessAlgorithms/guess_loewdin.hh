@@ -40,10 +40,10 @@ typedef GuessAlgorithmsKeysBase GuessLoewdinKeys;
  * \throws ExcObtainingScfGuessFailed if obtaining the guess failed.
  */
 template <typename IntegralOperator, typename OverlapMatrix>
-linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_loewdin(
+lazyten::EigensolutionTypeFor<true, IntegralOperator> guess_loewdin(
       const MolecularSystem& /*system*/, const IntegralOperator& fock_bb,
       const OverlapMatrix& S_bb, const krims::GenMap& params) {
-  using namespace linalgwrap;
+  using namespace lazyten;
 
   // apply Löwdin normalisation to the basis functions
   //   - Diagonalise the overlap

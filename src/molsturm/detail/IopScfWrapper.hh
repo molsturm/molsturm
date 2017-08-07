@@ -24,7 +24,7 @@
 #include "molsturm/ScfMsgType.hh"
 #include <iostream>
 #include <iterator>
-#include <linalgwrap/Constants.hh>
+#include <lazyten/Constants.hh>
 
 namespace molsturm {
 namespace detail {
@@ -64,8 +64,8 @@ class IopScfStateWrapper /*final*/ : public InnerState {
   IopScfStateWrapper(probmat_type probmat, const overlap_type& overlap_mat,
                      size_t n_iter_offset = 0)
         : base_type{std::move(probmat), overlap_mat},
-          last_step_tot_energy{linalgwrap::Constants<real_type>::invalid},
-          last_step_1e_energy{linalgwrap::Constants<real_type>::invalid},
+          last_step_tot_energy{lazyten::Constants<real_type>::invalid},
+          last_step_1e_energy{lazyten::Constants<real_type>::invalid},
           m_n_iter_offset(n_iter_offset) {}
 
   /** Move the most recently obtained error values from another state */
@@ -127,7 +127,7 @@ class IopScfWrapper /*final*/ : public InnerScf {
    * All indicates to never switch to another solver and finish
    * the SCF with the one which is currently running.
    **/
-  size_t run_until_iter = linalgwrap::Constants<size_t>::all;
+  size_t run_until_iter = lazyten::Constants<size_t>::all;
 
   /** Check convergence */
   bool is_converged(const state_type& state) const override;

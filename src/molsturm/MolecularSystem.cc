@@ -34,7 +34,7 @@ MolecularSystem::MolecularSystem(gint::Structure structure_, double charge_,
 
   // Twice the total spin (i.e. the multiplicity reduced by one)
   const size_t spin_twice = [&multiplicity_, &n_elec_count]() {
-    if (multiplicity_ == linalgwrap::Constants<size_t>::invalid) {
+    if (multiplicity_ == lazyten::Constants<size_t>::invalid) {
       // Set to 0 if even number of electrons and 1 if odd
       // equals multiplicities 1 and 2, respectively
       return n_elec_count % 2 == 0 ? size_t(0) : size_t(1);
@@ -43,10 +43,9 @@ MolecularSystem::MolecularSystem(gint::Structure structure_, double charge_,
     }
   }();
 
-  assert_throw(
-        multiplicity_ == linalgwrap::Constants<size_t>::invalid || multiplicity_ > 0,
-        ExcInvalidMultiplicity(multiplicity_,
-                               "The multiplicity needs to be a positive number."));
+  assert_throw(multiplicity_ == lazyten::Constants<size_t>::invalid || multiplicity_ > 0,
+               ExcInvalidMultiplicity(multiplicity_,
+                                      "The multiplicity needs to be a positive number."));
   assert_throw(
         spin_twice <= n_elec_count,
         ExcInvalidMultiplicity(
@@ -75,7 +74,7 @@ MolecularSystem::MolecularSystem(gint::Structure structure_, double charge_,
   n_beta  = n_elec_count - n_alpha;
 
   // Check that this makes sense
-  if (multiplicity_ == linalgwrap::Constants<size_t>::invalid) {
+  if (multiplicity_ == lazyten::Constants<size_t>::invalid) {
     assert_internal((n_alpha - n_beta) == spin_twice);
   } else {
     assert_internal((n_alpha - n_beta) + 1 == multiplicity_);
