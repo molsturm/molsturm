@@ -34,13 +34,6 @@ drb_add_executable(molsturm_tests
 	FILES ${MOLSTURM_TESTS_SOURCES}
 )
 
-drb_target_compile_definitions(ALL     molsturm_tests
-	PRIVATE ${MOLSTURM_DEFINITIONS})
-drb_target_compile_definitions(DEBUG   molsturm_tests
-	PRIVATE ${MOLSTURM_DEFINITIONS_DEBUG})
-drb_target_compile_definitions(RELEASE molsturm_tests
-	PRIVATE ${MOLSTURM_DEFINITIONS_RELEASE})
-
 drb_target_link_libraries(ALL     molsturm_tests
 	${MOLSTURM_DEPENDENCIES} ${MOLSTURM_DEPENDENCIES_TEST})
 drb_target_link_libraries(DEBUG   molsturm_tests

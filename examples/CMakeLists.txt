@@ -24,6 +24,11 @@ function(setup_example_target TARGET)
 	# if this version is available
 	# Supply PREFER_DEBUG as ARGV1 if you want to have the opposite
 	# preference
+	#
+	# Use this function like
+	#    add_executable(test test.cc main.cc)
+	#    setup_example_target(test)
+	#
 
 	# Select build type for example target:
 	if ("${ARGV1}" STREQUAL "PREFER_DEBUG" AND CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -45,15 +50,8 @@ function(setup_example_target TARGET)
 		COMPILE_DEFINITIONS "${EXAMPLE_BUILD_TYPE}"
 	)
 
-	# setup definitions.
-	target_compile_definitions(${TARGET} PRIVATE "${MOLSTURM_DEFINITIONS};${MOLSTURM_DEFINITIONS_${EXAMPLES_BUILD_TYPE}}")
-
 	# link it with the appropriate molsturm library target
-	target_link_libraries(${TARGET}
-		${molsturm_${EXAMPLE_BUILD_TYPE}_TARGET}
-		${MOLSTURM_DEPENDENCIES}
-		${MOLSTURM_DEPENDENCIES_${EXAMPLE_BUILD_TYPE}}
-	)
+	target_link_libraries(${TARGET} ${molsturm_${EXAMPLE_BUILD_TYPE}_TARGET})
 endfunction()
 
 # Include subdirectories:

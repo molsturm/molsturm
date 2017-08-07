@@ -5,10 +5,6 @@
 #       MOLSTURM_DEPENDENCIES_RELEASE		release mode needs these extras
 #       MOLSTURM_DEPENDENCIES_TEST		tests need these extra libraries
 #
-#       MOLSTURM_DEFINITIONS			definitions for all compilation
-#       MOLSTURM_DEFINITIONS_DEBUG		definitions for debug mode
-#       MOLSTURM_DEFINITIONS_RELEASE		definitions for release mode
-#
 
 ####################
 #-- Empty it all --#
@@ -17,9 +13,6 @@ set(MOLSTURM_DEPENDENCIES "")
 set(MOLSTURM_DEPENDENCIES_DEBUG "")
 set(MOLSTURM_DEPENDENCIES_RELEASE "")
 set(MOLSTURM_DEPENDENCIES_TEST "")
-set(MOLSTURM_DEFINITIONS "")
-set(MOLSTURM_DEFINITIONS_DEBUG "")
-set(MOLSTURM_DEFINITIONS_RELEASE "")
 
 ##############
 #-- Macros --#
