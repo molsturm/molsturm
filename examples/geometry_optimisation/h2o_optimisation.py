@@ -26,47 +26,50 @@ import scipy.optimize
 import molsturm
 import molsturm.posthf
 
-method = "hf"
-basis = "sto-3g"
-params = {
-  "atoms":         [ "O", "H", "H" ],
-  "basis_type":    "gaussian/libint",
-  "conv_tol":      1e-7,
-}
-recent_hf_res = None
+def optimize_geometry(geometryfctn, geometry_params_guess, conv_tol,
+                      level="hf", **params):
+  # Start from hcore guess
+  recent_hf_res = "hcore"
+  recent_hf_res_for_args = None
 
+  # The function to minimise
+  def objective_function(args):
+    nonlocal recent_hf_res
+    nonlocal recent_hf_res_for_args
 
-def objective_function(r_theta):
-  global recent_hf_res
+    hfparams = params
+    hfparams["conv_tol"] = conv_tol / 10
+    hfparams["atoms"], hfparams["coords"] = geometryfctn(args)
+    hfparams["export_repulsion_integrals"] = level != "hf"
 
-  r, theta = r_theta
-  print("r == ", r, " theta == ", theta)
-  coords = [
-    (0,0,0),
-    (r,0,0),
-    (r*np.cos(theta), r*np.sin(theta), 0),
-  ]
+    res = molsturm.hartree_fock(**hfparams, guess=recent_hf_res)
+    print("arguments: ", args, "niter:", res["n_iter"])
 
-  if recent_hf_res:
-    guess = recent_hf_res
-  else:
-    guess = "hcore"
+    # Update the hf_res but only if it differs enough
+    if recent_hf_res_for_args is None or \
+       np.max(np.abs(np.array(recent_hf_res_for_args) - np.array(args))) > conv_tol:
+      recent_hf_res_for_args = args
+      recent_hf_res = res
+      print("  -> guess update")
 
-  if method == "hf":
-    res = molsturm.hartree_fock(**params, coords=coords, guess=guess, basis_set=basis)
-    return res["energy_ground_state"]
-  elif method == "mp2":
-    res = molsturm.hartree_fock(**params, export_repulsion_integrals=True,
-                                coords=coords, guess=guess, basis_set=basis)
-    res = molsturm.posthf.mp2(res)
-    return res["energy_ground_state"]
-  else:
-    raise NotImplementedError("Level of theory not yet implemented")
-  recent_hf_res = res
+    if level == "hf":
+      return res["energy_ground_state"]
+    elif level == "mp2":
+      res = molsturm.posthf.mp2(res)
+      return res["energy_ground_state"]
+    else:
+      raise NotImplementedError("Level of theory not yet implemented")
 
-def run():
-  res = scipy.optimize.minimize(objective_function, (1.3, 105), tol=1e-6)
+  res = scipy.optimize.minimize(objective_function, geometry_params_guess, tol=conv_tol)
   print(res)
 
+
+def optimize_h2o(rHO_guess, angHO_guess, conv_tol, level="hf", **params):
+  def geometry(r_theta):
+    r, theta = r_theta
+    return [ "O", "H", "H" ], [ (0,0,0), (r,0,0), (r*np.cos(theta), r*np.sin(theta), 0) ]
+  return optimize_geometry(geometry, (rHO_guess, angHO_guess), conv_tol, level, **params)
+
 if __name__ == "__main__":
-  run()
+  params = { "basis_type": "gaussian/libint", "basis_set": "def2-sv(p)" }
+  optimize_h2o(1.6, 105, conv_tol=1e-7, level="hf", **params)
