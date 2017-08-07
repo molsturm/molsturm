@@ -22,7 +22,7 @@
 #include "MolecularSystem.hh"
 #include "energy_nuclear_repulsion.hh"
 #include <gscf/FocklikeMatrix_i.hh>
-#include <linalgwrap/LazyMatrix_i.hh>
+#include <lazyten/LazyMatrix_i.hh>
 #include <map>
 
 namespace molsturm {
@@ -37,7 +37,7 @@ class IntegralOperatorBase
 
   /** Type of the coefficients and the pointer to the coefficients
    *  used inside the operator */
-  typedef const linalgwrap::MultiVector<vector_type> coefficients_type;
+  typedef const lazyten::MultiVector<vector_type> coefficients_type;
   typedef std::shared_ptr<coefficients_type> coefficients_ptr_type;
 
   //! Type of a integral term
@@ -108,13 +108,13 @@ class IntegralOperatorBase
    *       the dimensionality of the returned matrix object is identical
    *       to the dimensionality of terms_alpha and terms_beta.
    * */
-  virtual std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+  virtual std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
   terms_1e() const;
 
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of alpha
    * spin. */
-  virtual std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+  virtual std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
   terms_alpha() const = 0;
 
   // TODO it would be really great to have a better interface
@@ -123,7 +123,7 @@ class IntegralOperatorBase
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of beta
    * spin. */
-  virtual std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+  virtual std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
   terms_beta() const = 0;
 
  protected:
@@ -270,7 +270,7 @@ IntegralOperatorBase<StoredMatrix>::energy_1e_terms() const {
   // We use the collection integral_terms_1e to obtain the ids of the 1e terms
   // than we sum them all
 
-  scalar_type sum = linalgwrap::Constants<scalar_type>::zero;
+  scalar_type sum = lazyten::Constants<scalar_type>::zero;
   for (auto& term : m_terms_1e) {
     sum += m_energies.at(term.id());
   }
@@ -278,9 +278,9 @@ IntegralOperatorBase<StoredMatrix>::energy_1e_terms() const {
 }
 
 template <typename StoredMatrix>
-std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
 IntegralOperatorBase<StoredMatrix>::terms_1e() const {
-  using linalgwrap::LazyMatrixProduct;
+  using lazyten::LazyMatrixProduct;
   std::map<gint::IntegralIdentifier, LazyMatrixProduct<StoredMatrix>> ret;
 
   auto itterm  = std::begin(m_terms_1e);

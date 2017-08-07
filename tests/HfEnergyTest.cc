@@ -20,8 +20,8 @@
 #include <catch.hpp>
 #include <gint/IntegralLookup.hh>
 #include <gint/OrbitalType.hh>
-#include <linalgwrap/SmallMatrix.hh>
-#include <linalgwrap/TestingUtils.hh>
+#include <lazyten/SmallMatrix.hh>
+#include <lazyten/TestingUtils.hh>
 #include <molsturm/FockOperator.hh>
 #include <molsturm/IopScf.hh>
 #include <molsturm/OverlapMatrix.hh>
@@ -30,7 +30,7 @@
 #ifdef GINT_HAVE_LIBINT
 namespace molsturm {
 namespace tests {
-using namespace linalgwrap;
+using namespace lazyten;
 using namespace krims;
 
 //

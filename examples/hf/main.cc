@@ -28,9 +28,9 @@
 #include <gint/version.hh>
 #include <gscf/version.hh>
 #include <iostream>
-#include <linalgwrap/SmallMatrix.hh>
-#include <linalgwrap/io.hh>
-#include <linalgwrap/version.hh>
+#include <lazyten/SmallMatrix.hh>
+#include <lazyten/io.hh>
+#include <lazyten/version.hh>
 #include <molsturm/FockOperator.hh>
 #include <molsturm/IopScf.hh>
 #include <molsturm/IopScfKeys.hh>
@@ -46,7 +46,7 @@ DefException1(
 
 namespace hf {
 using namespace molsturm;
-using namespace linalgwrap;
+using namespace lazyten;
 using namespace krims;
 
 /** Print the resulting eigenstates */
@@ -169,7 +169,7 @@ void run_hf(args_type args, bool debug = false) {
 
   if (debug) {
     std::ofstream mathematicafile("/tmp/debug_molsturm_rhf_sturmian.m");
-    auto debugout = linalgwrap::io::make_writer<linalgwrap::io::Mathematica, scalar_type>(
+    auto debugout = lazyten::io::make_writer<lazyten::io::Mathematica, scalar_type>(
           mathematicafile, 1e-20);
     debugout.write("guess", guess.evectors());
     debugout.write("sbb", S_bb);
@@ -189,11 +189,10 @@ void run_hf(args_type args, bool debug = false) {
 }
 
 int main(int argc, char** argv) {
-  std::cout << "molsturm version:   " << molsturm::Version::as_string() << std::endl
-            << "gscf version:       " << gscf::version::version_string() << std::endl
-            << "gint version:       " << gint::version::version_string() << std::endl
-            << "linalgwrap version: " << linalgwrap::version::version_string()
-            << std::endl;
+  std::cout << "molsturm version: " << molsturm::Version::as_string() << std::endl
+            << "gscf version:     " << gscf::version::version_string() << std::endl
+            << "gint version:     " << gint::version::version_string() << std::endl
+            << "lazyten version:  " << lazyten::version::version_string() << std::endl;
 
   args_type args;
   if (!parse_args(argc, argv, args)) return 1;

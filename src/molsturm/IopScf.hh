@@ -25,7 +25,7 @@
 
 namespace molsturm {
 
-// TODO Maybe a common base between this guy and linalgwrap's EigensystemSolver is
+// TODO Maybe a common base between this guy and lazyten's EigensystemSolver is
 // sensible?
 
 template <typename ProblemMatrix, typename OverlapMatrix>
@@ -45,7 +45,7 @@ struct IopScfState final : public gscf::ScfStateBase<ProblemMatrix, OverlapMatri
   }
 
   /** The orbital coefficients of the SCF */
-  const linalgwrap::MultiVector<vector_type>& orbital_coeff() const {
+  const lazyten::MultiVector<vector_type>& orbital_coeff() const {
     return base_type::eigensolution().evectors();
   }
 
@@ -85,8 +85,8 @@ struct IopScfState final : public gscf::ScfStateBase<ProblemMatrix, OverlapMatri
     m_n_iter = other_state.n_iter();
     m_n_mtx_applies += other_state.n_mtx_applies();
 
-    static_cast<linalgwrap::SolverStateBase&>(*this) =
-          static_cast<linalgwrap::SolverStateBase&&>(other_state);
+    static_cast<lazyten::SolverStateBase&>(*this) =
+          static_cast<lazyten::SolverStateBase&&>(other_state);
   }
 
   size_t n_iter() const override { return m_n_iter; }
@@ -215,7 +215,7 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
    */
   template <typename WrappedSolver>
   void solve_up_to(state_type& s, real_type error,
-                   size_t run_until_iter = linalgwrap::Constants<size_t>::all) const;
+                   size_t run_until_iter = lazyten::Constants<size_t>::all) const;
 
   /** Cache of the parameters which will be passed to the actual SCF.
    *
@@ -278,7 +278,7 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_up_to(state_type& state,
   try {
     inner_solver.solve_state(inner_state);
     state.push_intermediate_results(std::move(inner_state));
-  } catch (linalgwrap::SolverException& e) {
+  } catch (lazyten::SolverException& e) {
     // On exception still update the state reference
     state.push_intermediate_results(std::move(inner_state));
     throw;
@@ -404,7 +404,7 @@ void IopScf<IntegralOperator, OverlapMatrix>::on_converged(state_type& s) const 
     }
 
     // Store original precision:
-    linalgwrap::io::OstreamState outstate(std::cout);
+    lazyten::io::OstreamState outstate(std::cout);
 
     // Print energy terms
     std::cout << ind << std::left << std::setw(friendly_label_size) << nuc_rep_label

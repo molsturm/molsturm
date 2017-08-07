@@ -18,7 +18,7 @@
 //
 
 #pragma once
-#include <linalgwrap/io.hh>
+#include <lazyten/io.hh>
 
 namespace molsturm {
 
@@ -36,7 +36,7 @@ class ScfDebugWrapper : public InnerScf {
   typedef typename scf_type::state_type state_type;
   typedef typename scf_type::vector_type vector_type;
 
-  ScfDebugWrapper(linalgwrap::io::DataWriter_i<scalar_type>& writer,
+  ScfDebugWrapper(lazyten::io::DataWriter_i<scalar_type>& writer,
                   const InnerScf& innerscf)
         : scf_type(innerscf), m_writer(writer) {}
 
@@ -60,7 +60,7 @@ class ScfDebugWrapper : public InnerScf {
     assert_throw(m_writer, krims::ExcIO());
     m_writer.write(
           "evals" + std::to_string(s.n_iter()),
-          linalgwrap::make_as_multivector<vector_type>(s.eigensolution().evalues()));
+          lazyten::make_as_multivector<vector_type>(s.eigensolution().evalues()));
 
     auto tmp_copy =
           s.eigensolution().evectors();  // TODO right now we need this. Get rid later.
@@ -107,7 +107,7 @@ class ScfDebugWrapper : public InnerScf {
     assert_throw(m_writer, krims::ExcIO());
   }
 
-  linalgwrap::io::DataWriter_i<scalar_type>& m_writer;
+  lazyten::io::DataWriter_i<scalar_type>& m_writer;
 };
 
 }  // namespace molsturm

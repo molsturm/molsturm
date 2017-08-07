@@ -21,8 +21,8 @@
 #include "GuessAlgorithmsKeysBase.hh"
 #include <gint/IntegralType.hh>
 #include <gscf/FocklikeMatrix_i.hh>
-#include <linalgwrap/eigensystem.hh>
-#include <linalgwrap/rescue.hh>
+#include <lazyten/eigensystem.hh>
+#include <lazyten/rescue.hh>
 #include <molsturm/MolecularSystem.hh>
 
 namespace molsturm {
@@ -58,7 +58,7 @@ Solution make_block_diagonal(const Solution& solution_alpha,
   assert_size(n_orbs, evecs_beta.n_vectors());
   assert_size(n_bas, evecs_beta.n_elem());
 
-  linalgwrap::MultiVector<evector_type> guess(2 * n_bas, 2 * n_orbs);
+  lazyten::MultiVector<evector_type> guess(2 * n_bas, 2 * n_orbs);
   for (size_t f = 0; f < n_orbs; ++f) {
     std::copy(evecs_alpha[f].begin(), evecs_alpha[f].end(), guess[f].begin());
     std::copy(evecs_beta[f].begin(), evecs_beta[f].end(),

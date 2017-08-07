@@ -20,11 +20,11 @@
 #pragma once
 #include "IntegralTermContainer.hh"
 #include <functional>
-#include <linalgwrap/Constants.hh>
-#include <linalgwrap/LazyMatrixExpression.hh>
-#include <linalgwrap/LazyMatrix_i.hh>
-#include <linalgwrap/SubscriptionPointer.hh>
-#include <linalgwrap/view.hh>
+#include <lazyten/Constants.hh>
+#include <lazyten/LazyMatrixExpression.hh>
+#include <lazyten/LazyMatrix_i.hh>
+#include <lazyten/SubscriptionPointer.hh>
+#include <lazyten/view.hh>
 #include <map>
 
 namespace molsturm {
@@ -32,9 +32,9 @@ namespace molsturm {
 // This was a try for a generalisation of the RestrictedClosedIntegralOperator
 // to a general restricted operator.
 template <typename StoredMatrix>
-class RestrictedIntegralOperator : public linalgwrap::LazyMatrix_i<StoredMatrix> {
+class RestrictedIntegralOperator : public lazyten::LazyMatrix_i<StoredMatrix> {
  public:
-  typedef linalgwrap::LazyMatrix_i<StoredMatrix> base_type;
+  typedef lazyten::LazyMatrix_i<StoredMatrix> base_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::stored_matrix_type stored_matrix_type;
   typedef typename base_type::size_type size_type;
@@ -47,7 +47,7 @@ class RestrictedIntegralOperator : public linalgwrap::LazyMatrix_i<StoredMatrix>
   // TODO this is really bad, since it is a type which is only defined in
   // the detail namespace
   //! Type of a scale view to an integral term
-  typedef linalgwrap::view::detail::ScaleView<int_term_type> scaled_int_term_type;
+  typedef lazyten::view::detail::ScaleView<int_term_type> scaled_int_term_type;
 
   /** \name Construct a Fock/Kohn-Sham operator for a restricted calculation
    *
@@ -94,7 +94,7 @@ class RestrictedIntegralOperator : public linalgwrap::LazyMatrix_i<StoredMatrix>
    * It expects the new coefficients under the parameter key
    * "evec_coefficients"
    */
-  void update(const linalgwrap::GenMap& map) override;
+  void update(const lazyten::GenMap& map) override;
 
   /* \name Access to energies and individual terms */
   ///@{
@@ -170,7 +170,7 @@ class RestrictedIntegralOperator : public linalgwrap::LazyMatrix_i<StoredMatrix>
    * the same state, as copying views is just creating another
    * view to exactly the same object.
    * */
-  linalgwrap::LazyMatrixSum<stored_matrix_type> m_operator;
+  lazyten::LazyMatrixSum<stored_matrix_type> m_operator;
 
   /** Number of alpha electrons */
   const size_type m_n_alpha;
@@ -199,7 +199,7 @@ RestrictedIntegralOperator<StoredMatrix>::RestrictedIntegralOperator(
         m_operator{},
         m_n_alpha{n_alpha},
         m_energies{} {
-  using namespace linalgwrap;
+  using namespace lazyten;
 
   // Check that alpha is greater-equal to beta:
   assert_greater_equal(n_beta, n_alpha);
@@ -296,7 +296,7 @@ RestrictedIntegralOperator<StoredMatrix>::clone() const {
 }
 
 template <typename StoredMatrix>
-void RestrictedIntegralOperator<StoredMatrix>::update(const linalgwrap::GenMap& map) {
+void RestrictedIntegralOperator<StoredMatrix>::update(const lazyten::GenMap& map) {
   // The coefficient key we look for:
   const std::string coeff_key("evec_coefficients");
 
@@ -310,7 +310,7 @@ void RestrictedIntegralOperator<StoredMatrix>::update(const linalgwrap::GenMap& 
 template <typename StoredMatrix>
 void RestrictedIntegralOperator<StoredMatrix>::update_state_and_energies(
       const stored_matrix_type& coefficients_bf) {
-  using namespace linalgwrap;
+  using namespace lazyten;
 
   //
   // Occupied alpha and beta states in parameter maps:
@@ -393,7 +393,7 @@ RestrictedIntegralOperator<StoredMatrix>::energy_1e_terms() const {
   // We use the collection integral_terms_1e to obtain the ids of the 1e terms
   // than we sum them all
 
-  scalar_type sum = linalgwrap::Constants<scalar_type>::zero;
+  scalar_type sum = lazyten::Constants<scalar_type>::zero;
   for (auto& term : m_terms_1e) {
     sum += m_energies[term.id()];
   }
@@ -410,7 +410,7 @@ template <typename StoredMatrix>
 std::map<std::string,
          typename RestrictedIntegralOperator<StoredMatrix>::scaled_int_term_type>
 RestrictedIntegralOperator<StoredMatrix>::terms_alpha() const {
-  using namespace linalgwrap;
+  using namespace lazyten;
 
   assert_implemented(m_n_beta == m_n_alpha);
 

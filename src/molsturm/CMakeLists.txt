@@ -45,10 +45,6 @@ drb_set_target_properties(
 	VERSION "${PROJECT_VERSION}"
 )
 
-drb_target_compile_definitions(ALL     molsturm PUBLIC ${MOLSTURM_DEFINITIONS})
-drb_target_compile_definitions(DEBUG   molsturm PUBLIC ${MOLSTURM_DEFINITIONS_DEBUG})
-drb_target_compile_definitions(RELEASE molsturm PUBLIC ${MOLSTURM_DEFINITIONS_RELEASE})
-
 drb_target_link_libraries(ALL     molsturm ${MOLSTURM_DEPENDENCIES})
 drb_target_link_libraries(DEBUG   molsturm ${MOLSTURM_DEPENDENCIES_DEBUG})
 drb_target_link_libraries(RELEASE molsturm ${MOLSTURM_DEPENDENCIES_RELEASE})

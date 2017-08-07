@@ -128,16 +128,14 @@ script:
   # Configure and build.
   - mkdir ${TRAVIS_BUILD_DIR}/build && cd ${TRAVIS_BUILD_DIR}/build
   - cmake -DCMAKE_CXX_COMPILER=${CXX_COMP} -DCMAKE_C_COMPILER=${CC_COMP}
-           -DCMAKE_BUILD_TYPE=DebugRelease ${EXTRA_OPTS}
+           -DCMAKE_BUILD_TYPE=DebugRelease
            -DAUTOCHECKOUT_MISSING_REPOS=ON
+           -DENABLE_EXAMPLES=OFF -DMOLSTURM_ENABLE_EXAMPLES=ON
+           -DENABLE_TESTS=OFF -DMOLSTURM_ENABLE_TESTS=ON
            -DRC_ENABLE_TESTS=OFF
-           -DKRIMS_ENABLE_TESTS=OFF -DKRIMS_ENABLE_EXAMPLES=OFF
-           -DLINALGWRAP_ENABLE_TESTS=OFF -DLINALGWRAP_ENABLE_EXAMPLES=OFF
-           -DGSCF_ENABLE_TESTS=OFF -DGSCF_ENABLE_EXAMPLES=OFF
-           -DGINT_ENABLE_TESTS=OFF -DGINT_ENABLE_EXAMPLES=OFF
            -DGINT_ENABLE_STATIC_INTEGRALS=ON
            -DGINT_ENABLE_LIBINT=ON ${LIBINT_OPTS}
-           ${GEN_OPTS} ..
+           ${EXTRA_OPTS} ${GEN_OPTS} ..
   - cmake --build  . --target ${BUILD_TARGET:-all} -- -j ${CORES}
   - if [ "${TESTS}" != "0" ]; then
         ctest -j ${CORES} --output-on-failure -R "${TESTS_REGEX}"

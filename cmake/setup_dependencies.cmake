@@ -5,10 +5,6 @@
 #       MOLSTURM_DEPENDENCIES_RELEASE		release mode needs these extras
 #       MOLSTURM_DEPENDENCIES_TEST		tests need these extra libraries
 #
-#       MOLSTURM_DEFINITIONS			definitions for all compilation
-#       MOLSTURM_DEFINITIONS_DEBUG		definitions for debug mode
-#       MOLSTURM_DEFINITIONS_RELEASE		definitions for release mode
-#
 
 ####################
 #-- Empty it all --#
@@ -17,9 +13,6 @@ set(MOLSTURM_DEPENDENCIES "")
 set(MOLSTURM_DEPENDENCIES_DEBUG "")
 set(MOLSTURM_DEPENDENCIES_RELEASE "")
 set(MOLSTURM_DEPENDENCIES_TEST "")
-set(MOLSTURM_DEFINITIONS "")
-set(MOLSTURM_DEFINITIONS_DEBUG "")
-set(MOLSTURM_DEFINITIONS_RELEASE "")
 
 ##############
 #-- Macros --#
@@ -39,13 +32,12 @@ Try \"git submodule update --init --recursive\"")
 		LIMIT_COUNT 1)
 	string(REGEX MATCH "[0-9.]+" ${LIBRARY}_VERSION "${VERSION_RAW}")
 
-# TODO due to inconsistency in linalgwrap/lazyten this check is disabled for now.
-#	# Compare against what is needed
-#	if("${${LIBRARY}_VERSION}" VERSION_LESS "${VERSION}")
-#		message(FATAL_ERROR "Inconsistency in the repo: Version ${VERSION} of ${LIBRARY} \
-#was requested, but only version ${${LIBRARY}_VERSION} was found. Maybe a \
-#\"git submodule update --init ${${LIBRARY}_SOURCE_DIR}\" helps?")
-#	endif()
+	# Compare against what is needed
+	if("${${LIBRARY}_VERSION}" VERSION_LESS "${VERSION}")
+		message(FATAL_ERROR "Inconsistency in the repo: Version ${VERSION} of ${LIBRARY} \
+was requested, but only version ${${LIBRARY}_VERSION} was found. Maybe a \
+\"git submodule update --init ${${LIBRARY}_SOURCE_DIR}\" helps?")
+	endif()
 
 	# Set the project up:
 	add_subdirectory("${${LIBRARY}_SOURCE_DIR}")
@@ -79,7 +71,7 @@ endif()
 #-- Other libraries --#
 #######################
 
-add_submodule_dependency(krims 0.0.0)
-add_submodule_dependency(lazyten 0.2.0)
+add_submodule_dependency(krims 0.1.0)
+add_submodule_dependency(lazyten 0.3.0)
 add_submodule_dependency(gint 0.0.0)
-add_submodule_dependency(gscf 0.0.0)
+add_submodule_dependency(gscf 0.1.0)

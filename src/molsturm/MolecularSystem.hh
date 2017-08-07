@@ -19,7 +19,7 @@
 
 #pragma once
 #include <gint/Structure.hh>
-#include <linalgwrap/Constants.hh>
+#include <lazyten/Constants.hh>
 
 namespace molsturm {
 
@@ -71,7 +71,7 @@ struct MolecularSystem {
    * If the charge is missing 0 is assumed.
    */
   explicit MolecularSystem(gint::Structure structure_, double charge_ = 0.,
-                           size_t multiplicity_ = linalgwrap::Constants<size_t>::invalid);
+                           size_t multiplicity_ = lazyten::Constants<size_t>::invalid);
 };
 
 }  // namespace molsturm

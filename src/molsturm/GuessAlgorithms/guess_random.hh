@@ -19,8 +19,8 @@
 
 #pragma once
 #include "common.hh"
-#include <linalgwrap/ortho.hh>
-#include <linalgwrap/random.hh>
+#include <lazyten/ortho.hh>
+#include <lazyten/random.hh>
 
 namespace molsturm {
 
@@ -36,11 +36,11 @@ struct GuessRandomKeys {};
  * \throws ExcObtainingScfGuessFailed if obtaining the guess failed.
  */
 template <typename IntegralOperator, typename OverlapMatrix>
-linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_random(
+lazyten::EigensolutionTypeFor<true, IntegralOperator> guess_random(
       const MolecularSystem& /*system*/, const IntegralOperator& fock_bb,
       const OverlapMatrix& S_bb, const krims::GenMap& /* params */) {
-  using linalgwrap::random;
-  using linalgwrap::ortho;
+  using lazyten::random;
+  using lazyten::ortho;
 
   typedef typename IntegralOperator::stored_matrix_type stored_matrix_type;
   typedef typename stored_matrix_type::vector_type vector_type;
@@ -55,13 +55,13 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_random(
   const auto& Sa_bb = S_bb.block_alpha();
 
   auto random_solution = [&Sa_bb, &n_vectors]() {
-    linalgwrap::MultiVector<vector_type> guess;
+    lazyten::MultiVector<vector_type> guess;
     guess.reserve(n_vectors);
     for (size_t i = 0; i < n_vectors; ++i) {
       guess.push_back(random<vector_type>(Sa_bb.n_rows()));
     }
 
-    linalgwrap::EigensolutionTypeFor<true, IntegralOperator> sol;
+    lazyten::EigensolutionTypeFor<true, IntegralOperator> sol;
     sol.evectors() = ortho(guess, Sa_bb);
     sol.evalues()  = std::vector<scalar_type>(n_vectors, 1);
 

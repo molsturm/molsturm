@@ -42,10 +42,10 @@ struct GuessHcoreKeys : public GuessAlgorithmsKeysBase {
  * \throws ExcObtainingScfGuessFailed if obtaining the guess failed.
  */
 template <typename IntegralOperator, typename OverlapMatrix>
-linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_hcore(
+lazyten::EigensolutionTypeFor<true, IntegralOperator> guess_hcore(
       const MolecularSystem& /*system*/, const IntegralOperator& fock_bb,
       const OverlapMatrix& S_bb, const krims::GenMap& params) {
-  using namespace linalgwrap;
+  using namespace lazyten;
   typedef typename OverlapMatrix::scalar_type scalar_type;
 
   // TODO We had some trouble when choosing the factor different from 1.0,

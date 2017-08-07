@@ -19,13 +19,13 @@
 
 #pragma once
 #include "common.hh"
-#include <linalgwrap/SmallVector.hh>
+#include <lazyten/SmallVector.hh>
 
 namespace molsturm {
 
 struct GuessExternalKeys : public GuessAlgorithmsKeysBase {
   /** The external eigensolution guess.
-   *  Type: linalgwrap::Eigensolution<double, SmallVector<double>>.
+   *  Type: lazyten::Eigensolution<double, SmallVector<double>>.
    */
   const static std::string eigensolution;
 };
@@ -47,7 +47,7 @@ struct GuessExternalKeys : public GuessAlgorithmsKeysBase {
  * \throws ExcObtainingScfGuessFailed if obtaining the guess failed.
  */
 template <typename IntegralOperator, typename OverlapMatrix>
-linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_external(
+lazyten::EigensolutionTypeFor<true, IntegralOperator> guess_external(
       const MolecularSystem& /*system*/, const IntegralOperator& fock_bb,
       const OverlapMatrix& /*S_bb*/, const krims::GenMap& params) {
   typedef typename IntegralOperator::stored_matrix_type stored_matrix_type;
@@ -62,7 +62,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_external(
 
   // Check eigensolution is as expected
   auto esolution =
-        params.at<linalgwrap::Eigensolution<double, linalgwrap::SmallVector<double>>>(
+        params.at<lazyten::Eigensolution<double, lazyten::SmallVector<double>>>(
               GuessExternalKeys::eigensolution);
 
   auto& evectors = esolution.evectors();
@@ -115,7 +115,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_external(
   }
 
   // Copy into the datastructure we use and replicate the block if needed
-  linalgwrap::EigensolutionTypeFor<true, IntegralOperator> sol;
+  lazyten::EigensolutionTypeFor<true, IntegralOperator> sol;
   sol.evalues() = evalues;
   sol.evectors().reserve(evalues.size());
   for (auto& vec : evectors) {

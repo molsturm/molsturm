@@ -36,7 +36,7 @@ typedef GuessAlgorithmsKeysBase GuessAtomicSuperKeys;
  * \throws ExcObtainingScfGuessFailed if obtaining the guess failed.
  */
 template <typename IntegralOperator, typename OverlapMatrix>
-linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_atomic_super(
+lazyten::EigensolutionTypeFor<true, IntegralOperator> guess_atomic_super(
       const MolecularSystem& system, const IntegralOperator& fock_bb,
       const OverlapMatrix& S_bb, const krims::GenMap& params) {
 
@@ -47,7 +47,7 @@ linalgwrap::EigensolutionTypeFor<true, IntegralOperator> guess_atomic_super(
   (void)S_bb;
   (void)params;
 
-  return linalgwrap::EigensolutionTypeFor<true, IntegralOperator>{};
+  return lazyten::EigensolutionTypeFor<true, IntegralOperator>{};
 }
 
 }  // namespace molsturm

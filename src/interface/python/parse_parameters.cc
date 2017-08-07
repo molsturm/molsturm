@@ -23,7 +23,7 @@
 #include <gint/OrbitalType.hh>
 #include <gint/sturmian/atomic/NlmBasis.hh>
 #include <gscf/PulayDiisScfKeys.hh>
-#include <linalgwrap/EigensystemSolver.hh>
+#include <lazyten/EigensystemSolver.hh>
 #include <molsturm/GuessAlgorithms.hh>
 #include <molsturm/IopScfKeys.hh>
 #include <molsturm/ScfMsgType.hh>
@@ -184,7 +184,7 @@ krims::GenMap build_int_params(const Parameters& params, const MolecularSystem& 
 
 krims::GenMap build_guess_params(const Parameters& params,
                                  const MolecularSystem& system) {
-  using linalgwrap::EigensystemSolverKeys;
+  using lazyten::EigensystemSolverKeys;
   const bool restricted = parse_restricted(params, system);
 
   krims::GenMap guess_params{{ScfGuessKeys::method, params.guess}};
@@ -231,10 +231,10 @@ krims::GenMap build_guess_params(const Parameters& params,
     const size_t n_orbs_alpha = restricted ? n_orbs : n_orbs / 2;
     const size_t n_evec_elem  = restricted ? n_bas : 2 * n_bas;
 
-    linalgwrap::Eigensolution<double, linalgwrap::SmallVector<double>> esolution;
+    lazyten::Eigensolution<double, lazyten::SmallVector<double>> esolution;
     esolution.evalues() = orben_f;
     esolution.evectors() =
-          linalgwrap::MultiVector<linalgwrap::SmallVector<double>>(n_evec_elem, n_orbs);
+          lazyten::MultiVector<lazyten::SmallVector<double>>(n_evec_elem, n_orbs);
 
     for (size_t b = 0; b < n_bas; ++b) {
       for (size_t f = 0; f < n_orbs_alpha; ++f) {
@@ -254,7 +254,7 @@ krims::GenMap build_guess_params(const Parameters& params,
 }
 
 krims::GenMap build_scf_params(const Parameters& params, const MolecularSystem& system) {
-  using linalgwrap::EigensystemSolverKeys;
+  using lazyten::EigensystemSolverKeys;
   const bool restricted = parse_restricted(params, system);
 
   assert_throw(

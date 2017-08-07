@@ -18,7 +18,7 @@
 //
 
 #pragma once
-#include <linalgwrap/SmallMatrix.hh>
+#include <lazyten/SmallMatrix.hh>
 
 // TODO Temporary config file to instantiate types.
 //      This file should become configurable and a part of molsturm per se.
@@ -27,7 +27,7 @@ namespace molsturm {
 namespace iface {
 
 typedef double scalar_type;
-typedef linalgwrap::SmallMatrix<scalar_type> matrix_type;
+typedef lazyten::SmallMatrix<scalar_type> matrix_type;
 
 }  // namespace iface
 }  // namespace molsturm

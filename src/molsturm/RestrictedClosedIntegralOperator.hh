@@ -28,7 +28,7 @@ namespace molsturm {
 /** Class representing an restricted closed-shell integral operator */
 template <typename StoredMatrix>
 class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatrix>,
-                                         public linalgwrap::LazyMatrix_i<StoredMatrix> {
+                                         public lazyten::LazyMatrix_i<StoredMatrix> {
  public:
   typedef IntegralOperatorBase<StoredMatrix> base_type;
   typedef typename base_type::coefficients_ptr_type coefficients_ptr_type;
@@ -36,7 +36,7 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   typedef StoredMatrix stored_matrix_type;
   typedef typename base_type::scalar_type scalar_type;
   typedef typename base_type::vector_type vector_type;
-  typedef typename linalgwrap::LazyMatrix_i<StoredMatrix>::lazy_matrix_expression_ptr_type
+  typedef typename lazyten::LazyMatrix_i<StoredMatrix>::lazy_matrix_expression_ptr_type
         lazy_matrix_expression_ptr_type;
 
   constexpr bool restricted() const { return true; }
@@ -103,9 +103,9 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    */
   void extract_block(stored_matrix_type& M, const size_t start_row,
                      const size_t start_col,
-                     const linalgwrap::Transposed mode = linalgwrap::Transposed::None,
-                     const scalar_type c_this          = 1,
-                     const scalar_type c_M             = 0) const override {
+                     const lazyten::Transposed mode = lazyten::Transposed::None,
+                     const scalar_type c_this       = 1,
+                     const scalar_type c_M          = 0) const override {
     m_operator.extract_block(M, start_row, start_col, mode, c_this, c_M);
   }
 
@@ -122,11 +122,10 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    * automatically.
    */
   template <typename VectorIn, typename VectorOut,
-            linalgwrap::mat_vec_apply_enabled_t<RestrictedClosedIntegralOperator,
-                                                VectorIn, VectorOut>...>
-  void apply(const linalgwrap::MultiVector<VectorIn>& x,
-             linalgwrap::MultiVector<VectorOut>& y,
-             const linalgwrap::Transposed mode = linalgwrap::Transposed::None,
+            lazyten::mat_vec_apply_enabled_t<RestrictedClosedIntegralOperator, VectorIn,
+                                             VectorOut>...>
+  void apply(const lazyten::MultiVector<VectorIn>& x, lazyten::MultiVector<VectorOut>& y,
+             const lazyten::Transposed mode = lazyten::Transposed::None,
              const scalar_type c_this = 1, const scalar_type c_y = 0) const {
     m_operator.apply(x, y, mode, c_this, c_y);
   }
@@ -138,11 +137,11 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    *
    * See LazyMatrixExpression for more details
    */
-  void apply(const linalgwrap::MultiVector<
-                   const linalgwrap::MutableMemoryVector_i<scalar_type>>& x,
-             linalgwrap::MultiVector<linalgwrap::MutableMemoryVector_i<scalar_type>>& y,
-             const linalgwrap::Transposed mode = linalgwrap::Transposed::None,
-             const scalar_type c_this = 1, const scalar_type c_y = 0) const override {
+  void apply(
+        const lazyten::MultiVector<const lazyten::MutableMemoryVector_i<scalar_type>>& x,
+        lazyten::MultiVector<lazyten::MutableMemoryVector_i<scalar_type>>& y,
+        const lazyten::Transposed mode = lazyten::Transposed::None,
+        const scalar_type c_this = 1, const scalar_type c_y = 0) const override {
     m_operator.apply(x, y, mode, c_this, c_y);
   }
 
@@ -154,7 +153,7 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    * See LazyMatrixExpression for more details
    */
   void mmult(const stored_matrix_type& in, stored_matrix_type& out,
-             const linalgwrap::Transposed mode = linalgwrap::Transposed::None,
+             const lazyten::Transposed mode = lazyten::Transposed::None,
              const scalar_type c_this = 1, const scalar_type c_out = 0) const override {
     m_operator.mmult(in, out, mode, c_this, c_out);
   }
@@ -168,13 +167,13 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of alpha
    * spin. */
-  std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+  std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
   terms_alpha() const override final;
 
   /** Return a map from the id strings of the integral terms to const
    * references to the lazy matrix objects, which represent the terms of beta
    * spin. */
-  std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+  std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
   terms_beta() const override final {
     return terms_alpha();
   }
@@ -194,8 +193,8 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
  private:
   //@{
   /** Types used to pass occupied coefficients to the exchange and coulomb parts */
-  typedef const linalgwrap::MultiVector<const vector_type> cocc_type;
-  typedef std::shared_ptr<const linalgwrap::MultiVector<const vector_type>> cocc_ptr_type;
+  typedef const lazyten::MultiVector<const vector_type> cocc_type;
+  typedef std::shared_ptr<const lazyten::MultiVector<const vector_type>> cocc_ptr_type;
   //@}
 
   /** Instruction to update energies and operator. Called by update in the base class */
@@ -218,7 +217,7 @@ class RestrictedClosedIntegralOperator : public IntegralOperatorBase<StoredMatri
    * matrices and thus is available for performing operations on
    * all terms together
    * */
-  linalgwrap::LazyMatrixSum<stored_matrix_type> m_operator;
+  lazyten::LazyMatrixSum<stored_matrix_type> m_operator;
 };
 
 //
@@ -249,7 +248,7 @@ krims::Range<size_t> RestrictedClosedIntegralOperator<StoredMatrix>::indices_orb
 template <typename StoredMatrix>
 void RestrictedClosedIntegralOperator<StoredMatrix>::update_state(
       const coefficients_ptr_type& coeff_bf_ptr, bool include_energies) {
-  auto ca_bo_ptr = std::make_shared<const linalgwrap::MultiVector<const vector_type>>(
+  auto ca_bo_ptr = std::make_shared<const lazyten::MultiVector<const vector_type>>(
         coeff_bf_ptr->subview({0, base_type::m_n_alpha}));
   update_operator(ca_bo_ptr);
 
@@ -270,7 +269,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_operator(
   krims::GenMap occa_map{{gint::IntegralUpdateKeys::coefficients_occupied, ca_bo_ptr}};
 
   // Empty the operator:
-  m_operator = linalgwrap::LazyMatrixSum<StoredMatrix>{};
+  m_operator = lazyten::LazyMatrixSum<StoredMatrix>{};
 
   // Set up one-electron terms of m_fock:
   auto itterm  = std::begin(base_type::m_terms_1e);
@@ -292,7 +291,7 @@ void RestrictedClosedIntegralOperator<StoredMatrix>::update_operator(
 }
 
 template <typename StoredMatrix>
-std::map<gint::IntegralIdentifier, linalgwrap::LazyMatrixProduct<StoredMatrix>>
+std::map<gint::IntegralIdentifier, lazyten::LazyMatrixProduct<StoredMatrix>>
 RestrictedClosedIntegralOperator<StoredMatrix>::terms_alpha() const {
   // Note the factor 2 in front of the coulomb term once again comes from the fact
   // that we are closed-shell and hence only ever use the alpha density, but the

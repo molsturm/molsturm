@@ -68,7 +68,7 @@ void export_ff_matrix(const bool restricted, const Matrix& in,
 }
 
 template <typename Vector>
-void export_coeff_bf(const bool restricted, const linalgwrap::MultiVector<Vector>& mv,
+void export_coeff_bf(const bool restricted, const lazyten::MultiVector<Vector>& mv,
                      std::vector<scalar_type>& out) {
   const size_t n_orbs       = restricted ? 2 * mv.n_vectors() : mv.n_vectors();
   const size_t n_bas        = restricted ? mv.n_elem() : mv.n_elem() / 2;
@@ -97,7 +97,7 @@ void export_coeff_bf(const bool restricted, const linalgwrap::MultiVector<Vector
 
 template <typename Vector>
 void export_eri_restricted(const gint::ERITensor_i<scalar_type>& eri,
-                           const linalgwrap::MultiVector<Vector>& coeff_bf,
+                           const lazyten::MultiVector<Vector>& coeff_bf,
                            std::vector<scalar_type>& out) {
   const size_t n_orbs_alpha = coeff_bf.n_vectors();
   const size_t n_orbs       = 2 * n_orbs_alpha;
@@ -146,15 +146,15 @@ void export_eri_restricted(const gint::ERITensor_i<scalar_type>& eri,
 /** Split a block-diagonal coefficient multivector into its consituent blocks by copying
  */
 template <typename Vector>
-std::pair<linalgwrap::MultiVector<Vector>, linalgwrap::MultiVector<Vector>> coeff_blocks(
-      const linalgwrap::MultiVector<Vector>& coeff_bf_full) {
+std::pair<lazyten::MultiVector<Vector>, lazyten::MultiVector<Vector>> coeff_blocks(
+      const lazyten::MultiVector<Vector>& coeff_bf_full) {
   const size_t n_orbs_alpha = coeff_bf_full.n_vectors() / 2;  // == n_orbs_beta
   const size_t n_bas        = coeff_bf_full.n_elem() / 2;
   assert_internal(n_orbs_alpha * 2 == coeff_bf_full.n_vectors());
   assert_internal(2 * n_bas == coeff_bf_full.n_elem());
 
   // Partition coeff_bf into alpha-alpha and beta-beta blocks
-  linalgwrap::MultiVector<Vector> ca_bf(n_bas, n_orbs_alpha);
+  lazyten::MultiVector<Vector> ca_bf(n_bas, n_orbs_alpha);
   for (size_t f = 0; f < n_orbs_alpha; ++f) {
     assert_internal(n_bas <= coeff_bf_full[f].size());
     assert_internal(n_bas <= ca_bf[f].size());
@@ -162,7 +162,7 @@ std::pair<linalgwrap::MultiVector<Vector>, linalgwrap::MultiVector<Vector>> coef
               ca_bf[f].begin());
   }
 
-  linalgwrap::MultiVector<Vector> cb_bf(n_bas, n_orbs_alpha);
+  lazyten::MultiVector<Vector> cb_bf(n_bas, n_orbs_alpha);
   for (size_t f = 0; f < n_orbs_alpha; ++f) {
     const size_t ff = f + n_orbs_alpha;
     for (size_t b = 0; b < n_bas; ++b) {
@@ -178,9 +178,9 @@ std::pair<linalgwrap::MultiVector<Vector>, linalgwrap::MultiVector<Vector>> coef
 
 template <typename Vector>
 void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
-                             const linalgwrap::MultiVector<Vector>& coeff_bf,
+                             const lazyten::MultiVector<Vector>& coeff_bf,
                              std::vector<scalar_type>& out) {
-  using linalgwrap::MultiVector;
+  using lazyten::MultiVector;
 
   const size_t n_orbs_alpha = coeff_bf.n_vectors() / 2;  // == n_orbs_beta
   const size_t n_orbs       = 2 * n_orbs_alpha;
@@ -251,7 +251,7 @@ void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
 
 template <typename Vector>
 void export_eri(const bool restricted, const gint::ERITensor_i<scalar_type>& eri,
-                const linalgwrap::MultiVector<Vector>& coeff_bf,
+                const lazyten::MultiVector<Vector>& coeff_bf,
                 std::vector<scalar_type>& out) {
   if (restricted) {
     export_eri_restricted(eri, coeff_bf, out);
@@ -263,9 +263,9 @@ void export_eri(const bool restricted, const gint::ERITensor_i<scalar_type>& eri
 template <typename Vector, typename OverlapMatrix>
 typename Vector::scalar_type compute_spin_squared(
       const bool restricted, const OverlapMatrix& S_bb,
-      const linalgwrap::MultiVector<Vector>& coeff_bf, const size_t n_alpha,
+      const lazyten::MultiVector<Vector>& coeff_bf, const size_t n_alpha,
       const size_t n_beta) {
-  using linalgwrap::MultiVector;
+  using lazyten::MultiVector;
   using krims::range;
 
   // If restricted the <S^2> is always zeros
@@ -279,7 +279,7 @@ typename Vector::scalar_type compute_spin_squared(
 
   // Build the alpha-beta block of the overlap matrix in MO basis
   const auto& Sa_bb = S_bb.block_alpha();
-  auto Sab_ff       = linalgwrap::dot(cob_bf, Sa_bb * coa_bf);
+  auto Sab_ff       = lazyten::dot(cob_bf, Sa_bb * coa_bf);
 
   // Compute the exact value for <S^2> which we would expect for this
   // system if the determinant was an eigenfunction of S^2
@@ -288,7 +288,7 @@ typename Vector::scalar_type compute_spin_squared(
   const double spin_squared_exact = spin_total * (1 + spin_total);
 
   // According to Szabo-Ostlund, p. 107 (2.271) this is the actual value for <S^2>
-  return spin_squared_exact + n_beta - linalgwrap::norm_frobenius_squared(Sab_ff);
+  return spin_squared_exact + n_beta - lazyten::norm_frobenius_squared(Sab_ff);
 }
 
 }  // namespace
@@ -359,7 +359,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   if (params.export_overlap_matrix) {
     // Compute the overlap matrix in MO space, i.e. C^T (S * C)
     auto overlap_ff =
-          linalgwrap::dot(soln.evectors(), state.overlap_matrix() * soln.evectors());
+          lazyten::dot(soln.evectors(), state.overlap_matrix() * soln.evectors());
     export_ff_matrix(restricted, overlap_ff, ret.overlap_ff);
     assert_internal(ret.overlap_ff.size() == n_orbs * n_orbs);
   } else {
@@ -370,7 +370,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   if (params.export_fock_matrix) {
     // Compute the full fock matrix in MO space, i.e.  C^T * (F * C)
     // => Need a dot product here, so actually the dot of all vectors with another
-    auto fock_ff = linalgwrap::dot(soln.evectors(), fbb * soln.evectors());
+    auto fock_ff = lazyten::dot(soln.evectors(), fbb * soln.evectors());
     export_ff_matrix(restricted, fock_ff, ret.fock_ff);
     assert_internal(ret.fock_ff.size() == n_orbs * n_orbs);
   } else {
@@ -383,11 +383,11 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
     // space
     // (Note: This equals the beta-beta block for the one electron terms for both
     //        restricted and unrestricted calculations)
-    linalgwrap::LazyMatrixSum<matrix_type> hcore_block;
+    lazyten::LazyMatrixSum<matrix_type> hcore_block;
     for (const auto& id_term : fbb.terms_1e()) hcore_block += id_term.second;
 
     // The full hcore matrix (alpha-alpha and beta-beta block along the diagonal)
-    linalgwrap::BlockDiagonalMatrix<linalgwrap::LazyMatrixSum<matrix_type>, 2> hcore_bb{
+    lazyten::BlockDiagonalMatrix<lazyten::LazyMatrixSum<matrix_type>, 2> hcore_bb{
           {{hcore_block, hcore_block}}};
 
     // Compute the full one electron matrix in MO space, i.e.  C^T * (Hcore_bb * C)
@@ -397,9 +397,9 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
     //    we only need the alpha-alpha block. For unrestricted, where the alphas and betas
     //    might
     //    differ, we need both blocks.
-    auto hcore_ff =
-          restricted ? linalgwrap::dot(soln.evectors(), hcore_block * soln.evectors())
-                     : linalgwrap::dot(soln.evectors(), hcore_bb * soln.evectors());
+    auto hcore_ff = restricted
+                          ? lazyten::dot(soln.evectors(), hcore_block * soln.evectors())
+                          : lazyten::dot(soln.evectors(), hcore_bb * soln.evectors());
     export_ff_matrix(restricted, hcore_ff, ret.hcore_ff);
     assert_internal(ret.hcore_ff.size() == n_orbs * n_orbs);
   } else {
