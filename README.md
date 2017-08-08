@@ -36,6 +36,7 @@ In order to actually [use the `molsturm`-module](#using-molsturm-from-python) on
 it has been built the following `python` packages are required:
 - [h5py](https://pypi.python.org/pypi/h5py)
 - [numpy](https://pypi.python.org/pypi/numpy)
+- [scipy](https://pypi.python.org/pypi/scipy)
 - [PyYAML](https://pypi.python.org/pypi/PyYAML)
 
 On a recent **Debian/Ubuntu** you can install all these dependencies by running
