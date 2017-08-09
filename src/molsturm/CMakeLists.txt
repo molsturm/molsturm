@@ -77,6 +77,6 @@ export(EXPORT MolsturmTargets
 install(EXPORT MolsturmTargets
 	FILE "molsturmTargets.cmake"
 	NAMESPACE Upstream::
-	DESTINATION "${PackageModuleLocation}/molsturm"
+	DESTINATION "share/cmake/molsturm"
 )
 

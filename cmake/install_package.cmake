@@ -1,6 +1,4 @@
 # Installs the cmake apckage information this project provides
-#
-# Requires the variable PackageModuleLocation to be set.
 
 # Write a basic version file for molsturm
 include(CMakePackageConfigHelpers)
@@ -19,7 +17,7 @@ configure_file(cmake/molsturmConfig.cmake.in
 install(FILES
 	"${molsturm_BINARY_DIR}/molsturmConfig.cmake"
 	"${molsturm_BINARY_DIR}/molsturmConfigVersion.cmake"
-	DESTINATION "${PackageModuleLocation}/molsturm"
+	DESTINATION "share/cmake/molsturm"
 	COMPONENT devel
 )
 
