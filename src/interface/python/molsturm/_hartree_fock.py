@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,7 +20,6 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from . import _iface as iface
 import numpy as np
@@ -170,6 +170,36 @@ HF_PARAMS_EXCLUDE_KEYS = [ "all" ] + [ k for k in dir(iface.Parameters)
 hartree_fock_keys = HF_EXTRA_KEYS + [ k for k in dir(iface.Parameters)
                                       if not k in HF_PARAMS_EXCLUDE_KEYS ]
 
+# TODO Quick and dirty wrapper to mimic the new syntax
+class TmpState(dict):
+    def __init__(self, other):
+        for key in other:
+            self.__setitem__(key, other[key])
+
+    def eri_block(self, block="ffff"):
+        """Get a block of the electron repulsion tensor
+           in shell pair or chemists notation.
+           No antisymmetrisation done yet.
+        """
+        if block != "ffff":
+            raise NotImplementedError("Only ffff can be obtained at the moment.")
+        return self.__getitem__("eri_ffff")
+
+    @property
+    def eri(self):
+        """
+        Return the full eri tensor.
+        """
+        return self.eri_block()
+
+    @property
+    def fock(self):
+        """
+        Return the full fock matrix.
+        """
+        return self.__getitem__("fock_ff")
+
+
 def hartree_fock(molecular_system=None, basis=None, **kwargs):
   """
   Run a Hartree-Fock calculation with molsturm. The list of valid input
@@ -256,7 +286,7 @@ def hartree_fock(molecular_system=None, basis=None, **kwargs):
   # Forward input parameters to output
   out[INPUT_PARAMETER_KEY] = inputargs
 
-  return out
+  return TmpState(out)
 
 
 def compute_derived_hartree_fock_energies(hfres):
