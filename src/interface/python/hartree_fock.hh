@@ -18,14 +18,18 @@
 //
 
 #pragma once
+#include "HfParameters.hh"
 #include "HfResults.hh"
-#include "Parameters.hh"
 #include <krims/ExceptionSystem.hh>
 
 namespace molsturm {
 namespace iface {
 
-HfResults hartree_fock(const Parameters& p);
+/** Run a restricted (closed-shell) HF calculation */
+HfResults restricted_hartree_fock(const HfParameters& p);
+
+/** Run an unrestricted HF calculation */
+HfResults unrestricted_hartree_fock(const HfParameters& p);
 
 }  // namespace iface
 }  // namespace molsturm

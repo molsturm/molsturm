@@ -23,19 +23,12 @@
 #include "interface/python/ExcInvalidParameters.hh"
 #include "interface/python/hartree_fock.hh"
 #include "interface/python/HfResults.hh"
-#include "interface/python/Parameters.hh"
+#include "interface/python/HfParameters.hh"
 #include <molsturm/Version.hh>
+
+// Run the %init block (to setup numpy)
+#define SWIG_FILE_WITH_INIT
 %}
-
-%include "std_vector.i"
-%include "std_string.i"
-
-// Instantiate what is needed
-namespace std {
-  %template(DoubleVector)  vector<double>;
-  %template(IntVector)     vector<int>;
-  %template(StringVector)  vector<string>;
-}
 
 // TODO Extremely rudimentary exception handling
 %exception {
@@ -53,7 +46,21 @@ namespace std {
   }
 }
 
-%include "Parameters.hh"
+%include "numpy.i"
+%include "std_string.i"
+%include "std_vector.i"
+
+// Instantiate what is needed
+namespace std {
+  %template(DoubleVector)  vector<double>;
+}
+
+// Setup import of numpy array:
+%init %{
+import_array();
+%}
+
+%include "HfParameters.hh"
 %include "HfResults.hh"
 %include "hartree_fock.hh"
 %include "../../molsturm/Version.hh"

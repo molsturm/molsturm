@@ -166,8 +166,9 @@ std::pair<lazyten::MultiVector<Vector>, lazyten::MultiVector<Vector>> coeff_bloc
   for (size_t f = 0; f < n_orbs_alpha; ++f) {
     const size_t ff = f + n_orbs_alpha;
     for (size_t b = 0; b < n_bas; ++b) {
-      assert_internal(std::distance(coeff_bf_full[ff].begin() + n_bas,
-                                    coeff_bf_full[ff].end()) == cb_bf[f].size());
+      assert_internal(
+            std::distance(coeff_bf_full[ff].begin() + n_bas, coeff_bf_full[ff].end()) ==
+            static_cast<ptrdiff_t>(cb_bf[f].size()));
       std::copy(coeff_bf_full[ff].begin() + n_bas, coeff_bf_full[ff].end(),
                 cb_bf[f].begin());
     }
@@ -295,7 +296,7 @@ typename Vector::scalar_type compute_spin_squared(
 
 template <typename State>
 HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_type>& eri,
-                            const Parameters& params) {
+                            const HfParameters& params) {
   const auto& fbb       = state.problem_matrix();
   const auto& soln      = state.eigensolution();
   const bool restricted = fbb.restricted();
@@ -420,7 +421,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   template HfResults export_hf_results(                                   \
         const IopScfState<FockOperator<matrix_type, STATE_TYPE>,          \
                           OverlapMatrix<matrix_type, STATE_TYPE>>& state, \
-        const gint::ERITensor_i<scalar_type>& eri, const Parameters&)
+        const gint::ERITensor_i<scalar_type>& eri, const HfParameters&)
 
 INSTANTIATE(RestrictionType::Unrestricted);
 INSTANTIATE(RestrictionType::RestrictedClosed);
