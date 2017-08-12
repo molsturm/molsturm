@@ -20,7 +20,6 @@
 %module molsturm_iface
 
 %{
-#include "interface/python/available_features.hh"
 #include "interface/python/ExcInvalidParameters.hh"
 #include "interface/python/hartree_fock.hh"
 #include "interface/python/HfResults.hh"
@@ -54,7 +53,6 @@ namespace std {
   }
 }
 
-%include "available_features.hh"
 %include "Parameters.hh"
 %include "HfResults.hh"
 %include "hartree_fock.hh"

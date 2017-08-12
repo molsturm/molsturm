@@ -20,7 +20,6 @@
 ## ---------------------------------------------------------------------
 
 set(SRC
-	available_features.cc
 	export_hf_results.cc
 	hartree_fock.cc
 	Parameters.cc

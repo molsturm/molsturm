@@ -22,10 +22,6 @@
 ## ---------------------------------------------------------------------
 
 
-from ._iface import available_basis_types as __iface_available_basis_types
-
-available_basis_types = [ t for t in __iface_available_basis_types() ]
-
 def has_real_harmonics(**basis_args):
   """
   Does the basis have real spherical harmonics in the angular part(True)
