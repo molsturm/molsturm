@@ -28,6 +28,7 @@ from collections import Iterable
 from .scf_guess import extrapolate_from_previous
 from .MolecularSystem import MolecularSystem
 from .sturmian import CoulombSturmianBasis
+from gint.util import basis_class_from_name
 
 def __to_double_vector(val):
   ret = iface.DoubleVector()
@@ -200,17 +201,164 @@ class TmpState(dict):
         return self.__getitem__("fock_ff")
 
 
-def hartree_fock(molecular_system=None, basis=None, **kwargs):
-  """
-  Run a Hartree-Fock calculation with molsturm. The list of valid input
-  parameters can be retrieved by the means of the list "hartree_fock_keys".
+def hartree_fock(molecular_system, basis=None, basis_type=None,
+                 conv_tol=5e-7, max_iter=25, n_eigenpairs=10000,
+                 restricted=None,
+                 guess="hcore", guess_esolver="auto",
+                 eigensolver="auto",
+                 print_iterations=False, **kwargs):
+    """
+    Run a Hartree-Fock calculation with molsturm.
 
-  A couple of selected kwargs:
-    - basis_type        The type of the basis used for the calculation
-    - coords            List of iterables of size 3: Coordinats of the atoms
-    - atoms             List of the atom symbols (in the same order as coords)
-    - guess             The guess method to use
-  """
+    basis    A valid basis object. If None the basis will be constructed
+             on the fly from teh basis_type and the kwargs.
+
+
+
+    Examples:
+        hartree_fock(molecular_system=("Be"),    )
+
+
+    The list of valid input
+    parameters can be retrieved by the means of the list "hartree_fock_keys".
+
+    A couple of selected kwargs:
+      - basis_type        The type of the basis used for the calculation
+      - coords            List of iterables of size 3: Coordinats of the atoms
+      - atoms             List of the atom symbols (in the same order as coords)
+      - guess             The guess method to use
+    """
+
+    #
+    # Input normalisation
+    #
+    if isinstance(molecular_system, tuple):
+        # Construct from the provided tuple:
+        molecular_system = MolecularSystem(*molecular_system)
+    elif not isinstance(molecular_system, MolecularSystem):
+        raise TypeError("The first argument needs to be a MolecularSystem object or a "
+                        "tuple to setup a MolecularSystem object on the fly.")
+
+    if basis is None:
+        if basis_type is None:
+            raise ValueError("Either the basis or the basis_type needs to be given.")
+        Basis = basis_class_from_name(basis_type)
+        bas_args = []
+        bas_kwargs = {}
+
+        # TODO use inspect to check the interface of the Basis
+        #      object and use the kwargs to construct it.
+        raise NotImplementedError("Basis construction on the fly is not yet implemented.")
+
+        basis = Basis(molecular_system, *bas_args, **bas_kwargs)
+
+    if restricted is None:
+        restricted = molecular_system.is_closed_shell
+    if restricted and not molecular_system.is_closed_shell:
+        raise ValueError("Currenlty restricted is only possible for closed-shell systems")
+
+    #
+    # Input parameters
+    #
+    params = iface.ScfParameters()
+    params.set_molecular_system(molecular_system.atom_numbers, molecular_system.coords,
+                                molecular_system.n_alpha, molecular_system.n_beta)
+
+    # The following functions set three kinds of parameters:
+    # a) params.INTEGRAL
+    #       Integral parameters. These are interpreted by gint::IntegralLookup and
+    #       basically determine everything about the integral backend to use and
+    #       the parameters it needs (molecular structure and so on.)
+    #
+    # b) params.GUESS
+    #       Guess parameters, these are interpreted by the molsturm::scf_guess function
+    #
+    # c) params.SCF
+    #       SCF parameters, these are read by molsturm::run_scf and from there
+    #       subsequently passed onto the SCF algorithms inside gscf.
+    SCF = params.SCF
+
+
+    #
+    # Integral parameters (parts hackish)
+    #
+    INTEGRAL = params.INTEGRAL
+    params.set_param_string(INTEGRAL, "basis_type", basis.basis_type)
+    if isinstance(basis, gint.gaussian.Basis):
+        # TODO Instead set basis functions here directly and omit passing
+        #      the basis set name here and allow to pass the full description
+        #      down to gint
+        params.set_param_string(INTEGRAL, "basis_set", basis.basis_set_name)
+
+        # TODO This is still some sort of legacy stuff we kind of need
+        #      to do at the moment unfortunately. One should remove that soon.
+        params.set_integral_param_orbital_type("real_molecular")
+    elif isinstance(basis, gint.sturmian.atomic.Basis):
+        if (molecular_system.n_atoms > 1):
+            raise ValueError("Invalid basis: Atomic Coulomb-Strumians can only be used "
+                             "on atoms and not on molecules.")
+
+        params.set_param_double(INTEGRAL, "k_exponent", basis.k_exp)
+        params.set_integral_param_nlm_basis(np.array(basis.functions))
+
+        # TODO Do this only if we are sure ... or better leave it off entirely
+        #      It is some kind of legacy anyway.
+        print("WARNING: Right now we assume all sturmian basis sets to be dense")
+        params.set_param_int(INTEGRAL, "n_max", basis.n_max)
+        params.set_param_int(INTEGRAL, "l_max", basis.l_max)
+        params.set_param_int(INTEGRAL, "m_max", basis.m_max)
+
+        # TODO This is still some sort of legacy stuff we kind of need
+        #      to do at the moment unfortunately. One should remove that soon.
+        params.set_integral_param_orbital_type("complex_atomic")
+    else:
+        raise TypeError("basis has an unrecognised type.")
+
+    #
+    # Build guess parameters
+    #
+    GUESS = params.GUESS
+
+    # TODO The way to set the guess eigensolver parameters from C++ is:
+    # guess_params.update(ScfGuessKeys::eigensolver_params,
+    #                     {{EigensystemSolverKeys::method, params.guess_esolver}});
+    # This is not yet implemented
+    print("WARNING: Setting the guess eigensolver is not yet implemented.")
+
+    if isinstance(guess, str):
+        if guess == "external":
+            # TODO We would need to get the guess data into the
+            #      coefficients from which we start the calculation somehow
+            raise NotImplementedError("external guess not yet implemented.")
+        else:
+            params.set_param_string(GUESS, "method", guess)
+    else:
+        raise NotImplementedError("guess from previous not yet implemented.")
+
+    #
+    # Build scf parameters
+    #
+
+    # TODO see build_scf_params in parse_parameters.cc
+
+
+
+
+    #
+    # Run scf
+    #
+    scf_kind = iface.RHF if restricted else iface.UHF
+    results = iface.self_consistent_field(kind, params, solution_view)
+
+    print("WARNING: Exporting the results or the input parameters is not implemented at the moment!")
+
+  
+
+    # TODO old stuff follows
+
+
+
+
   #
   # Input
   #
