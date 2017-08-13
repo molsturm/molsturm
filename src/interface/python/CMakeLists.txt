@@ -22,6 +22,7 @@
 set(SRC
 	export_hf_results.cc
 	ScfParameters.cc
+	ScfSolutionView.cc
 	self_consistent_field.cc
 )
 
