@@ -18,18 +18,18 @@
 //
 
 #pragma once
-#include "HfParameters.hh"
-#include "HfResults.hh"
-#include <krims/ExceptionSystem.hh>
+#include "ScfParameters.hh"
+#include "ScfResults.hh"
+#include "ScfSolutionView.hh"
 
 namespace molsturm {
 namespace iface {
 
-/** Run a restricted (closed-shell) HF calculation */
-HfResults restricted_hartree_fock(const HfParameters& p);
+enum ScfKind { RHF, UHF };
 
-/** Run an unrestricted HF calculation */
-HfResults unrestricted_hartree_fock(const HfParameters& p);
+/** Run a restricted (closed-shell) SCF calculation */
+ScfResults self_consistent_field(const ScfKind type, const ScfParameters& params,
+                                 ScfSolutionView& solution_view);
 
 }  // namespace iface
 }  // namespace molsturm

@@ -21,9 +21,10 @@
 
 %{
 #include "interface/python/ExcInvalidParameters.hh"
-#include "interface/python/hartree_fock.hh"
-#include "interface/python/HfResults.hh"
-#include "interface/python/HfParameters.hh"
+#include "interface/python/self_consistent_field.hh"
+#include "interface/python/ScfResults.hh"
+#include "interface/python/ScfSolutionView.hh"
+#include "interface/python/ScfParameters.hh"
 #include <molsturm/Version.hh>
 
 // Run the %init block (to setup numpy)
@@ -60,9 +61,10 @@ namespace std {
 import_array();
 %}
 
-%include "HfParameters.hh"
-%include "HfResults.hh"
-%include "hartree_fock.hh"
+%include "ScfParameters.hh"
+%include "ScfResults.hh"
+%include "ScfSolutionView.hh"
+%include "self_consistent_field.hh"
 %include "../../molsturm/Version.hh"
 
 // vi: syntax=c

@@ -21,8 +21,8 @@
 
 set(SRC
 	export_hf_results.cc
-	hartree_fock.cc
-	HfParameters.cc
+	ScfParameters.cc
+	self_consistent_field.cc
 )
 
 # Download the numpy.i module we require from github

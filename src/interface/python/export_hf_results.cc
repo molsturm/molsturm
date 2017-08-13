@@ -295,8 +295,9 @@ typename Vector::scalar_type compute_spin_squared(
 }  // namespace
 
 template <typename State>
-HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_type>& eri,
-                            const HfParameters& params) {
+ScfResults export_hf_results(const State& state,
+                             const gint::ERITensor_i<scalar_type>& eri,
+                             const ScfParameters& params) {
   const auto& fbb       = state.problem_matrix();
   const auto& soln      = state.eigensolution();
   const bool restricted = fbb.restricted();
@@ -308,7 +309,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   const size_t n_orbs = n_orbs_alpha + n_orbs_beta;
 #endif
 
-  HfResults ret;
+  ScfResults ret;
 
   // Size information
   ret.n_beta       = fbb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA).length();
@@ -418,10 +419,10 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
 }
 
 #define INSTANTIATE(STATE_TYPE)                                           \
-  template HfResults export_hf_results(                                   \
+  template ScfResults export_hf_results(                                  \
         const IopScfState<FockOperator<matrix_type, STATE_TYPE>,          \
                           OverlapMatrix<matrix_type, STATE_TYPE>>& state, \
-        const gint::ERITensor_i<scalar_type>& eri, const HfParameters&)
+        const gint::ERITensor_i<scalar_type>& eri, const ScfParameters&)
 
 INSTANTIATE(RestrictionType::Unrestricted);
 INSTANTIATE(RestrictionType::RestrictedClosed);

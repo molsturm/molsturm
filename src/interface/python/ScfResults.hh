@@ -23,7 +23,7 @@
 namespace molsturm {
 namespace iface {
 
-struct HfResults {
+struct ScfResults {
   unsigned int n_alpha = 0;
   unsigned int n_beta  = 0;
   unsigned int n_bas   = 0;

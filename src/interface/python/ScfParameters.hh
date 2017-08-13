@@ -32,13 +32,6 @@
 // Setting the nlm vectors for coulomb-sturmians
 %apply (long* IN_ARRAY2, int DIM1, int DIM2) {(long* nlm, int n_nlm, int three_n)};
 
-// Setting an external guess
-%apply (double* IN_ARRAY1, int DIM1) {(double* orbena_f, int n_fock_ae)};
-%apply (double* IN_ARRAY1, int DIM1) {(double* orbenb_f, int n_fock_be)};
-%apply (double* IN_ARRAY2, int DIM1, int DIM2)
-                {(double* orbcoeffa_bf, int n_bas_ac, int n_fock_ac)};
-%apply (double* IN_ARRAY2, int DIM1, int DIM2)
-                {(double* orbcoeffb_bf, int n_bas_bc, int n_fock_bc)};
 // clang-format on
 #else
 #include <gint/Structure.hh>
@@ -48,11 +41,11 @@
 namespace molsturm {
 namespace iface {
 
-/** HfParameters which are available from the python interface.
+/** ScfParameters which are available from the python interface.
  *  All parameters prefixed with internal_ are internal and will not
  *  be exposed to the user or available for the user
  */
-struct HfParameters {
+struct ScfParameters {
 #ifndef SWIG
   //! The integral parameters to pass to the IntegralLookup object
   krims::GenMap integral_params;
@@ -80,7 +73,10 @@ struct HfParameters {
   gint::Structure structure{};
 #endif  // SWIG
 
-  /** Set the molecular system from python */
+  /** Set the molecular system from python
+   *
+   * Note: Will also populate the integral_parameters with the Structure object.
+   * */
   void set_molecular_system(long* atom_numbers, int n_atoms_an, double* coords,
                             int n_atoms_c, int three_c, size_t n_alpha, size_t n_beta);
   //@}
@@ -115,28 +111,8 @@ struct HfParameters {
   /** Set the nlm basis stucture inside the integral_params */
   void set_integral_param_nlm_basis(long* nlm, int n_nlm, int three_n);
 
-  /** Set the external guess inside the scf_params
-   * This only works for rhf calculations.
-   *
-   * \param orbcoeff_bf  alpha-alpha and beta-beta block of the guess.
-   * */
-  void set_scf_param_external_guess_rhf(double* orbena_f, int n_fock_ae,
-                                        double* orbcoeffa_bf, int n_bas_ac,
-                                        int n_fock_ac) {
-    set_scf_param_external_guess(orbena_f, n_fock_ae, nullptr, 0, orbcoeffa_bf, n_bas_ac,
-                                 n_fock_ac, nullptr, n_bas_ac, 0);
-  }
-
-  /** Set the external guess inside the scf_params
-   *
-   * \param orbcoeffa_bf   alpha-alpha block of the guess
-   * \param orbcoeffb_bf   beta-beta block of the guess
-   *                       Leave it empty for RHF calculations.
-   */
-  void set_scf_param_external_guess(double* orbena_f, int n_fock_ae, double* orbenb_f,
-                                    int n_fock_be, double* orbcoeffa_bf, int n_bas_ac,
-                                    int n_fock_ac, double* orbcoeffb_bf, int n_bas_bc,
-                                    int n_fock_bc);
+  /** Set the orbital type */
+  void set_integral_param_orbital_type(std::string type);
 
   //
   // TODO

@@ -17,9 +17,11 @@
 // along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "HfParameters.hh"
+#include "ScfParameters.hh"
 #include "ExcInvalidParameters.hh"
 #include "gint/config.hh"
+#include <gint/IntegralLookupKeys.hh>
+#include <gint/OrbitalType.hh>
 #include <gint/sturmian/atomic/NlmBasis.hh>
 #include <lazyten/Base/Solvers/Eigensolution.hh>
 #include <lazyten/SmallMatrix.hh>
@@ -29,9 +31,9 @@
 namespace molsturm {
 namespace iface {
 
-void HfParameters::set_molecular_system(long* atom_numbers, int n_atoms_an,
-                                        double* coords, int n_atoms_c, int three_c,
-                                        size_t n_alpha_, size_t n_beta_) {
+void ScfParameters::set_molecular_system(long* atom_numbers, int n_atoms_an,
+                                         double* coords, int n_atoms_c, int three_c,
+                                         size_t n_alpha_, size_t n_beta_) {
   size_t n_atoms = static_cast<size_t>(n_atoms_an);
   assert_throw(n_atoms_an == n_atoms_c,
                krims::ExcSizeMismatch(n_atoms, static_cast<size_t>(n_atoms_c)));
@@ -51,9 +53,11 @@ void HfParameters::set_molecular_system(long* atom_numbers, int n_atoms_an,
 
   n_alpha = n_alpha_;
   n_beta  = n_beta_;
+
+  integral_params.update(IntegralLookupKeys::structure, structure)
 }
 
-void HfParameters::set_integral_param_nlm_basis(long* nlm, int n_nlm, int three_n) {
+void ScfParameters::set_integral_param_nlm_basis(long* nlm, int n_nlm, int three_n) {
   using gint::sturmian::atomic::Nlm;
   using gint::sturmian::atomic::NlmBasis;
 
@@ -90,84 +94,48 @@ void HfParameters::set_integral_param_nlm_basis(long* nlm, int n_nlm, int three_
   integral_params.update("nlm_basis", std::move(nlm_basis));
 }
 
-void HfParameters::set_scf_param_external_guess(double* orbena_f, int n_fock_ae,
-                                                double* orbenb_f, int n_fock_be,
-                                                double* orbcoeffa_bf, int n_bas_ac,
-                                                int n_fock_ac, double* orbcoeffb_bf,
-                                                int n_bas_bc, int n_fock_bc) {
-  assert_throw(
-        n_fock_ae == n_fock_ac,
-        ExcInvalidParameters("Size mismatch in the number of orbitals in orbena_f (" +
-                             std::to_string(n_fock_ae) + ") and orbcoeffa_bf (" +
-                             std::to_string(n_fock_ac) + ")."));
-  assert_throw(
-        n_fock_be == n_fock_bc,
-        ExcInvalidParameters("Size mismatch in the number of orbitals in orbenb_f (" +
-                             std::to_string(n_fock_be) + ") and orbcoeffb_bf (" +
-                             std::to_string(n_fock_bc) + ")."));
-  assert_throw(n_bas_ac == n_bas_bc,
-               ExcInvalidParameters(
-                     "Size mismatch in the number of basis functions in orbcoeffa_bf (" +
-                     std::to_string(n_bas_ac) + ") and orbcoeffb_bf (" +
-                     std::to_string(n_bas_bc) + ")."));
+void ScfParameters::set_integral_param_orbital_type(std::string type) {
+  using gint::IntegralLookupKeys;
+  using gint::OrbitalType;
 
-  const int n_fock_a = n_fock_ac;
-  const int n_fock_b = n_fock_bc;
-  const int n_bas    = n_bas_ac;
-
-  // If we are unrestricted then we need to build the block-diagonal structure inside
-  // the eigensolution, which we pass onto the guess_external method and hence to
-  // the initial Fock matrix. We do this by shifting the beta block by n_fock_ac
-  // and n_bas_ac and placing a block of size (n_fock_bc, n_bas_bc) there.
-  // If (n_fock_bc, n_bas_bc) == (0, 0) i.e. if the beta block is absent,
-  // then we are plainly RHF.
-  lazyten::Eigensolution<double, lazyten::SmallVector<double>> esolution;
-
-  auto& evalues = esolution.evalues();
-  evalues.resize(n_fock_a + n_fock_b);
-  auto it = std::copy(orbena_f, orbena_f + n_fock_a, evalues.begin());
-  std::copy(orbenb_f, orbenb_f + n_fock_b, it);
-
-  auto& evectors = esolution.evectors();
-  evectors       = lazyten::MultiVector<lazyten::SmallVector<double>>(2 * n_bas,
-                                                                n_fock_a + n_fock_b);
-  for (int b = 0; b < n_bas; ++b) {
-    // The alpha block
-    for (int f = 0; f < n_fock_a; ++f) {
-      evectors[f][b] = orbcoeffa_bf[b * n_fock_a + f];
-    }
-
-    // The beta block
-    for (int f = 0; f < n_fock_b; ++f) {
-      evectors[n_fock_a + f][n_bas + b] = orbcoeffb_bf[b * n_fock_b + f];
-    }
+  if (type == std::string("real_molecular")) {
+    integral_params.update(IntegralLookupKeys::orbital_type, OrbitalType::REAL_MOLECULAR);
+  } else if (type == std::string("real_atomic")) {
+    integral_params.update(IntegralLookupKeys::orbital_type, OrbitalType::REAL_ATOMIC);
+  } else if (type == std::string("complex_molecular")) {
+    integral_params.update(IntegralLookupKeys::orbital_type,
+                           OrbitalType::COMPLEX_MOLECULAR);
+  } else if (type == std::string("complex_atomic")) {
+    integral_params.update(IntegralLookupKeys::orbital_type, OrbitalType::COMPLEX_ATOMIC);
+  } else {
+    assert_throw(false, ExcInvalidParameters(
+                              "Invalid value for set_integral_param_orbital_type"));
   }
-
-  guess_params.update(GuessExternalKeys::eigensolution, std::move(esolution));
 }
 
 template <typename T>
-void HfParameters::set_param(HfParameters::ParameterKind kind, std::string key, T value) {
+void ScfParameters::set_param(ScfParameters::ParameterKind kind, std::string key,
+                              T value) {
   switch (kind) {
-    case HfParameters::ParameterKind::SCF:
+    case ScfParameters::ParameterKind::SCF:
       scf_params.update(key, value);
       break;
-    case HfParameters::ParameterKind::GUESS:
+    case ScfParameters::ParameterKind::GUESS:
       guess_params.update(key, value);
       break;
-    case HfParameters::ParameterKind::INTEGRAL:
+    case ScfParameters::ParameterKind::INTEGRAL:
       integral_params.update(key, value);
       break;
     default:
       assert_throw(false, ExcInvalidParameters(
-                                "Invalid value for HfParameters::ParameterKind: " +
+                                "Invalid value for ScfParameters::ParameterKind: " +
                                 std::to_string(kind)));
   }
 }
 
-#define INSTANTIATE_SETPARAM(TYPE)                                        \
-  template void HfParameters::set_param(HfParameters::ParameterKind kind, \
-                                        std::string key, TYPE value);
+#define INSTANTIATE_SETPARAM(TYPE)                                          \
+  template void ScfParameters::set_param(ScfParameters::ParameterKind kind, \
+                                         std::string key, TYPE value);
 INSTANTIATE_SETPARAM(bool);
 INSTANTIATE_SETPARAM(double);
 INSTANTIATE_SETPARAM(int);
