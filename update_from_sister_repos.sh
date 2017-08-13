@@ -30,8 +30,9 @@ update_file "lazyten" "templates/cmake.template" "keep_header" || exit 1
 update_file "lazyten" "templates/hh.template" "keep_header" || exit 1
 update_file "lazyten" "templates/README.md" || exit 1
 
-update_file "krims" "doc/Doxyfile.in" || exit 1
+update_file "krims"   "doc/Doxyfile.in" || exit 1
 
-update_file "krims" ".clang-format" || exit 1
-update_file "krims" ".clang-tidy" || exit 1
+update_file "gint"    "setup.cfg" || exit 1
+update_file "krims"   ".clang-format" || exit 1
+update_file "krims"   ".clang-tidy" || exit 1
 update_file "lazyten" "update_from_sisters.lib.sh" || exit 1
