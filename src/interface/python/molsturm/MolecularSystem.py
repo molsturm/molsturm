@@ -24,7 +24,7 @@
 from gint import Structure
 
 
-class MolecularSystem:
+class MolecularSystem(Structure):
     """
     Class representing a molecular system, i.e. a structure and a number of electrons.
     """
@@ -45,15 +45,18 @@ class MolecularSystem:
         """
 
         if structure is None:
-            structure = Structure(atoms=atoms, coords=coords)
-        self.structure = structure
+            super().__init__(atoms, coords)
+        elif not isinstance(structure, Structure):
+            raise TypeError("structure needs to be a gint.Structure object.")
+        else:
+            super().__init__(structure.atom_numbers, structure.coords)
 
         if electrons is None:
             if charge is None:
                 raise ValueError("Either the number of alpha and the number of beta "
                                  "electrons or the charge (and multiplicity) needs to be "
                                  "specified.")
-            n_elec_count = structure.total_charge - charge
+            n_elec_count = self.total_charge - charge
 
             if multiplicity is None:
                 if n_elec_count % 2 == 0:
@@ -81,8 +84,12 @@ class MolecularSystem:
             self.n_alpha = electrons
             self.n_beta = electrons
 
-        self.charge = structure.total_charge - self.n_alpha - self.n_beta
+        self.charge = self.total_charge - self.n_alpha - self.n_beta
 
     @property
     def multiplicity(self):
         return self.n_alpha - self.n_beta + 1
+
+    @property
+    def is_closed_shell(self):
+        return self.n_alpha == self.n_beta
