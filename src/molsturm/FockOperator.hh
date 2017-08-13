@@ -59,6 +59,9 @@ class FockOperator final
   static_assert(restriction != RestrictionType::RestrictedOpen,
                 "RestrictedOpen is not implemented yet.");
 
+  /** Access to the RestrictionType flag */
+  static constexpr RestrictionType restriction_type = restriction;
+
   typedef krims::conditional_t<restriction == RestrictionType::RestrictedClosed,
                                RestrictedClosedIntegralOperator<StoredMatrix>,
                                UnrestrictedIntegralOperator<StoredMatrix>>
