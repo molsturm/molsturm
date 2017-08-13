@@ -21,7 +21,7 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from ._basis import available_basis_types
+from gint import available_basis_types
 from ._hartree_fock import hartree_fock, hartree_fock_keys
 from ._hartree_fock import compute_derived_hartree_fock_energies
 from ._hartree_fock import compute_exchange_ff, compute_coulomb_ff

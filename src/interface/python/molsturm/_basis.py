@@ -29,6 +29,9 @@ def has_real_harmonics(**basis_args):
 
   By default complex is assumed.
   """
+  # TODO This function has now been replaced by a member property
+  #      inside the basis classes.
+
   basis_type = basis_args["basis_type"]
   if basis_type == "gaussian/libint":
     return True
