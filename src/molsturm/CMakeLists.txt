@@ -26,7 +26,6 @@ set(MOLSTURM_SOURCES
 	read_xyz.cc
 	MolecularSystem.cc
 	GuessAlgorithms/guess_hcore.cc
-	GuessAlgorithms/guess_external.cc
 	GuessAlgorithms/GuessAlgorithmsKeysBase.cc
 )
 

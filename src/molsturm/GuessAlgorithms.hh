@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include "GuessAlgorithms/guess_external.hh"
 #include "GuessAlgorithms/guess_hcore.hh"
 #include "GuessAlgorithms/guess_loewdin.hh"
 #include "GuessAlgorithms/guess_random.hh"
