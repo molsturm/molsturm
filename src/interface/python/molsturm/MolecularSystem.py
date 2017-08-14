@@ -38,10 +38,13 @@ class MolecularSystem(Structure):
 
         electrons       The number of electrons in the system.
                         Can be given as a tuple (n_alpha, n_beta) or as a single
-                        value to assign n_alpha = n_beta = electrons.
+                        value. Then we take n_alpha = electrons // 2 and
+                        n_beta = electrons - n_alpha
         multiplicity    The multiplicity (2S+1) of the ground state to compute.
                         By default 1 is chosen for even electron systems and 2
                         for odd electron systems.
+        charge          Computed from the electrons and the nuclei in the system
+                        or set to 0 (neutral atom).
         """
 
         if structure is None:
@@ -53,10 +56,8 @@ class MolecularSystem(Structure):
 
         if electrons is None:
             if charge is None:
-                raise ValueError("Either the number of alpha and the number of beta "
-                                 "electrons or the charge (and multiplicity) needs to be "
-                                 "specified.")
-            n_elec_count = self.total_charge - charge
+                charge = 0
+            n_elec_count = super().total_charge - charge
 
             if multiplicity is None:
                 if n_elec_count % 2 == 0:
@@ -73,7 +74,7 @@ class MolecularSystem(Structure):
                                  "has " + str(n_elec_count) + " electrons, but a "
                                  "multiplicity of " + str(multiplicity) + ".")
 
-            self.n_alpha = (n_elec_count - spin_twice) / 2 + spin_twice
+            self.n_alpha = (n_elec_count - spin_twice) // 2 + spin_twice
             self.n_beta = n_elec_count - self.n_alpha
 
             assert self.multiplicity == multiplicity
@@ -81,15 +82,27 @@ class MolecularSystem(Structure):
         elif isinstance(electrons, tuple):
             self.n_alpha, self.n_beta = electrons
         else:
-            self.n_alpha = electrons
-            self.n_beta = electrons
+            self.n_alpha = electrons // 2
+            self.n_beta = electrons - self.n_alpha
 
-        self.charge = self.total_charge - self.n_alpha - self.n_beta
+        self.__charge = super().total_charge - self.n_alpha - self.n_beta
 
     @property
     def multiplicity(self):
+        """Return the multiplicity of the system"""
         return self.n_alpha - self.n_beta + 1
 
     @property
     def is_closed_shell(self):
+        """Is the system closed shell"""
         return self.n_alpha == self.n_beta
+
+    @property
+    def total_charge(self):
+        """Return the total resulting charge of the system"""
+        return self.__charge
+
+    @property
+    def charge(self):
+        return self.__charge
+    charge.__doc__ = total_charge.__doc__

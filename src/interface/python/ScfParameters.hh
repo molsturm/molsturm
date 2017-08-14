@@ -41,87 +41,61 @@
 namespace molsturm {
 namespace iface {
 
+#ifndef SWIG
+/** The keys used by the system submap of the ScfParameters */
+struct SystemKeys {
+  /** The structure to use. Type: gint::Structure */
+  static const std::string structure;
+
+  /** The number of alpha electrons. Type: size_t */
+  static const std::string n_alpha;
+
+  /** The number of beta electrons. Type: size_t */
+  static const std::string n_beta;
+};
+#endif  // SWIG
+
 /** ScfParameters which are available from the python interface.
- *  All parameters prefixed with internal_ are internal and will not
- *  be exposed to the user or available for the user
- */
-struct ScfParameters {
-#ifndef SWIG
-  //! The integral parameters to pass to the IntegralLookup object
-  krims::GenMap integral_params;
-
-  //! The guess parameters to pass to the guess method
-  krims::GenMap guess_params;
-
-  //! The SCF parameters to pass to the SCF solver
-  krims::GenMap scf_params;
-#endif  // SWIG
-
-//
-// System setup
-//
-/** Molecular system: Structure, charge and multiplicity
  *
- * All quantities in atomic units.
- * */
-//@{
-
-#ifndef SWIG
-  size_t n_alpha = 0;
-  size_t n_beta  = 0;
-
-  gint::Structure structure{};
-#endif  // SWIG
-
-  /** Set the molecular system from python
-   *
-   * Note: Will also populate the integral_parameters with the Structure object.
-   * */
-  void set_molecular_system(long* atom_numbers, int n_atoms_an, double* coords,
-                            int n_atoms_c, int three_c, size_t n_alpha, size_t n_beta);
-  //@}
-
+ * Contains the following submaps:
+ *    - guess     Will be used as the guess parameters i.e. to setup the scf guess
+ *    - scf       Will be used as the scf parameters to be passed to the actual SCF solver
+ *    - integrals Controls the integral backend, i.e. the basis function types which are
+ *                   used and the parameters for these.
+ *    - system    The chemical system to be modelled.
+ *                   Contains the description of the nuclei and electrons.
+ */
+struct ScfParameters : public krims::GenMap {
   //
-  // Setters for the GenMap objects
+  // Getters and setters for the GenMap
   //
-  /** The type of parameter which is set by the function call of the
-   *  set function below */
-  enum ParameterKind {
-    INTEGRAL,
-    GUESS,
-    SCF,
-  };
-
   /** Set a parameter in one of the GenMap objects */
   template <typename T>
-  void set_param(ParameterKind kind, std::string key, T value);
+  void update(const std::string& key, T value) {
+    krims::GenMap::update(key, value);
+  }
 #ifdef SWIG
   // clang-format off
-  %template(set_param_bool)   set_param<bool>;
-  %template(set_param_double) set_param<double>;
-  %template(set_param_int)    set_param<int>;
-  %template(set_param_size_t) set_param<size_t>;
-  %template(set_param_string) set_param<std::string>;
+  %template(update_bool)    update<bool>;
+  %template(update_int)     update<int>;
+  %template(update_size_t)  update<size_t>;
+  %template(update_scalar)  update<double>;
+  %template(update_string)  update<std::string>;
 // clang-format on
 #endif
 
   //
   // Special parameter setters
   //
-  /** Set the nlm basis stucture inside the integral_params */
-  void set_integral_param_nlm_basis(long* nlm, int n_nlm, int three_n);
+  /** Construct and set an gint::sturmian::NlmBasis object. */
+  void update_nlm_basis(const std::string& key, long* nlm, int n_nlm, int three_n);
 
-  /** Set the orbital type */
-  void set_integral_param_orbital_type(std::string type);
+  /** Interpret this type string as a gint::OrbitalType enum and set the value */
+  void update_orbital_type(const std::string& key, std::string type);
 
-  //
-  // TODO
-  // Temporary:
-  //
-  bool export_repulsion_integrals = true;
-  bool export_fock_matrix         = true;
-  bool export_hcore_matrix        = true;
-  bool export_overlap_matrix      = true;
+  /** Construct and set a gint::Structure object. */
+  void update_structure(const std::string& key, long* atom_numbers, int n_atoms_an,
+                        double* coords, int n_atoms_c, int three_c);
 };
 
 }  // namespace iface

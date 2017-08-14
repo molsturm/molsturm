@@ -195,7 +195,12 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_state(
   const size_t n_bas        = m_coul_bdens.n_rows();
   const size_t n_alpha      = base_type::m_n_alpha;
   const size_t n_beta       = base_type::m_n_beta;
-  assert_size(coeff_bf_ptr->n_elem(), 2 * n_bas);
+
+  assert_throw(coeff_bf_ptr->n_elem() == 2 * n_bas,
+               krims::ExcSizeMismatch(coeff_bf_ptr->n_elem(), 2 * n_bas));
+  assert_throw(
+        n_alpha + n_beta < coeff_bf_ptr->n_vectors(),
+        krims::ExcTooLargeOrEqual<size_t>(n_alpha + n_beta, coeff_bf_ptr->n_vectors()));
 
   // Since the eigenvectors from the Block-Diagonal eigensolver are padded with zeros
   // in the alpha-beta and beta-alpha blocks, we need to remove that padding and get

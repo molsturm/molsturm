@@ -296,8 +296,7 @@ typename Vector::scalar_type compute_spin_squared(
 
 template <typename State>
 ScfResults export_hf_results(const State& state,
-                             const gint::ERITensor_i<scalar_type>& eri,
-                             const ScfParameters& params) {
+                             const gint::ERITensor_i<scalar_type>& eri) {
   const auto& fbb       = state.problem_matrix();
   const auto& soln      = state.eigensolution();
   const bool restricted = fbb.restricted();
@@ -358,7 +357,7 @@ ScfResults export_hf_results(const State& state,
   assert_internal(ret.orben_f.size() == n_orbs);
   assert_internal(ret.orbcoeff_bf.size() == n_orbs * n_bas /* *2 */);
 
-  if (params.export_overlap_matrix) {
+  if (true) {
     // Compute the overlap matrix in MO space, i.e. C^T (S * C)
     auto overlap_ff =
           lazyten::dot(soln.evectors(), state.overlap_matrix() * soln.evectors());
@@ -369,7 +368,7 @@ ScfResults export_hf_results(const State& state,
     ret.overlap_ff.resize(0);
   }
 
-  if (params.export_fock_matrix) {
+  if (true) {
     // Compute the full fock matrix in MO space, i.e.  C^T * (F * C)
     // => Need a dot product here, so actually the dot of all vectors with another
     auto fock_ff = lazyten::dot(soln.evectors(), fbb * soln.evectors());
@@ -380,7 +379,7 @@ ScfResults export_hf_results(const State& state,
     ret.fock_ff.resize(0);
   }
 
-  if (params.export_hcore_matrix) {
+  if (true) {
     // Build the alpha-alpha block of the one electron terms in atomic basis function
     // space
     // (Note: This equals the beta-beta block for the one electron terms for both
@@ -408,7 +407,7 @@ ScfResults export_hf_results(const State& state,
     ret.hcore_ff.resize(0);
   }
 
-  if (params.export_repulsion_integrals) {
+  if (true) {
     export_eri(restricted, eri, soln.evectors(), ret.eri_ffff);
     assert_internal(ret.eri_ffff.size() == n_orbs * n_orbs * n_orbs * n_orbs);
   } else {
@@ -422,7 +421,7 @@ ScfResults export_hf_results(const State& state,
   template ScfResults export_hf_results(                                  \
         const IopScfState<FockOperator<matrix_type, STATE_TYPE>,          \
                           OverlapMatrix<matrix_type, STATE_TYPE>>& state, \
-        const gint::ERITensor_i<scalar_type>& eri, const ScfParameters&)
+        const gint::ERITensor_i<scalar_type>& eri)
 
 INSTANTIATE(RestrictionType::Unrestricted);
 INSTANTIATE(RestrictionType::RestrictedClosed);

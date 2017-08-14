@@ -23,7 +23,6 @@
 
 from ._iface import Version
 from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
-from ._constants import INPUT_PARAMETER_ARRAY_KEYS
 from ._hdf5 import emplace_dict, extract_group, h5py
 
 import numpy as np
@@ -79,6 +78,9 @@ def dump_yaml(hfres, stream):
   for k in HFRES_ARRAY_KEYS:
     if k in res:
       res[k] = res[k].tolist()
+
+  print("WARNING exporting / importing the new interface does not work.")
+  INPUT_PARAMETER_ARRAY_KEYS = []
 
   if INPUT_PARAMETER_KEY in res:
     ipkey = INPUT_PARAMETER_KEY

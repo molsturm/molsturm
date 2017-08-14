@@ -31,33 +31,12 @@
 namespace molsturm {
 namespace iface {
 
-void ScfParameters::set_molecular_system(long* atom_numbers, int n_atoms_an,
-                                         double* coords, int n_atoms_c, int three_c,
-                                         size_t n_alpha_, size_t n_beta_) {
-  size_t n_atoms = static_cast<size_t>(n_atoms_an);
-  assert_throw(n_atoms_an == n_atoms_c,
-               krims::ExcSizeMismatch(n_atoms, static_cast<size_t>(n_atoms_c)));
-  assert_throw(three_c == 3, krims::ExcSizeMismatch(static_cast<size_t>(three_c), 3ul));
-  static_assert(std::is_same<gint::real_type, double>::value,
-                "gint::real_type is expected to be double right now.");
+const std::string SystemKeys::structure = "structure";
+const std::string SystemKeys::n_alpha   = "n_alpha";
+const std::string SystemKeys::n_beta    = "n_beta";
 
-  // Build the structure object from the plain arrays:
-  structure.clear();
-  structure.reserve(n_atoms);
-  for (size_t i = 0; i < n_atoms; ++i) {
-    std::array<double, 3> arr_coords{
-          {coords[3 * i + 0], coords[3 * i + 1], coords[3 * i + 2]}};
-    assert_throw(atom_numbers[i] > 0, krims::ExcTooLarge<long>(0, atom_numbers[i]));
-    structure.emplace_back(atom_numbers[i], std::move(arr_coords));
-  }
-
-  n_alpha = n_alpha_;
-  n_beta  = n_beta_;
-
-  integral_params.update(IntegralLookupKeys::structure, structure)
-}
-
-void ScfParameters::set_integral_param_nlm_basis(long* nlm, int n_nlm, int three_n) {
+void ScfParameters::update_nlm_basis(const std::string& key, long* nlm, int n_nlm,
+                                     int three_n) {
   using gint::sturmian::atomic::Nlm;
   using gint::sturmian::atomic::NlmBasis;
 
@@ -91,58 +70,56 @@ void ScfParameters::set_integral_param_nlm_basis(long* nlm, int n_nlm, int three
 
     nlm_basis.push_back(std::move(tple));
   }
-  integral_params.update("nlm_basis", std::move(nlm_basis));
+
+  krims::GenMap::update(key, std::move(nlm_basis));
 }
 
-void ScfParameters::set_integral_param_orbital_type(std::string type) {
-  using gint::IntegralLookupKeys;
+/** Interpret this type string as a gint::OrbitalType enum and set the value */
+void ScfParameters::update_orbital_type(const std::string& key, std::string type) {
   using gint::OrbitalType;
 
-  if (type == std::string("real_molecular")) {
-    integral_params.update(IntegralLookupKeys::orbital_type, OrbitalType::REAL_MOLECULAR);
-  } else if (type == std::string("real_atomic")) {
-    integral_params.update(IntegralLookupKeys::orbital_type, OrbitalType::REAL_ATOMIC);
-  } else if (type == std::string("complex_molecular")) {
-    integral_params.update(IntegralLookupKeys::orbital_type,
-                           OrbitalType::COMPLEX_MOLECULAR);
-  } else if (type == std::string("complex_atomic")) {
-    integral_params.update(IntegralLookupKeys::orbital_type, OrbitalType::COMPLEX_ATOMIC);
-  } else {
-    assert_throw(false, ExcInvalidParameters(
-                              "Invalid value for set_integral_param_orbital_type"));
-  }
-}
-
-template <typename T>
-void ScfParameters::set_param(ScfParameters::ParameterKind kind, std::string key,
-                              T value) {
-  switch (kind) {
-    case ScfParameters::ParameterKind::SCF:
-      scf_params.update(key, value);
-      break;
-    case ScfParameters::ParameterKind::GUESS:
-      guess_params.update(key, value);
-      break;
-    case ScfParameters::ParameterKind::INTEGRAL:
-      integral_params.update(key, value);
-      break;
-    default:
+  const OrbitalType otype = [&type] {
+    if (type == std::string("real_molecular")) {
+      return OrbitalType::REAL_MOLECULAR;
+    } else if (type == std::string("real_atomic")) {
+      return OrbitalType::REAL_ATOMIC;
+    } else if (type == std::string("complex_molecular")) {
+      return OrbitalType::COMPLEX_MOLECULAR;
+    } else if (type == std::string("complex_atomic")) {
+      return OrbitalType::COMPLEX_ATOMIC;
+    } else {
       assert_throw(false, ExcInvalidParameters(
-                                "Invalid value for ScfParameters::ParameterKind: " +
-                                std::to_string(kind)));
-  }
+                                "Invalid value for set_integral_param_orbital_type"));
+      return OrbitalType::REAL_MOLECULAR;
+    }
+  }();
+
+  krims::GenMap::update(key, otype);
 }
 
-#define INSTANTIATE_SETPARAM(TYPE)                                          \
-  template void ScfParameters::set_param(ScfParameters::ParameterKind kind, \
-                                         std::string key, TYPE value);
-INSTANTIATE_SETPARAM(bool);
-INSTANTIATE_SETPARAM(double);
-INSTANTIATE_SETPARAM(int);
-INSTANTIATE_SETPARAM(size_t);
-INSTANTIATE_SETPARAM(std::string);
+/** Construct and set a gint::Structure object. */
+void ScfParameters::update_structure(const std::string& key, long* atom_numbers,
+                                     int n_atoms_an, double* coords, int n_atoms_c,
+                                     int three_c) {
+  size_t n_atoms = static_cast<size_t>(n_atoms_an);
+  assert_throw(n_atoms_an == n_atoms_c,
+               krims::ExcSizeMismatch(n_atoms, static_cast<size_t>(n_atoms_c)));
+  assert_throw(three_c == 3, krims::ExcSizeMismatch(static_cast<size_t>(three_c), 3ul));
+  static_assert(std::is_same<gint::real_type, double>::value,
+                "gint::real_type is expected to be double right now.");
 
-#undef INSTANTIATE_SET
+  // Build the structure object from the plain arrays:
+  gint::Structure structure;
+  structure.reserve(n_atoms);
+  for (size_t i = 0; i < n_atoms; ++i) {
+    std::array<double, 3> arr_coords{
+          {coords[3 * i + 0], coords[3 * i + 1], coords[3 * i + 2]}};
+    assert_throw(atom_numbers[i] > 0, krims::ExcTooLarge<long>(0, atom_numbers[i]));
+    structure.emplace_back(atom_numbers[i], std::move(arr_coords));
+  }
+
+  krims::GenMap::update(key, std::move(structure));
+}
 
 }  // namespace iface
 }  // namespace molsturm

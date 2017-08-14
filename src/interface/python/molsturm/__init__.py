@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,10 +20,9 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from gint import available_basis_types
-from ._hartree_fock import hartree_fock, hartree_fock_keys
+from ._hartree_fock import hartree_fock
 from ._hartree_fock import compute_derived_hartree_fock_energies
 from ._hartree_fock import compute_exchange_ff, compute_coulomb_ff
 from ._print import *

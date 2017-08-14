@@ -143,6 +143,13 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
   //! How verbose should the solver be.
   ScfMsgType verbosity = ScfMsgType::Silent;
 
+  /** Print the progress during the solve
+   *  (Type: bool)
+   *
+   *  Will add ScfMsgType::IterationProcess to the verbosity parameter.
+   */
+  static const std::string print_progress;
+
   // TODO introduce method parameter!
 
   /** Update control parameters from Parameter map */
@@ -153,6 +160,11 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
           map.at(IopScfKeys::max_tot_energy_change, max_tot_energy_change);
     max_1e_energy_change = map.at(IopScfKeys::max_1e_energy_change, max_1e_energy_change);
     verbosity            = map.at(IopScfKeys::verbosity, verbosity);
+
+    // For transition ... later remove the verbosity flag.
+    if (map.at(IopScfKeys::print_iterations, false)) {
+      verbosity |= ScfMsgType::IterationProcess;
+    }
 
     // Copy the map to the internal storage such that we
     // can pass it on to the actual eigensolvers.
@@ -167,6 +179,10 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
     map.update(IopScfKeys::max_tot_energy_change, max_tot_energy_change);
     map.update(IopScfKeys::max_1e_energy_change, max_1e_energy_change);
     map.update(IopScfKeys::verbosity, verbosity);
+
+    // For transition ... later remove the verbosity flag.
+    map.update(IopScfKeys::print_iterations,
+               have_common_bit(verbosity, ScfMsgType::IterationProcess));
   }
   ///@}
 

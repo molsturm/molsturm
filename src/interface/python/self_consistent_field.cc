@@ -39,7 +39,12 @@ ScfResults scf_for_operator(const ScfParameters& params,
                             const gint::IntegralLookup<matrix_type>& integrals,
                             ScfSolutionView& solution_view) {
   constexpr RestrictionType restrict = ScfOperator::restriction_type;
-  MolecularSystem system(params.structure, {{params.n_alpha, params.n_beta}});
+
+  // Build the molecular system
+  const krims::GenMap system_params = params.submap("system");
+  const MolecularSystem system{system_params.at<gint::Structure>(SystemKeys::structure),
+                               {{system_params.at<size_t>(SystemKeys::n_alpha),
+                                 system_params.at<size_t>(SystemKeys::n_beta)}}};
 
   // Overlap matrix and  Fock or Kohn-Sham matrix setup
   auto Sa_bb = integrals.lookup_integral(gint::IntegralTypeKeys::overlap);
@@ -47,37 +52,43 @@ ScfResults scf_for_operator(const ScfParameters& params,
   ScfOperator scfop_bb(integrals, system);
 
   // Obtaining and setting the guess.
-  const std::string guess_method =
-        params.scf_params.at<std::string>(ScfGuessKeys::method);
+  const krims::GenMap guess_params = params.submap("guess");
+  const std::string guess_method   = guess_params.at<std::string>(ScfGuessKeys::method);
+
   auto guess = (guess_method == std::string("external"))
                      ? solution_view.as_eigensolution()
-                     : scf_guess(system, scfop_bb, S_bb, params.guess_params);
+                     : scf_guess(system, scfop_bb, S_bb, guess_params);
   scfop_bb.update(guess.evectors_ptr);
 
   // Run SCF and export results back to caller.
-  auto result = run_scf(scfop_bb, S_bb, guess, params.scf_params);
+  auto result = run_scf(scfop_bb, S_bb, guess, params.submap("scf"));
   solution_view.set_from_eigensolution(result.eigensolution());
-  return export_hf_results(result, integrals.eri_tensor(), params);
+  return export_hf_results(result, integrals.eri_tensor());
 }
 
 ScfResults self_consistent_field(const ScfKind type, const ScfParameters& params,
                                  ScfSolutionView& solution_view) {
   const bool restricted = type == ScfKind::RHF;
 
+  // Add the structure for the integral library if not done yet:
+  params.insert_default("integrals/structure", params.at_raw_value("system/structure"));
+
   // TODO Potentially setting up this thing is expensive.
   //      Ideally we want to keep this around until it is no longer needed
   //      in other words, we probably want to pass it back to the caller
   //      inside the ScfResults or so.
-  gint::IntegralLookup<matrix_type> integrals(params.integral_params);
+  gint::IntegralLookup<matrix_type> integrals(params.submap("integrals"));
   const size_t n_bas =
         integrals.lookup_integral(gint::IntegralTypeKeys::overlap).n_rows();
-  const size_t max_elec = std::max(params.n_alpha, params.n_beta);
+  const size_t n_alpha  = params.at<size_t>("system/" + SystemKeys::n_alpha);
+  const size_t n_beta   = params.at<size_t>("system/" + SystemKeys::n_beta);
+  const size_t max_elec = std::max(n_alpha, n_beta);
+  const size_t n_spin   = solution_view.n_spin;
 
   //
   // Size checks
   //
-  assert_throw((restricted && solution_view.n_spin == 1) ||
-                     (!restricted && solution_view.n_spin == 2),
+  assert_throw((restricted && n_spin == 1) || (!restricted && n_spin == 2),
                ExcInvalidParameters("For restricted SCF we need exactly 1 spin component "
                                     "and for unrestricted SCF exactly 2."));
 
@@ -93,39 +104,36 @@ ScfResults self_consistent_field(const ScfKind type, const ScfParameters& params
         max_elec < n_bas,
         ExcInvalidParameters("A basis with n_bas == " + std::to_string(n_bas) +
                              " basis functions is too small for treating a system with " +
-                             std::to_string(params.n_alpha) + " alpha and " +
-                             std::to_string(params.n_beta) + " beta electrons."));
+                             std::to_string(n_alpha) + " alpha and " +
+                             std::to_string(n_beta) + " beta electrons."));
 
-  // Make sure the n_eigenpairs setting and the number of eigenpairs we can store in the
-  // arrays agrees.
-  if (params.scf_params.exists(gscf::ScfBaseKeys::n_eigenpairs)) {
-    const size_t n_eigenpairs =
-          params.scf_params.at<size_t>(gscf::ScfBaseKeys::n_eigenpairs);
-    assert_throw(n_eigenpairs == solution_view.n_fock * solution_view.n_spin,
-                 ExcInvalidParameters(
-                       "Number of eigenpairs requested via the ScfParameters (== " +
-                       std::to_string(n_eigenpairs) +
-                       ") and the size of the arrays "
-                       "which is reserved for the "
-                       "energies/coeffients in the ScfSolutionView (== " +
-                       std::to_string(solution_view.n_fock) + " orbitals * " +
-                       std::to_string(solution_view.n_spin) +
-                       " spin components) does not agree."));
-  } else {
-    params.scf_params.insert_default(gscf::ScfBaseKeys::n_eigenpairs,
-                                     solution_view.n_fock * solution_view.n_spin);
-  }
+  assert_throw(max_elec < solution_view.n_fock,
+               ExcInvalidParameters("Requested too few eigeinpairs. Cannot incorporate " +
+                                    std::to_string(n_alpha) + " alpha and " +
+                                    std::to_string(n_beta) + " beta electrons if only " +
+                                    std::to_string(solution_view.n_fock) +
+                                    " orbitals are computed for each spin."));
 
-  const size_t n_eigenpairs =
-        params.scf_params.at<size_t>(gscf::ScfBaseKeys::n_eigenpairs);
-  assert_throw(
-        n_eigenpairs >= 2 * max_elec,
-        ExcInvalidParameters(
-              "Cannot treat a system with " + std::to_string(params.n_alpha) +
-              " alpha and " + std::to_string(params.n_beta) +
-              " beta electrons with computing only " + std::to_string(n_eigenpairs) +
-              " eigenpairs in the SCF eigensolver. You need to request at least " +
-              std::to_string(2 * max_elec) + " eigenpairs."));
+  //
+  // Make sure the n_eigenpairs setting exists and the number of eigenpairs we
+  // can store in the arrays agrees with it.
+  //
+
+  // Note: The insert_default only does something if the key does *not* exist inside the
+  //       params yet.
+  const std::string eigenpairs_key = "scf/" + gscf::ScfBaseKeys::n_eigenpairs;
+  params.insert_default(eigenpairs_key, solution_view.n_fock * solution_view.n_spin);
+  const size_t n_eigenpairs = params.at<size_t>(eigenpairs_key);
+
+  assert_throw(n_eigenpairs == solution_view.n_fock * n_spin,
+               ExcInvalidParameters(
+                     "Number of eigenpairs requested via the ScfParameters (== " +
+                     std::to_string(n_eigenpairs) +
+                     ") and the size of the arrays "
+                     "which is reserved for the "
+                     "energies/coeffients in the ScfSolutionView (== " +
+                     std::to_string(solution_view.n_fock) + " orbitals * " +
+                     std::to_string(n_spin) + " spin components) does not agree."));
 
   //
   // Run the SCF
