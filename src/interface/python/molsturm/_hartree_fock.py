@@ -27,6 +27,7 @@ from gint.util import basis_class_from_name
 import collections
 import gint.gaussian
 import gint.sturmian.atomic
+import inspect
 
 from .scf_guess import extrapolate_from_previous
 from .MolecularSystem import MolecularSystem
@@ -286,20 +287,28 @@ def hartree_fock(molecular_system, basis=None, basis_type=None,
         if basis_type is None:
             raise ValueError("Either the basis or the basis_type needs to be given.")
         Basis = basis_class_from_name(basis_type)
-        bas_args = []
-        bas_kwargs = {}
 
-        # TODO use inspect to check the interface of the Basis
-        #      object and use the kwargs to construct it.
-        raise NotImplementedError("Basis construction on the fly is not yet implemented.")
+        # Get the name of the parameters which are accepted by the constructor
+        # of the Basis object
+        init_params = inspect.signature(Basis.__init__).parameters.keys()
 
-        basis = Basis(molecular_system, *bas_args, **bas_kwargs)
+        bas_kwargs = dict()
+        for p in kwargs:
+            if p in init_params:
+                bas_kwargs[p] = kwargs[p]
+
+        try:
+            basis = Basis(molecular_system, **bas_kwargs)
+        except (TypeError, ValueError) as e:
+            raise ValueError("Invalid kwarg for basis construction: " + str(e))
     else:
         if basis_type is not None:
             raise ValueError("Only one of basis or basis_type may be given.")
 
     if restricted is None:
         restricted = molecular_system.is_closed_shell
+
+    # TODO Check for wrongful or unused kwargs.
 
     #
     # Move system parameters into dict tree
