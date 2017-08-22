@@ -21,19 +21,20 @@
 ##
 ## ---------------------------------------------------------------------
 
-from . import _iface as iface
-import numpy as np
 from gint.util import basis_class_from_name
+from . import _iface as iface
+from .MolecularSystem import MolecularSystem
+from .MolsturmState import MolsturmState
+from .ParameterMap import ParameterMap, numpy_scalar
 import collections
 import gint.gaussian
 import gint.sturmian.atomic
 import inspect
+import numpy as np
 
 from .scf_guess import extrapolate_from_previous
-from .MolecularSystem import MolecularSystem
 from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
-from collections import Iterable
-from .sturmian import CoulombSturmianBasis
+
 
 def __to_double_vector(val):
     ret = iface.DoubleVector()
@@ -548,62 +549,62 @@ def hartree_fock(molecular_system, basis=None, basis_type=None,
 
 
 def compute_derived_hartree_fock_energies(hfres):
-  """Compute various derived hartree-fock energy terms."""
-  # TODO It would be better to have this in a hfres class,
-  #      which is returned by the hartree_fock function
-  res=dict()
+    """Compute various derived hartree-fock energy terms."""
+    # TODO It would be better to have this in a hfres class,
+    #      which is returned by the hartree_fock function
+    res = dict()
 
-  # Prefix all energy keys use:
-  prefix = "energy_"
+    # Prefix all energy keys use:
+    prefix = "energy_"
 
-  # Classify the different keys:
-  zeroElectron = [ "nuclear_repulsion" ]    # No electrons involved
-  twoElectron = [ "coulomb", "exchange" ]   # 2 electron terms
+    # Classify the different keys:
+    zeroElectron = ["nuclear_repulsion"]    # No electrons involved
+    twoElectron = ["coulomb", "exchange"]   # 2 electron terms
 
-  # Keys with special treatment
-  special = zeroElectron + twoElectron + [ "ground_state" ]
-  oneElectron = sorted([ k[len(prefix):] for k in hfres
-                         if k.startswith(prefix) and \
-                           not k[len(prefix):] in special
-                       ])
+    # Keys with special treatment
+    special = zeroElectron + twoElectron + ["ground_state"]
+    oneElectron = sorted([k[len(prefix):]
+                          for k in hfres
+                          if k.startswith(prefix) and not k[len(prefix):] in special
+                          ])
 
-  # All energy terms:
-  energies = zeroElectron + oneElectron + twoElectron
+    # All energy terms:
+    energies = zeroElectron + oneElectron + twoElectron
 
-  # Store individual terms in returned dictionary
-  res["terms"] = { ene : hfres[prefix+ene] for ene in energies }
+    # Store individual terms in returned dictionary
+    res["terms"] = {ene: hfres[prefix + ene] for ene in energies}
 
-  # Derived energies:
-  res[prefix + "ground_state"] = hfres[prefix + "ground_state"]
-  res[prefix + "1e"]           = sum([ hfres[prefix+ene] for ene in oneElectron ])
-  res[prefix + "2e"]           = sum([ hfres[prefix+ene] for ene in twoElectron ])
-  res[prefix + "electronic"]   = res[prefix + "1e"] + res[prefix + "2e"]
-  res[prefix + "nuclear"]      = hfres[prefix + "nuclear_repulsion"]
-  res[prefix + "potential"]    = sum([ hfres[prefix+ene] for ene in energies
-                                     if not ene in [ "kinetic" ] ])
-  res[prefix + "kinetic"]      = hfres[prefix + "kinetic"]
-  res["virial_ratio"]          = - res[prefix + "potential"] / res[prefix + "kinetic"]
+    # Derived energies:
+    res[prefix + "ground_state"] = hfres[prefix + "ground_state"]
+    res[prefix + "1e"] = sum([hfres[prefix + ene] for ene in oneElectron])
+    res[prefix + "2e"] = sum([hfres[prefix + ene] for ene in twoElectron])
+    res[prefix + "electronic"] = res[prefix + "1e"] + res[prefix + "2e"]
+    res[prefix + "nuclear"] = hfres[prefix + "nuclear_repulsion"]
+    res[prefix + "potential"] = sum([hfres[prefix + ene] for ene in energies
+                                     if ene not in ["kinetic"]])
+    res[prefix + "kinetic"] = hfres[prefix + "kinetic"]
+    res["virial_ratio"] = - res[prefix + "potential"] / res[prefix + "kinetic"]
 
-  return res
+    return res
+
 
 def compute_coulomb_ff(hfres):
-  """Compute the coulomb matrix in MO space"""
-  noa   = hfres["n_orbs_alpha"]
-  na    = hfres["n_alpha"]
-  nb    = hfres["n_beta"]
-  jirep = hfres["eri_ffff"]
+    """Compute the coulomb matrix in MO space"""
+    noa = hfres["n_orbs_alpha"]
+    na = hfres["n_alpha"]
+    nb = hfres["n_beta"]
+    jirep = hfres["eri_ffff"]
 
-  return np.trace(jirep[   :na,          :na,       :, : ], axis1=0, axis2=1) + \
-         np.trace(jirep[noa:noa + nb, noa:noa + nb, :, : ], axis1=0, axis2=1)
+    return np.trace(jirep[:na, :na, :, :], axis1=0, axis2=1) + \
+        np.trace(jirep[noa:noa + nb, noa:noa + nb, :, :], axis1=0, axis2=1)
 
 
 def compute_exchange_ff(hfres):
-  """Compute the exchange matrix in MO space"""
-  noa   = hfres["n_orbs_alpha"]
-  na    = hfres["n_alpha"]
-  nb    = hfres["n_beta"]
-  jirep = hfres["eri_ffff"]
+    """Compute the exchange matrix in MO space"""
+    noa = hfres["n_orbs_alpha"]
+    na = hfres["n_alpha"]
+    nb = hfres["n_beta"]
+    jirep = hfres["eri_ffff"]
 
-  return np.trace(jirep[   :na      , :, :,    :na      ], axis1=0, axis2=3) + \
-         np.trace(jirep[noa:noa + nb, :, :, noa:noa + nb], axis1=0, axis2=3)
-
+    return np.trace(jirep[:na, :, :, :na], axis1=0, axis2=3) + \
+        np.trace(jirep[noa:noa + nb, :, :, noa:noa + nb], axis1=0, axis2=3)
