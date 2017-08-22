@@ -25,10 +25,8 @@
 namespace molsturm {
 namespace iface {
 
-enum ScfKind { RHF, UHF };
-
-/** Run a restricted (closed-shell) SCF calculation */
-ScfResults self_consistent_field(const ScfKind type, const ScfParameters& params,
+/** Run a SCF calculation */
+ScfResults self_consistent_field(const ScfParameters& params,
                                  ScfSolutionView& solution_view);
 
 }  // namespace iface

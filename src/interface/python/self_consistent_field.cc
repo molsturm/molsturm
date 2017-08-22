@@ -66,9 +66,10 @@ ScfResults scf_for_operator(const ScfParameters& params,
   return export_hf_results(result, integrals.eri_tensor());
 }
 
-ScfResults self_consistent_field(const ScfKind type, const ScfParameters& params,
+ScfResults self_consistent_field(const ScfParameters& params,
                                  ScfSolutionView& solution_view) {
-  const bool restricted = type == ScfKind::RHF;
+  const std::string scf_kind = params.at<std::string>("scf/kind");
+  const bool restricted      = scf_kind == std::string("RHF");
 
   // Add the structure for the integral library if not done yet:
   params.insert_default("integrals/structure", params.at_raw_value("system/structure"));
@@ -141,16 +142,17 @@ ScfResults self_consistent_field(const ScfKind type, const ScfParameters& params
   typedef FockOperator<matrix_type, RestrictionType::RestrictedClosed> fock_rhf_t;
   typedef FockOperator<matrix_type, RestrictionType::Unrestricted> fock_uhf_t;
 
-  switch (type) {
-    case ScfKind::RHF:
-      return scf_for_operator<fock_rhf_t>(params, integrals, solution_view);
-    case ScfKind::UHF:
-      return scf_for_operator<fock_uhf_t>(params, integrals, solution_view);
-    default:
-      assert_throw(false,
-                   ExcInvalidParameters(
-                         "The ScfKind / SCF type parameter supplied is not understood."));
+  if (scf_kind == "RHF") {
+    return scf_for_operator<fock_rhf_t>(params, integrals, solution_view);
+  } else if (scf_kind == "UHF") {
+    return scf_for_operator<fock_uhf_t>(params, integrals, solution_view);
+  } else if (scf_kind == "ROHF") {
+    assert_implemented(scf_kind != "ROHF");
+  } else {
+    assert_throw(false, ExcInvalidParameters(
+                              "The scf/kind parameter supplied is not understood."));
   }
+  return ScfResults{};
 }
 
 }  // namespace iface

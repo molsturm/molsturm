@@ -24,8 +24,8 @@
 from gint.util import basis_class_from_name
 from . import _iface as iface
 from .MolecularSystem import MolecularSystem
-from .MolsturmState import MolsturmState
-from .ParameterMap import ParameterMap, numpy_scalar
+from .State import State
+from .ParameterMap import ParameterMap
 import collections
 import gint.gaussian
 import gint.sturmian.atomic
@@ -104,142 +104,55 @@ __params_transform_map = {
 }
 
 
-class soarray(np.ndarray):
-    """Spin-Orbital array"""
+"""Named tuple to contain value and type of an SCF parameter."""
+ScfParamSpecial = collections.namedtuple("ScfParamSpecial", ["value", "type"])
 
-    # Subclassing numpy arrays is a little different than usual.
-    # See https://docs.scipy.org/doc/numpy/user/basics.subclassing.html
-    # for a guideline.
 
-    def __new__(cls, n_orbs, n_electrons, inner):
-        # Create numpy array instance
-        order = "C" if not np.isfortran(inner) else "F"
-        obj = super(soarray, cls).__new__(cls, shape=inner.shape, dtype=inner.dtype,
-                                          buffer=inner, strides=inner.strides, order=order)
+def __scf_parameters_from_tree(param_tree):
+    """Make an ScpParameters object from a ParameterMap parameter tree"""
+    if not isinstance(param_tree, ParameterMap):
+        raise TypeError("paramtree needs to be a ParameterMap object.")
 
-        if isinstance(n_orbs, int):
-            obj.n_orbs = (n_orbs // 2, n_orbs - n_orbs // 2)
-        elif isinstance(n_orbs, tuple):
-            obj.n_orbs = n_orbs
+    # Map which changes the keys string from the one in the tree
+    # to the one actually exported to the C++ side
+    # (this is for legacy and compatiblity reasons)
+    map_key_remap = {"scf/diis_size": "scf/diis_n_prev_steps"}
+
+    # Map which maps the actual type of a data value to the function
+    # call and the type we need to set on the C++ side
+    ParamUpdate = collections.namedtuple("ParamUpdate", ["function", "typecast"])
+    map_update = {
+        int: ParamUpdate("update_int", int),
+        np.uint64: ParamUpdate("update_size_t", int),
+        float: ParamUpdate("update_scalar", float),
+        str: ParamUpdate("update_string", str),
+        bool: ParamUpdate("update_bool", bool),
+    }
+
+    # This call is special since it needs two inputs from the tree
+    scfparams = iface.ScfParameters()
+    scfparams.update_structure("system/structure",
+                               param_tree["system/atom_numbers"].value,
+                               param_tree["system/coords"].value)
+
+    for key_in in param_tree:
+        key = map_key_remap.get(key_in, key_in)
+
+        if isinstance(param_tree[key_in], ScfParamSpecial):
+            # Deal with special nodes
+            value, typestr = param_tree[key_in]
+            if typestr not in ["structure"]:
+                # Setting the value has not been already done above
+                getattr(scfparams, "update_" + typestr)(key, value)
         else:
-            raise TypeError("n_orbs needs to be a tuple or an int.")
-
-        if isinstance(n_electrons, int):
-            obj.n_electrons = (n_electrons // 2, n_electrons - n_electrons // 2)
-        elif isinstance(n_electrons, tuple):
-            obj.n_electrons = n_electrons
-        else:
-            raise TypeError("n_electrons needs to be a tuple or an int.")
-
-        if obj.n_orbs[0] < obj.n_electrons[0] or obj.n_orbs[1] < obj.n_electrons[1]:
-            raise ValueError("Need less electrons than orbitals.")
-
-        if any(sh != sum(obj.n_orbs) for sh in inner.shape):
-            raise ValueError("Shape of the inner tensor needs to be equal to the number "
-                             "of orbitals.")
-        return obj
-
-    def __array_finalize__(self, obj):
-        if obj is None:
-            return
-
-        if not hasattr(obj, "n_electrons"):
-            raise ValueError("Sorry, cannot construct soarray from a plain numpy ndarray")
-        else:
-            self.n_electrons = getattr(obj, "n_electrons")
-            self.n_orbs = getattr(obj, "n_orbs")
-
-    def block(self, block):
-        if len(block) != self.ndim:
-            raise ValueError("Tensor dimension and number of letters in "
-                             "the block string needs to agree")
-
-        n_alpha = self.n_electrons[0]
-        n_beta = self.n_electrons[1]
-        n_orbs_alpha = self.n_orbs[0]
-        n_orbs_beta = self.n_orbs[1]
-
-        occa = slice(0, n_alpha)
-        occb = slice(n_orbs_alpha, n_orbs_alpha + n_beta)
-        virta = slice(n_alpha, n_orbs_alpha)
-        virtb = slice(n_orbs_alpha + n_beta, n_orbs_alpha + n_orbs_beta)
-
-        ranges = {
-            "o": (occa, occb),
-            "v": (virta, virtb),
-        }
-
-        if any(a not in ranges for a in block):
-            raise ValueError("Block string may only contain letters " +
-                             ",".join(ranges.keys()))
-
-        ret = self
-        for i, b in enumerate(block):
-            # Build numpy index:
-            idxa = i * (slice(None), ) + (ranges[b][0], Ellipsis)
-            idxb = i * (slice(None), ) + (ranges[b][1], Ellipsis)
-            ret = np.concatenate((ret[idxa], ret[idxb]), axis=i)
-        return ret
-
-
-# TODO Quick and dirty wrapper to mimic the new syntax
-class TmpState(dict):
-    def __init__(self, other):
-        for key in other:
-            self.__setitem__(key, other[key])
-
-    def eri_block(self, block="ffff"):
-        """Get a block of the electron repulsion tensor
-           in shell pair or chemists notation.
-           No antisymmetrisation done yet.
-        """
-        if block != "ffff":
-            raise NotImplementedError("Only ffff can be obtained at the moment.")
-        return self.make_soarray(self.__getitem__("eri_ffff"))
-
-    @property
-    def eri(self):
-        """
-        Return the full eri tensor.
-        """
-        return self.eri_block()
-
-    @property
-    def fock(self):
-        """
-        Return the full fock matrix.
-        """
-        return self.make_soarray(self.__getitem__("fock_ff"))
-
-    @property
-    def n_orbs(self):
-        return (self.__getitem__("n_orbs_alpha"), self.__getitem__("n_orbs_beta"))
-
-    @property
-    def n_electrons(self):
-        return (self.__getitem__("n_alpha"), self.__getitem__("n_beta"))
-
-    def make_soarray(self, inner):
-        a = soarray(self.n_orbs, self.n_electrons, inner)
-        return a
-
-
-class ParameterMap(dict):
-    # TODO Three like structure which can be built from
-    #      the input parameters to hartree_fock
-    #
-    # Probably this guy should be directly linked to a GenMap
-    # object back on the C++ side or made such that a GenMap
-    # in C++ can be easily generated from this.
-    pass
-
-    def update(key, value, typestr=None):
-        if type(value) == bool:
-            typestr = "bool"
-        elif type(value) == int:
-            raise ValueError("For int type string is needed")
-        elif type(value) == str:
-            typestr = "string"
+            value = param_tree[key_in]
+            try:
+                updatefct, typecast = map_update[type(value)]
+            except KeyError as e:
+                raise ValueError("Did not understand type " + str(type(value)) +
+                                 " of key " + key_in)
+            getattr(scfparams, updatefct)(key, typecast(value))
+    return scfparams
 
 
 def hartree_fock(molecular_system, basis=None, basis_type=None,
@@ -258,17 +171,8 @@ def hartree_fock(molecular_system, basis=None, basis_type=None,
 
 
     Examples:
-        hartree_fock(molecular_system=("Be",),    )
-
-    # TODO old docs:
-    The list of valid input
-    parameters can be retrieved by the means of the list "hartree_fock_keys".
-
-    A couple of selected kwargs:
-      - basis_type        The type of the basis used for the calculation
-      - coords            List of iterables of size 3: Coordinats of the atoms
-      - atoms             List of the atom symbols (in the same order as coords)
-      - guess             The guess method to use
+        hartree_fock(molecular_system=("Be",), basis_type="gaussian",
+                     basis_set_name="sto-3g")
     """
 
     #
@@ -314,78 +218,81 @@ def hartree_fock(molecular_system, basis=None, basis_type=None,
     #
     # Move system parameters into dict tree
     #
-    ScfParam = collections.namedtuple("ScfParam", ["value", "type"])
-    param_tree = dict()
-    param_tree["restricted"] = ScfParam(restricted, "bool")
+    param_tree = ParameterMap()
 
     #
     # System parameters
     #
-    param_tree["system/n_alpha"] = ScfParam(molecular_system.n_alpha, "size_t")
-    param_tree["system/n_beta"] = ScfParam(molecular_system.n_beta, "size_t")
-    param_tree["system/coords"] = ScfParam(molecular_system.coords, "structure")
+    param_tree["system/n_alpha"] = np.uint64(molecular_system.n_alpha)
+    param_tree["system/n_beta"] = np.uint64(molecular_system.n_beta)
+    param_tree["system/coords"] = ScfParamSpecial(molecular_system.coords, "structure")
     param_tree["system/atom_numbers"] = \
-        ScfParam(molecular_system.atom_numbers, "structure")
+        ScfParamSpecial(molecular_system.atom_numbers, "structure")
 
     #
     # Integral parameters (parts hackish)
     #
-    param_tree["integrals/basis_type"] = ScfParam(basis.basis_type, "string")
-    if isinstance(basis, gint.gaussian.Basis):
-        # TODO Instead set basis functions here directly and omit passing
+    param_tree["integrals/basis_type"] = str(basis.basis_type)
+    if isinstance(basis, gint.gaussian.Basis):    # TODO Instead set basis functions here directly and omit passing
         #      the basis set name here and allow to pass the full description
         #      down to gint
-        param_tree["integrals/basis_set"] = ScfParam(basis.basis_set_name, "string")
+        param_tree["integrals/basis_set"] = str(basis.basis_set_name)
 
         # TODO This is still some sort of legacy stuff we kind of need
         #      to do at the moment unfortunately. One should remove that soon.
-        param_tree["integrals/orbital_type"] = ScfParam("real_molecular", "orbital_type")
+        param_tree["integrals/orbital_type"] = ScfParamSpecial("real_molecular",
+                                                               type="orbital_type")
     elif isinstance(basis, gint.sturmian.atomic.Basis):
         if (molecular_system.n_atoms > 1):
             raise ValueError("Invalid basis: Atomic Coulomb-Strumians can only be used "
                              "on atoms and not on molecules.")
 
-        param_tree["integrals/k_exponent"] = ScfParam(basis.k_exp, "scalar")
-        param_tree["integrals/nlm_basis"] = ScfParam(basis.functions, "nlm_basis")
+        param_tree["integrals/k_exponent"] = float(basis.k_exp)
+        param_tree["integrals/nlm_basis"] = ScfParamSpecial(basis.functions, "nlm_basis")
 
         # TODO This is still some sort of legacy stuff we kind of need
         #      to do at the moment unfortunately. One should remove that soon.
-        param_tree["integrals/orbital_type"] = ScfParam("complex_atomic", "orbital_type")
+        param_tree["integrals/orbital_type"] = ScfParamSpecial("complex_atomic",
+                                                               type="orbital_type")
 
         # TODO This is only temporary and until the gint layer has fully moved
         #      to using nlm_basis.
         print("WARNING: Right now we assume all sturmian basis sets to be dense")
         n_max, l_max, m_max = np.max(basis.functions, axis=0)
-        param_tree["integrals/n_max"] = ScfParam(n_max, "int")
-        param_tree["integrals/l_max"] = ScfParam(l_max, "int")
-        param_tree["integrals/m_max"] = ScfParam(m_max, "int")
+        param_tree["integrals/n_max"] = int(n_max)
+        param_tree["integrals/l_max"] = int(l_max)
+        param_tree["integrals/m_max"] = int(m_max)
     else:
         raise TypeError("basis has an unrecognised type.")
 
     #
     # Build guess parameters
     #
-    param_tree["guess/eigensolver/method"] = ScfParam(guess_esolver, "string")
+    param_tree["guess/eigensolver/method"] = str(guess_esolver)
     if isinstance(guess, str):
         if guess == "external":
             # TODO We would need to get the guess data into the
             #      coefficients from which we start the calculation somehow
             raise NotImplementedError("external guess not yet implemented.")
         else:
-            param_tree["guess/method"] = ScfParam(guess, "string")
+            param_tree["guess/method"] = str(guess)
     else:
         raise NotImplementedError("guess from previous not yet implemented.")
 
     #
     # Build scf parameters
     #
-    param_tree["scf/max_error_norm"] = ScfParam(conv_tol, "scalar")
-    param_tree["scf/max_1e_energy_change"] = ScfParam(conv_tol * 100., "scalar")
-    param_tree["scf/max_tot_energy_change"] = ScfParam(conv_tol / 4., "scalar")
-    param_tree["scf/max_iter"] = ScfParam(max_iter, "size_t")
-    param_tree["scf/n_eigenpairs"] = ScfParam(n_eigenpairs, "size_t")
-    param_tree["scf/diis_size"] = ScfParam(diis_size, "size_t")
-    param_tree["scf/print_iterations"] = ScfParam(print_iterations, "bool")
+    param_tree["scf/kind"] = "ROHF" if restricted else "UHF"
+    if restricted and molecular_system.is_closed_shell:
+        param_tree["scf/kind"] = "RHF"
+
+    param_tree["scf/max_error_norm"] = float(conv_tol)
+    param_tree["scf/max_1e_energy_change"] = float(conv_tol * 100.)
+    param_tree["scf/max_tot_energy_change"] = float(conv_tol / 4.)
+    param_tree["scf/max_iter"] = np.uint64(max_iter)
+    param_tree["scf/n_eigenpairs"] = np.uint64(n_eigenpairs)
+    param_tree["scf/diis_size"] = np.uint64(diis_size)
+    param_tree["scf/print_iterations"] = bool(print_iterations)
 
     # TODO import param_tree from a yaml file
     #      This will set n_bas, n_fock and n_spin from the cached input
@@ -393,70 +300,33 @@ def hartree_fock(molecular_system, basis=None, basis_type=None,
     #
     # Checking and normalisation
     #
-    if param_tree["restricted"].value and \
-       param_tree["system/n_alpha"].value != param_tree["system/n_beta"].value:
-        raise ValueError("Currently restricted is only possible for closed-shell systems")
+    if param_tree["scf/kind"] == "RHF" and \
+       param_tree["system/n_alpha"] != param_tree["system/n_beta"]:
+        raise ValueError("Currently RHF is only possible for closed-shell systems")
 
-    if param_tree["scf/n_eigenpairs"].value % 2 != 0:
+    if param_tree["scf/kind"] == "ROHF":
+        raise ValueError("ROHF is currently not implemented.")
+
+    if param_tree["scf/n_eigenpairs"] % 2 != 0:
         raise ValueError("The n_eigenpairs parameter applies to the accumulated number "
                          "of eigenpairs in the SCF calculations, i.e. the number of "
                          "alpha plus the number of beta orbitals. This is the done even "
                          "for restricted calculations. For now we further require this "
                          "number to be even number.")
 
-    n_spin = 1 if param_tree["restricted"].value else 2  # Number of spin components
+    n_spin = 1 if param_tree["scf/kind"] == "RHF" else 2  # Number of spin components
     n_bas = basis.size
-    n_fock = min(n_bas, param_tree["scf/n_eigenpairs"].value // 2)
-    param_tree["scf/n_eigenpairs"] = ScfParam(n_fock * n_spin, "size_t")
+    n_fock = min(n_bas, param_tree["scf/n_eigenpairs"] // 2)
+    param_tree["scf/n_eigenpairs"] = np.uint64(n_fock * n_spin)
 
     # Check enough eigenpairs are requested.
-    if n_fock < max(param_tree["system/n_alpha"].value, param_tree["system/n_beta"].value):
-        raise ValueError("Cannot treat a system with " + str(param_tree["system/n_alpha"].value) + " alpha and " + str(param_tree["system/n_beta"].value) + " beta electrons with computing only " + str(n_fock) + " eigenpairs. Either choose a larger basis or a larger value for n_eigenpairs.")
-
-    #
-    # Set the keys inside the ScfParameters
-    # TODO This section is really bäh
-    #
-    # Map which changes the keys from the tree to the keys exported to the C++ side
-    key_remap = {"scf/diis_size": "scf/diis_n_prev_steps"}
-
-    scfparams = iface.ScfParameters()
-    scfparams.update_structure("system/structure",
-                               param_tree["system/atom_numbers"].value,
-                               param_tree["system/coords"].value)
-
-    for key in param_tree:
-        if param_tree[key].type in ["structure"]:
-            pass  # Already done
-        else:
-            # TODO This is an ugly hack
-            # Should be done transparently in some param_tree manager class
-            # (see ParameterMap above)
-            if param_tree[key].type == "size_t":
-                print("WARNIG  using size_t hacke on " + key)
-                value = np.asscalar(np.array([param_tree[key].value], dtype=np.uint64))
-            elif param_tree[key].type == "bool":
-                print("WARNIG  using bool hacke on " + key)
-                value = bool(param_tree[key].value)
-            elif param_tree[key].type == "int":
-                print("WARNIG  using int hacke on " + key)
-                value = int(param_tree[key].value)
-            else:
-                value = param_tree[key].value
-
-            # If the key is in the key_remap it needs to be remapped
-            if key in key_remap:
-                key_out = key_remap[key]
-            else:
-                key_out = key
-
-            # Use the type to construct the version of the update
-            # function to call and call it with the value we have stored
-            try:
-                getattr(scfparams, "update_" + param_tree[key].type)(key_out, value)
-            except:
-                print(key, value, type(value), param_tree[key].type)
-                raise
+    if n_fock < max(param_tree["system/n_alpha"], param_tree["system/n_beta"]):
+        raise ValueError("Cannot treat a system with " +
+                         str(param_tree["system/n_alpha"]) + " alpha and " +
+                         str(param_tree["system/n_beta"]) +
+                         " beta electrons with computing only " + str(n_fock) +
+                         " eigenpairs. Either choose a larger basis or a larger "
+                         "value for n_eigenpairs.")
 
     #
     # Run scf
@@ -464,11 +334,15 @@ def hartree_fock(molecular_system, basis=None, basis_type=None,
     orben = np.empty((n_spin, n_fock))
     orbcoeff = np.empty((n_spin, n_bas, n_fock))
     solution_view = iface.ScfSolutionView(orben, orbcoeff)
-    scf_kind = iface.RHF if param_tree["restricted"] else iface.UHF
-    res = iface.self_consistent_field(scf_kind, scfparams, solution_view)
+
+    scf_params = __scf_parameters_from_tree(param_tree)
+    res = iface.self_consistent_field(scf_params, solution_view)
 
     #
     # Output
+    #
+    # TODO This part has not been altered since the move to the new interface
+    #      on the input side. Rework it.
     #
     # TODO Better return a dict-like class instead of a dict. That way
     #      we can use the class more easily and distinguish between results
@@ -495,57 +369,7 @@ def hartree_fock(molecular_system, basis=None, basis_type=None,
     # out[INPUT_PARAMETER_KEY] = inputargs
     # TODO sericalise the dict_tree to something yaml and hdf5 can shamelessly write
 
-    return TmpState(out)
-
-#   #
-#   # Input
-#   #
-#   inputargs = dict()
-#   if molecular_system:
-#     if not isinstance(molecular_system, MolecularSystem):
-#       raise TypeError("molecular_system needs to be of type MolecularSystem")
-#     inputargs.update(molecular_system.as_hartree_fock_parameters())
-# 
-#   if basis:
-#     if not isinstance(basis, CoulombSturmianBasis):
-#       raise TypeError("basis needs to be of type CoulombSturmianBasis")
-#     inputargs.update(basis.as_hartree_fock_parameters())
-# 
-#   # Keys which need to be parsed *after* all other ones have been.
-#   delayed_keys = [ "guess", "guess_external_orben_f", "guess_external_orbcoeff_bf" ]
-# 
-#   for key in kwargs:
-#     if not key in hartree_fock_keys:
-#       raise ValueError("Keyword " + key + " is unknown to hartree_fock")
-#     if key in delayed_keys:
-#       continue
-# 
-#     # Copy key and (possibly transformed) value:
-#     if key in __kwargs_parse_map:
-#       __kwargs_parse_map[key](kwargs,inputargs)
-#     else:
-#       inputargs[key] = kwargs[key]
-# 
-#   # Deal with the delayed keys:
-#   for key in delayed_keys:
-#     if key in kwargs:
-#       __kwargs_parse_map[key](kwargs,inputargs)
-# 
-#   # Setup parameters:
-#   params = iface.Parameters()
-#   for key in inputargs:
-#     if key in __params_transform_map:
-#       setattr(params, key, __params_transform_map[key](inputargs[key]))
-#     else:
-#       setattr(params, key, inputargs[key])
-# 
-#   if "restricted" in kwargs:
-#     # Make a note that the user specified the restricted keyword
-#     params.internal_restricted_set_by_user = True
-# 
-#   #
-#   res = iface.hartree_fock(params)
-#   #
+    return State(out)
 
 
 def compute_derived_hartree_fock_energies(hfres):
