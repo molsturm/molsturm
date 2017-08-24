@@ -25,7 +25,7 @@
 
 """The keys corresponding to numpy arrays in the HfResults class"""
 HFRES_ARRAY_KEYS = ["orben_f", "eri_ffff", "fock_ff", "orbcoeff_bf", "hcore_ff",
-                    "overlap_ff"]
+                    "overlap_ff", "fock_bb"]
 
 """The optional output arrays in the hartree_fock procedure along with the
    parameters to switch them on"""

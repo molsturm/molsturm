@@ -369,6 +369,15 @@ ScfResults export_hf_results(const State& state,
   }
 
   if (true) {
+    // Compute the full fock matrix in AO space, i.e. just F
+    ret.fock_bb.resize(n_bas * n_bas);
+    matrix_type fbb_stored = static_cast<matrix_type>(fbb);
+    std::copy(fbb_stored.begin(), fbb_stored.end(), ret.fock_bb.begin());
+  } else {
+    ret.fock_bb.resize(0);
+  }
+
+  if (true) {
     // Compute the full fock matrix in MO space, i.e.  C^T * (F * C)
     // => Need a dot product here, so actually the dot of all vectors with another
     auto fock_ff = lazyten::dot(soln.evectors(), fbb * soln.evectors());
@@ -395,7 +404,8 @@ ScfResults export_hf_results(const State& state,
     // => Need a dot product here, so actually the dot of all vectors with another
     //    For restricted, where evectors() only runs over the alpha orbitals (betas are
     //    identical)
-    //    we only need the alpha-alpha block. For unrestricted, where the alphas and betas
+    //    we only need the alpha-alpha block. For unrestricted, where the alphas and
+    //    betas
     //    might
     //    differ, we need both blocks.
     auto hcore_ff = restricted

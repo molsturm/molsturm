@@ -86,6 +86,9 @@ struct ScfResults {
   // Fock matrix
   std::vector<double> fock_ff;
 
+  // Fock in AOs
+  std::vector<double> fock_bb;
+
   // Overlap matrix
   std::vector<double> overlap_ff;
 
