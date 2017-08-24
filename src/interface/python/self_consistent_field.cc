@@ -69,7 +69,8 @@ ScfResults scf_for_operator(const ScfParameters& params,
 ScfResults self_consistent_field(const ScfParameters& params,
                                  ScfSolutionView& solution_view) {
   const std::string scf_kind = params.at<std::string>("scf/kind");
-  const bool restricted      = scf_kind == std::string("RHF");
+  const bool restricted      = scf_kind == std::string("restricted");
+  assert_implemented(scf_kind != "restricted-open");
 
   // Add the structure for the integral library if not done yet:
   params.insert_default("integrals/structure", params.at_raw_value("system/structure"));
@@ -79,8 +80,7 @@ ScfResults self_consistent_field(const ScfParameters& params,
   //      in other words, we probably want to pass it back to the caller
   //      inside the ScfResults or so.
   gint::IntegralLookup<matrix_type> integrals(params.submap("integrals"));
-  const size_t n_bas =
-        integrals.lookup_integral(gint::IntegralTypeKeys::overlap).n_rows();
+  const size_t n_bas    = integrals.n_bas();
   const size_t n_alpha  = params.at<size_t>("system/" + SystemKeys::n_alpha);
   const size_t n_beta   = params.at<size_t>("system/" + SystemKeys::n_beta);
   const size_t max_elec = std::max(n_alpha, n_beta);
@@ -142,15 +142,17 @@ ScfResults self_consistent_field(const ScfParameters& params,
   typedef FockOperator<matrix_type, RestrictionType::RestrictedClosed> fock_rhf_t;
   typedef FockOperator<matrix_type, RestrictionType::Unrestricted> fock_uhf_t;
 
-  if (scf_kind == "RHF") {
+  if (scf_kind == "restricted") {
     return scf_for_operator<fock_rhf_t>(params, integrals, solution_view);
-  } else if (scf_kind == "UHF") {
+  } else if (scf_kind == "unrestricted") {
     return scf_for_operator<fock_uhf_t>(params, integrals, solution_view);
-  } else if (scf_kind == "ROHF") {
-    assert_implemented(scf_kind != "ROHF");
+  } else if (scf_kind == "restricted-open") {
+    assert_implemented(scf_kind != "restricted-open");
   } else {
-    assert_throw(false, ExcInvalidParameters(
-                              "The scf/kind parameter supplied is not understood."));
+    assert_throw(false,
+                 ExcInvalidParameters("The scf/kind parameter supplied is not "
+                                      "understood. The only known scf/kind options are : "
+                                      "restricted, unrestricted and restricted-open."));
   }
   return ScfResults{};
 }
