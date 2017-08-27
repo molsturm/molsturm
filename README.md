@@ -39,7 +39,7 @@ it has been built the following `python` packages are required:
 - [scipy](https://pypi.python.org/pypi/scipy)
 - [PyYAML](https://pypi.python.org/pypi/PyYAML)
 
-On a recent **Debian/Ubuntu** you can install all these dependencies by running
+On a recent **Debian/Ubuntu** you can install all the aforementioned dependencies by running
 ```
 apt-get install cmake swig python3-dev libopenblas-dev liblapack-dev libarmadillo-dev \
                 python3-h5py python3-yaml python3-numpy
@@ -97,6 +97,8 @@ For example
 - `-DENABLE_DOCUMENTATION=ON`: Build and install the *sparse*
   [doxygen](http://www.stack.nl/~dimitri/doxygen/index.html)-generated
   in-source documentation.
+- `-DGINT_ENABLE_LIBCINT=ON`: Enable Gaussian integrals via the
+  [``libcint``](https://github.com/sunqm/libcint) library.
 - `-DGINT_ENABLE_STURMINT=ON`: Enable the Coulomb-Sturmian basis functions
   via `sturmint` (This library is not yet publicly available,
   but will be released soon)
