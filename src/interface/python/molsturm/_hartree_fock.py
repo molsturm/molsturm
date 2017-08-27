@@ -21,12 +21,12 @@
 ##
 ## ---------------------------------------------------------------------
 
-from gint.util import basis_class_from_name
+from gint.util import split_basis_type
 from . import _iface as iface
 from .MolecularSystem import MolecularSystem
 from .State import State
 from .ParameterMap import ParameterMap
-import collections
+from ._iface_conversion import ParamSpecial, __to_iface_parameters
 import gint.gaussian
 import gint.sturmian.atomic
 import inspect
@@ -104,64 +104,13 @@ __params_transform_map = {
 }
 
 
-"""Named tuple to contain value and type of an SCF parameter."""
-ScfParamSpecial = collections.namedtuple("ScfParamSpecial", ["value", "type"])
-
-
-def __scf_parameters_from_tree(param_tree):
-    """Make an ScpParameters object from a ParameterMap parameter tree"""
-    if not isinstance(param_tree, ParameterMap):
-        raise TypeError("paramtree needs to be a ParameterMap object.")
-
-    # Map which changes the keys string from the one in the tree
-    # to the one actually exported to the C++ side
-    # (this is for legacy and compatiblity reasons)
-    map_key_remap = {"scf/diis_size": "scf/diis_n_prev_steps"}
-
-    # Map which maps the actual type of a data value to the function
-    # call and the type we need to set on the C++ side
-    ParamUpdate = collections.namedtuple("ParamUpdate", ["function", "typecast"])
-    map_update = {
-        int: ParamUpdate("update_int", int),
-        np.uint64: ParamUpdate("update_size_t", int),
-        float: ParamUpdate("update_scalar", float),
-        str: ParamUpdate("update_string", str),
-        bool: ParamUpdate("update_bool", bool),
-    }
-
-    # This call is special since it needs two inputs from the tree
-    scfparams = iface.ScfParameters()
-    scfparams.update_structure("system/structure",
-                               param_tree["system/atom_numbers"].value,
-                               param_tree["system/coords"].value)
-
-    for key_in in param_tree:
-        key = map_key_remap.get(key_in, key_in)
-
-        if isinstance(param_tree[key_in], ScfParamSpecial):
-            # Deal with special nodes
-            value, typestr = param_tree[key_in]
-            if typestr not in ["structure"]:
-                # Setting the value has not been already done above
-                getattr(scfparams, "update_" + typestr)(key, value)
-        else:
-            value = param_tree[key_in]
-            try:
-                updatefct, typecast = map_update[type(value)]
-            except KeyError as e:
-                raise ValueError("Did not understand type " + str(type(value)) +
-                                 " of key " + key_in)
-            getattr(scfparams, updatefct)(key, typecast(value))
-    return scfparams
-
-
 # TODO The n_bas_tmp parameter should go.
 #      It is not the way this should be done.
 #
 #      Note, that we cannot just put it into the tree, since
 #      the user (who might specify the tree via a yaml file)
 #      certainly does not know n_bas by himself.
-def __run_scf(param_tree, n_bas_tmp):
+def self_consistent_field(param_tree, n_bas_tmp):
     """
     Run an SCF procedure from a param_tree object, which should
     contain all the parameters needed for the SCF.
@@ -186,7 +135,7 @@ def __run_scf(param_tree, n_bas_tmp):
         raise ValueError("Currently restricted is only possible for closed-shell systems")
 
     if param_tree["scf/kind"] == "restricted-open":
-        raise ValueError("ROHF is currently not implemented.")
+        raise ValueError("restricted-open is currently not implemented.")
 
     if param_tree["scf/n_eigenpairs"] % 2 != 0:
         raise ValueError("The n_eigenpairs parameter applies to the accumulated number "
@@ -217,8 +166,8 @@ def __run_scf(param_tree, n_bas_tmp):
     orbcoeff = np.empty((n_spin, n_bas, n_fock))
     solution_view = iface.ScfSolutionView(orben, orbcoeff)
 
-    scf_params = __scf_parameters_from_tree(param_tree)
-    res = iface.self_consistent_field(scf_params, solution_view)
+    iface_params = __to_iface_parameters(param_tree, "ScfParameters")
+    res = iface.self_consistent_field(iface_params, solution_view)
 
     #
     # Output
@@ -270,9 +219,9 @@ def __scf_tree_from_args(molecular_system, basis, conv_tol, max_iter, n_eigenpai
     #
     param_tree["system/n_alpha"] = np.uint64(molecular_system.n_alpha)
     param_tree["system/n_beta"] = np.uint64(molecular_system.n_beta)
-    param_tree["system/coords"] = ScfParamSpecial(molecular_system.coords, "structure")
+    param_tree["system/coords"] = ParamSpecial(molecular_system.coords, "structure")
     param_tree["system/atom_numbers"] = \
-        ScfParamSpecial(molecular_system.atom_numbers, "structure")
+        ParamSpecial(molecular_system.atom_numbers, "structure")
 
     #
     # Integral parameters (parts hackish)
@@ -286,20 +235,20 @@ def __scf_tree_from_args(molecular_system, basis, conv_tol, max_iter, n_eigenpai
 
         # TODO This is still some sort of legacy stuff we kind of need
         #      to do at the moment unfortunately. One should remove that soon.
-        param_tree["integrals/orbital_type"] = ScfParamSpecial("real_molecular",
-                                                               type="orbital_type")
+        param_tree["integrals/orbital_type"] = ParamSpecial("real_molecular",
+                                                            type="orbital_type")
     elif isinstance(basis, gint.sturmian.atomic.Basis):
         if (molecular_system.n_atoms > 1):
             raise ValueError("Invalid basis: Atomic Coulomb-Strumians can only be used "
                              "on atoms and not on molecules.")
 
-        param_tree["integrals/k_exponent"] = float(basis.k_exp)
-        param_tree["integrals/nlm_basis"] = ScfParamSpecial(basis.functions, "nlm_basis")
+        param_tree["integrals/k_exp"] = float(basis.k_exp)
+        param_tree["integrals/nlm_basis"] = ParamSpecial(basis.functions, "nlm_basis")
 
         # TODO This is still some sort of legacy stuff we kind of need
         #      to do at the moment unfortunately. One should remove that soon.
-        param_tree["integrals/orbital_type"] = ScfParamSpecial("complex_atomic",
-                                                               type="orbital_type")
+        param_tree["integrals/orbital_type"] = ParamSpecial("complex_atomic",
+                                                            type="orbital_type")
 
         # TODO This is only temporary and until the gint layer has fully moved
         #      to using nlm_basis.
@@ -372,7 +321,7 @@ def hartree_fock(molecular_system=None, basis=None, basis_type=None,
         if isinstance(params, ParameterMap):
             # If the argument of hartree_fock is a ParameterMap,
             # short-circuit all of the normalisation and run the inner function.
-            return __run_scf(params)
+            return self_consistent_field(params)
         elif isinstance(params, str):
             # TODO Read parameters from a yaml file and run using those
             raise NotImplementedError("Cannot read parameters from yaml file yet.")
@@ -382,9 +331,6 @@ def hartree_fock(molecular_system=None, basis=None, basis_type=None,
     #
     # Input normalisation and building of parameter tree
     #
-    if isinstance(molecular_system, tuple):
-        # Construct from the provided tuple:
-        molecular_system = MolecularSystem(*molecular_system)
     if isinstance(molecular_system, str):
         # Only a single atom
         molecular_system = MolecularSystem(molecular_system)
@@ -395,7 +341,7 @@ def hartree_fock(molecular_system=None, basis=None, basis_type=None,
     if basis is None:
         if basis_type is None:
             raise ValueError("Either the basis or the basis_type needs to be given.")
-        Basis = basis_class_from_name(basis_type)
+        Basis, backend = split_basis_type(basis_type)
 
         # Get the name of the parameters which are accepted by the constructor
         # of the Basis object
@@ -407,7 +353,7 @@ def hartree_fock(molecular_system=None, basis=None, basis_type=None,
                 bas_kwargs[p] = kwargs[p]
 
         try:
-            basis = Basis(molecular_system, **bas_kwargs)
+            basis = Basis(molecular_system, **bas_kwargs, backend=backend)
         except (TypeError, ValueError) as e:
             raise ValueError("Invalid kwarg for basis construction: " + str(e))
     else:
@@ -419,12 +365,11 @@ def hartree_fock(molecular_system=None, basis=None, basis_type=None,
 
     # TODO Check for wrongful or unused kwargs.
 
-
     # Build a parameter tree from the commandline arguments
     param_tree = __scf_tree_from_args(molecular_system, basis, conv_tol, max_iter,
                                       n_eigenpairs, restricted, guess, guess_esolver,
                                       eigensolver, diis_size, print_iterations)
-    return __run_scf(param_tree, basis.size)
+    return self_consistent_field(param_tree, basis.size)
 
 
 def compute_derived_hartree_fock_energies(hfres):
