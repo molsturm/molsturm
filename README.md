@@ -31,6 +31,11 @@ For *building* `molsturm` the following things are required:
 
   See [github.com/lazyten/lazyten](https://github.com/lazyten/lazyten/blob/master/README.md)
   for more details about ``lazyten``'s dependencies.
+- If you want to use Gaussian integrals from
+  [``libint``](https://github.com/evaleev/libint) you further need
+    - Eigen3
+    - Autoconf
+    - GNU Multiprecision library
 
 In order to actually [use the `molsturm`-module](#using-molsturm-from-python) once
 it has been built the following `python` packages are required:
@@ -42,10 +47,9 @@ it has been built the following `python` packages are required:
 On a recent **Debian/Ubuntu** you can install all the aforementioned dependencies by running
 ```
 apt-get install cmake swig python3-dev libopenblas-dev liblapack-dev libarmadillo-dev \
-                python3-h5py python3-yaml python3-numpy
+                python3-h5py python3-yaml python3-numpy libeigen3-dev autoconf libgmp-dev
 ```
 as root.
-
 
 ### Optional dependencies
 The dependencies in this section are only needed for some extra functionality.
