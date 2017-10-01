@@ -370,7 +370,7 @@ ScfResults export_hf_results(const State& state,
 
   if (true) {
     // Compute the full fock matrix in AO space, i.e. just F
-    ret.fock_bb.resize(n_bas * n_bas);
+    ret.fock_bb.resize(fbb.n_rows() * fbb.n_cols());
     matrix_type fbb_stored = static_cast<matrix_type>(fbb);
     std::copy(fbb_stored.begin(), fbb_stored.end(), ret.fock_bb.begin());
   } else {
