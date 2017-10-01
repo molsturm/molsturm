@@ -198,9 +198,8 @@ void UnrestrictedIntegralOperator<StoredMatrix, BlockType>::update_state(
 
   assert_throw(coeff_bf_ptr->n_elem() == 2 * n_bas,
                krims::ExcSizeMismatch(coeff_bf_ptr->n_elem(), 2 * n_bas));
-  assert_throw(
-        n_alpha + n_beta < coeff_bf_ptr->n_vectors(),
-        krims::ExcTooLargeOrEqual<size_t>(n_alpha + n_beta, coeff_bf_ptr->n_vectors()));
+  assert_throw(n_alpha + n_beta <= coeff_bf_ptr->n_vectors(),
+               krims::ExcTooLarge<size_t>(n_alpha + n_beta, coeff_bf_ptr->n_vectors()));
 
   // Since the eigenvectors from the Block-Diagonal eigensolver are padded with zeros
   // in the alpha-beta and beta-alpha blocks, we need to remove that padding and get

@@ -162,7 +162,7 @@ TEST_CASE("Test HF energies and MOs compared to ORCA", "[hf energies]") {
     d.energies_mos = {-20.233397, -1.265715, -0.629267, -0.441668,
                       -0.387645,  0.602839,  0.765918};
 
-    intparams.update("basis_set", "sto-3g");
+    intparams.update("basis_set_name", "sto-3g");
     run_testscf(water, intparams, scfparams, d);
   }  // h2o sto-3g
 
@@ -178,7 +178,7 @@ TEST_CASE("Test HF energies and MOs compared to ORCA", "[hf energies]") {
     d.energies_mos = {-0.917124, 0.174366, 0.530376, 0.530376, 0.530376,
                       1.713453,  3.024883, 3.024883, 3.024883};
 
-    intparams.update("basis_set", "aug-cc-pvdz");
+    intparams.update("basis_set_name", "aug-cc-pvdz");
     scfparams.update(IopScfKeys::max_error_norm, tolerance);
     run_testscf(he, intparams, scfparams, d);
   }  // he aug-cc-pvdz
@@ -195,14 +195,14 @@ TEST_CASE("Test HF energies and MOs compared to ORCA", "[hf energies]") {
     d.energies_mos = {-4.732554, -0.309206, 0.058138, 0.058138, 0.058138,
                       0.087734,  0.349301,  0.349301, 0.349301, 0.492669};
 
-    intparams.update("basis_set", "def2-tzvp");
+    intparams.update("basis_set_name", "def2-tzvp");
     scfparams.update(IopScfKeys::max_error_norm, tolerance);
     run_testscf(be, intparams, scfparams, d);
   }  // be def2-tzvp
 
-//
-// =========================================================================
-//
+    //
+    // =========================================================================
+    //
 
 #ifndef DEBUG
   //
@@ -221,7 +221,7 @@ TEST_CASE("Test HF energies and MOs compared to ORCA", "[hf energies]") {
     d.energies_mos = {-20.546361, -1.336322, -0.712324, -0.557705, -0.491828,
                       0.187645,   0.256614,  0.812822,  0.837446,  1.160574};
 
-    intparams.update({{"basis_set", "cc-pvdz"}});
+    intparams.update({{"basis_set_name", "cc-pvdz"}});
     run_testscf(water, intparams, scfparams, d);
   }     // h2o cc-pvdz
 #endif  // DEBUG
@@ -242,7 +242,7 @@ TEST_CASE("Test HF energies and MOs compared to ORCA", "[hf energies]") {
     d.energies_mos = {-20.233397, -1.265715, -0.629267, -0.441668, -0.387645,
                       -20.233397, -1.265715, -0.629267, -0.441668, -0.387645};
 
-    intparams.update("basis_set", "sto-3g");
+    intparams.update("basis_set_name", "sto-3g");
     run_testscf<RestrictionType::Unrestricted>(water, intparams, scfparams, d);
   }  // h2o sto-3g
 
@@ -258,7 +258,7 @@ TEST_CASE("Test HF energies and MOs compared to ORCA", "[hf energies]") {
     d.energies_mos = {-2.460515, -0.194432, 0.026439, 0.026439, 0.026439,   // alpha
                       -2.443869, 0.021623,  0.057347, 0.057347, 0.057347};  // beta
 
-    intparams.update("basis_set", "3-21g");
+    intparams.update("basis_set_name", "3-21g");
     run_testscf<RestrictionType::Unrestricted>(li, intparams, scfparams, d);
   }
 
@@ -274,7 +274,7 @@ TEST_CASE("Test HF energies and MOs compared to ORCA", "[hf energies]") {
     d.energies_mos = {-11.272502, -0.814457, -0.425960, -0.425960, 0.052944,   // alpha
                       -11.231394, -0.575274, 0.108087,  0.162728,  0.162728};  // beta
 
-    intparams.update("basis_set", "3-21g");
+    intparams.update("basis_set_name", "3-21g");
     run_testscf<RestrictionType::Unrestricted>(c, intparams, scfparams, d);
   }
 

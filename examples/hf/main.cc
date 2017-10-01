@@ -76,8 +76,8 @@ void print_res(const State& res) {
 /** Run an SCF */
 template <RestrictionType restrict>
 void run_hf(args_type args, bool debug = false) {
-  using gint::IntegralTypeKeys;
   using gint::IntegralLookupKeys;
+  using gint::IntegralTypeKeys;
 
   //
   // Types and settings
@@ -116,7 +116,7 @@ void run_hf(args_type args, bool debug = false) {
     intparams.update({
           {IntegralLookupKeys::basis_type, args.basis_type},
           {IntegralLookupKeys::orbital_type, gint::OrbitalType::REAL_MOLECULAR},
-          {"basis_set", args.basis_set},
+          {"basis_set_name", args.basis_set},
           //
           {IntegralLookupKeys::structure, args.system.structure},
     });
