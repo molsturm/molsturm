@@ -76,7 +76,7 @@ def __to_iface_parameters(params, interface_type):
         if isinstance(params[key_in], ParamSpecial):
             # Deal with special nodes
             value, typestr = params[key_in]
-            if typestr not in ["structure"]:
+            if typestr not in ["structure", "ignore"]:
                 # Setting the value has not been already done above
                 getattr(ret, "update_" + typestr)(key, value)
         else:

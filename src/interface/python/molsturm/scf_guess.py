@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,124 +20,41 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from ._basis import is_sturmian, is_gaussian
-from ._constants import INPUT_PARAMETER_KEY
-from . import sturmian
-import numpy as np
-
-def __crop_orben_orbcoeff(restricted, n_alpha, n_beta, orben, orbcoeff):
-  """
-  Take an orben and an orbcoeff array and crop it in a way to serve as
-  a guess for a system with n_alpha and n_beta electrons which is modelled
-  in restricted or unrestricted manor
-  """
-
-  if restricted:
-    return orben[:n_alpha], orbcoeff[:,:n_alpha]
-  else:
-    n = max(n_alpha, n_beta)
-    n_orbs_alpha = orben.shape[0]//2
-    if 2*n_orbs_alpha != orben.shape[0]:
-      raise ValueError("orben does not have an even number of entries.")
-    return np.concatenate( (orben[:n], orben[n_orbs_alpha:n_orbs_alpha+n]) ), \
-        np.concatenate( (orbcoeff[:,:n], orbcoeff[:, n_orbs_alpha:n_orbs_alpha+n]),
-                       axis=1)
-
-def __restricted_to_unrestricted(guess):
-  """
-  Transform a guess for a restricted calculation to a guess for an unrestricted
-  calculation
-  """
-  orben, orbcoeff = guess
-  return np.concatenate(orben, orben), np.concatenate((orbcoeff,orbcoeff), axis=1)
+import warnings
 
 
-def __extrapolate_from_previous_gaussian(old_hfres, kwargs):
-  old_kwargs  = old_hfres[INPUT_PARAMETER_KEY]
-  old_orben    = old_hfres["orben_f"]
-  old_orbcoeff = old_hfres["orbcoeff_bf"]
+def extrapolate_from_previous(old_state, scf_params):
+    """
+    Extrapolate the old SCF result state onto the new parameters to build
+    a guess for a new scf procedure
+    """
+    warnings.warn("External guess of guess from previous is not yet "
+                  "re-implemented properly.")
 
-  # TODO Here we assume the n_bas and n_alpha/n_beta values will
-  #      be the same such that we can plainly copy the old results
-  #      over
-  n_elec = max(old_hfres["n_alpha"], old_hfres["n_beta"])
-  return __crop_orben_orbcoeff(old_hfres["restricted"], old_hfres["n_alpha"],
-                               old_hfres["n_beta"], old_orben, old_orbcoeff)
+    # TODO This is just to make it work ... we need much more checking here.
+    #      See the old version in scf_guess.old.py for ideas.
 
-def __extrapolate_from_previous_sturmian(old_hfres, kwargs):
-  old_kwargs  = old_hfres[INPUT_PARAMETER_KEY]
-  old_orben    = old_hfres["orben_f"]
-  old_orbcoeff = old_hfres["orbcoeff_bf"]
+    scf_sizes = scf_params.scf_sizes
+    n_spin = scf_sizes.n_spin
+    n_fock = scf_sizes.n_fock
+    n_bas = scf_sizes.n_bas
 
-  # TODO
-  # This is really hackish, since we reimplement the decisions
-  # which go on inside the C++ code right here!
-  #
-  # The way to get around this is to only transfer nlm_basis to the C++
-  # and do all the parsing on the python side, see also Parameters.hh
-  if "nlm_basis" in old_kwargs or "nlm_basis" in kwargs:
-    raise NotImplementedError("Cannot deal with sturmian bases, "
-                              "which contain 'nlm_basis' at the moment")
+    if old_state["restricted"]:
+        if not n_spin == 1:
+            raise ValueError("Restricted guess for unrestricted computation")
 
-  def get_nlm_basis(kwargs):
-    # TODO Here we assume nlm order!
-    order="nlm"
+        orben_f = old_state["orben_f"][:n_fock].reshape(n_spin, n_fock)
+        orbcoeff_bf = old_state["orbcoeff_bf"][:, :n_fock]
+        orbcoeff_bf = orbcoeff_bf.reshape(n_spin, n_bas, n_fock)
+    else:
+        if not n_spin == 2:
+            raise ValueError("Unrestricted guess for restricted computation")
 
-    n = kwargs["n_max"]
-    l = kwargs["l_max"] if "l_max" in kwargs else None
-    m = kwargs["m_max"] if "m_max" in kwargs else None
-    return sturmian.CoulombSturmianBasis(kwargs["k_exp"], n, l, m, order=order)
+        orben_f = old_state["orben_f"].reshape(n_fock, n_spin)
+        orben_f = orben_f.transpose(1, 0)
 
-  old_nlm_basis = get_nlm_basis(old_kwargs)
-  nlm_basis     = get_nlm_basis(kwargs)
+        orbcoeff_bf = old_state["orbcoeff_bf"].reshape(n_bas, n_fock, n_spin)
+        orbcoeff_bf = orbcoeff_bf.transpose(2, 0, 1)
 
-  assert len(old_nlm_basis) == old_hfres["n_bas"], \
-         "Expected number of basis functions differ: n_bas == " + \
-         str(old_hfres["n_bas"]) + " vs. len(old_nlm_basis) == " + \
-         str(len(old_nlm_basis))
-
-  if old_nlm_basis == nlm_basis:
-    return __crop_orben_orbcoeff(old_hfres["restricted"], old_hfres["n_alpha"],
-                                 old_hfres["n_beta"], old_orben, old_orbcoeff)
-  else:
-    proj = old_nlm_basis.obtain_projection_to(nlm_basis)
-    return __crop_orben_orbcoeff(old_hfres["restricted"], old_hfres["n_alpha"],
-                                 old_hfres["n_beta"], old_orben,
-                                 np.matmul(proj, old_orbcoeff))
-
-def extrapolate_from_previous(old_hfres, **kwargs):
-  """
-  Extrapolate the old SCF results onto the new parameters to build a
-  guess for the new SCF procedure
-  """
-  old_kwargs  = old_hfres[INPUT_PARAMETER_KEY]
-
-  def check_agreement(key):
-    both_have_key = key in old_kwargs and key in kwargs
-    both_without_key = not key in old_kwargs and not key in kwargs
-    if (both_without_key): return
-
-    if not both_have_key or old_kwargs[key] != kwargs[key]:
-      raise ValueError("Cannot extrapolate an SCF guess if the old and new "
-                       "value for '" + key + "' differ.")
-
-  if not old_hfres["restricted"] and "restricted" in kwargs and kwargs["restricted"]:
-    raise ValueError("Cannot extrapolate from an unrestricted to a "
-                     "restricted calculation")
-
-  check_agreement("basis_type")
-  if is_gaussian(**kwargs):
-    check_agreement("basis_set")
-    guess = __extrapolate_from_previous_gaussian(old_hfres, kwargs)
-  elif is_sturmian(**kwargs):
-    guess = __extrapolate_from_previous_sturmian(old_hfres, kwargs)
-  else:
-    raise ValueError("Did not understand basis_type: '" + basis_type + "'.")
-
-  if "restricted" in kwargs and not kwargs["restricted"] and old_hfres["restricted"]:
-    return __restricted_to_unrestricted(guess)
-  else:
-    return guess
-
+    return orben_f, orbcoeff_bf

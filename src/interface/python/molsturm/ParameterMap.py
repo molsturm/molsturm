@@ -21,8 +21,6 @@
 ##
 ## ---------------------------------------------------------------------
 
-import numpy as np
-
 
 class ParameterMap(dict):
     """
@@ -114,9 +112,20 @@ class ParameterMap(dict):
         return super().__len__()
         pass
 
+    def setdefault(self, key, value):
+        raise NotImplementedError()
+
     def keys_recursive(self):
         return list(self.__iter__())
 
+    def to_dict(self):
+        """
+        Return a dict of dicts which represents the same data
+        """
+        return {
+            k: p.to_dict() if isinstance(p, ParameterMap) else p
+            for k, p in super().items()
+        }
 
     # TODO There is still stuff missing ...
 
@@ -133,4 +142,3 @@ if __name__ == "__main__":
 
     for k in m["a"]:
         print(k)
-
