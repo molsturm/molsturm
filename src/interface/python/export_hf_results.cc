@@ -201,8 +201,8 @@ void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
   {
     // Partition into alpha-alpha and beta-beta blocks
     std::pair<MultiVector<Vector>, MultiVector<Vector>> cab_bf = coeff_blocks(coeff_bf);
-    const auto& ca_bf = cab_bf.first;
-    const auto& cb_bf = cab_bf.second;
+    const auto& ca_bf                                          = cab_bf.first;
+    const auto& cb_bf                                          = cab_bf.second;
 
     // Contract with the eri tensor
     eri.contract_with(ca_bf, ca_bf, ca_bf, ca_bf, eri_aaaa);
@@ -266,8 +266,8 @@ typename Vector::scalar_type compute_spin_squared(
       const bool restricted, const OverlapMatrix& S_bb,
       const lazyten::MultiVector<Vector>& coeff_bf, const size_t n_alpha,
       const size_t n_beta) {
-  using lazyten::MultiVector;
   using krims::range;
+  using lazyten::MultiVector;
 
   // If restricted the <S^2> is always zeros
   if (restricted) return 0.;
@@ -369,10 +369,11 @@ ScfResults export_hf_results(const State& state,
   }
 
   if (true) {
-    // Compute the full fock matrix in AO space, i.e. just F
-    ret.fock_bb.resize(fbb.n_rows() * fbb.n_cols());
+    // This is a bit counter-intuitive, but this function works for basis times basis
+    // as well, since in the end it just replicates the balpha block to the beta
+    // block in case the calculation is restricted
     matrix_type fbb_stored = static_cast<matrix_type>(fbb);
-    std::copy(fbb_stored.begin(), fbb_stored.end(), ret.fock_bb.begin());
+    export_ff_matrix(restricted, fbb_stored, ret.fock_bb);
   } else {
     ret.fock_bb.resize(0);
   }

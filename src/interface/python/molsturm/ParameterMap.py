@@ -29,11 +29,22 @@ class ParameterMap(dict):
     If [], i.e. __getitem__ is used a ParameterMap is returned iff
     the string only points to a subtree instead of an actual value.
     """
+    def __from_dict_inner(self, d, prefix):
+        for k, v in d.items():
+            fullkey = prefix + "/" + k
+            if isinstance(v, dict):
+                self.__from_dict_inner(v, fullkey)
+            else:
+                self[fullkey] = v
 
-    def __init__(self, inner={}):
-        if len(inner) > 0:
-            raise NotImplementedError()
-        # TODO  parse a hierachical dict with keys /bla/bla/bla to a dict of dicts list
+    # TODO Have the init_values initialisation?
+    def __init__(self, init_values={}):
+        """
+        Construct a ParameterMap and optionally initialise some inner
+        values using an initial dictionary init_values
+        """
+        if len(init_values) > 0:
+            self.__from_dict_inner(init_values, "")
 
     def __recursive_setter(self, name, key, *args, **kwargs):
         if not isinstance(key, str):
@@ -113,7 +124,7 @@ class ParameterMap(dict):
         pass
 
     def setdefault(self, key, value):
-        raise NotImplementedError()
+        return self.__recursive_setter("setdefault", key, value)
 
     def keys_recursive(self):
         return list(self.__iter__())
@@ -142,3 +153,8 @@ if __name__ == "__main__":
 
     for k in m["a"]:
         print(k)
+
+    m.setdefault("/a/b/c", 6)
+    m.setdefault("/a/d/c", 6)
+
+    print(m)

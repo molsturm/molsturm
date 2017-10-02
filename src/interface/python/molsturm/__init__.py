@@ -22,7 +22,7 @@
 ## ---------------------------------------------------------------------
 
 from gint import available_basis_types
-from ._scf import hartree_fock, self_consistent_field,
+from ._scf import hartree_fock, self_consistent_field
 from ._scf import compute_derived_hartree_fock_energies
 from ._scf import compute_exchange_ff, compute_coulomb_ff
 from .ScfParameters import ScfParameters

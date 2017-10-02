@@ -27,7 +27,7 @@ from .MolecularSystem import MolecularSystem
 import numpy as np
 from . import _iface as iface
 from ._iface_conversion import __to_iface_parameters
-from scf_guess import extrapolate_from_previous
+from .scf_guess import extrapolate_from_previous
 import inspect
 from gint.util import split_basis_type
 
@@ -163,7 +163,8 @@ def hartree_fock(system, basis=None, basis_type=None,
         for p in kwargs:
             if p in init_params:
                 bas_kwargs[p] = kwargs[p]
-                del kwargs[p]
+        for key in bas_kwargs:
+            del kwargs[key]
 
         try:
             basis = Basis(system, **bas_kwargs, backend=backend)
@@ -191,7 +192,9 @@ def hartree_fock(system, basis=None, basis_type=None,
         ("restricted", "scf/restricted", bool),
         ("guess_esolver", "guess/eigensolver/method", str),
     ]:
-        param_tree[to] = typ(locals())[frm]
+        val = locals()[frm]
+        if val is not None:
+            param_tree[to] = typ(val)
 
     # Set all other key-value pairs given on the commandline
     for k, v in kwargs.items():

@@ -33,7 +33,7 @@ import warnings
 import collections
 
 
-def __assert_c_contiguous_numpy(arr, shape, dtype=None, prefix="numpy array"):
+def _assert_c_contiguous_numpy(arr, shape, dtype=None, prefix="numpy array"):
     if not isinstance(arr, np.ndarray):
         raise TypeError(prefix + " is not a numpy array, but a " + str(type(arr)))
     if arr.shape != shape:
@@ -59,6 +59,9 @@ ScfSizes = collections.namedtuple("ScfSizes", ["n_bas", "n_spin", "n_fock"])
 
 
 class ScfParameters(ParameterMap):
+    """The keys which do not start with n_ and which still need to be
+       of type size_t
+    """
     __size_t_keys = ["scf/max_iter", "scf/diis_size"]
     __special_keys = {
         # key : special type
@@ -71,20 +74,27 @@ class ScfParameters(ParameterMap):
     }
 
     def __from_dict_inner(self, d, prefix):
+        inttypes = (int,) + tuple(np.sctypes["int"] + np.sctypes["uint"])
+        scalartypes = (bool, float)
+
         for k, v in d.items():
-            fullkey = prefix + "/" + k
+            fullkey = prefix + "/" + k if len(prefix) > 0 else k
 
             if isinstance(v, dict):
                 self.__from_dict_inner(v, fullkey)
-            elif fullkey in self._special_keys:
+            elif isinstance(v, ParamSpecial):
+                self[fullkey] = v
+            elif fullkey in self.__special_keys:
                 self[fullkey] = ParamSpecial(v, type=self.__special_keys[fullkey])
-            elif isinstance(v, int):
+            elif isinstance(v, inttypes):
                 if k.startswith("n_") or fullkey in self.__size_t_keys:
                     self[fullkey] = np.uint64(v)
                 else:
-                    self[fullkey] = v
-            elif isinstance(v, (str, bool, float)):
+                    self[fullkey] = int(v)
+            elif isinstance(v, (str,) + scalartypes):
                 self[fullkey] = v
+            else:
+                raise TypeError("Unknown type " + str(type(v)) + " for key " + fullkey)
 
     @classmethod
     def from_dict(cls, d):
@@ -95,8 +105,7 @@ class ScfParameters(ParameterMap):
         """
         params = cls()
         params.__from_dict_inner(d, "")
-        params.fill_defaults()
-        params.assert_valid()
+        params.normalise()
         return params
 
     def __assert_system(self):
@@ -116,10 +125,10 @@ class ScfParameters(ParameterMap):
             raise ValueError("Length of the system/coords and length of "
                              "system/atom_numbers needs to agree.")
         n_atom = len(system["coords"].value)
-        __assert_c_contiguous_numpy(system["coords"].value, (n_atom, 3),
-                                    "system/coords")
-        __assert_c_contiguous_numpy(system["atom_numbers"].value, (n_atom, 3),
-                                    "system/atom_numbers")
+        _assert_c_contiguous_numpy(system["coords"].value, (n_atom, 3),
+                                   prefix="system/coords")
+        _assert_c_contiguous_numpy(system["atom_numbers"].value, (n_atom,),
+                                   prefix="system/atom_numbers")
 
         if "n_alpha" not in system or "n_beta" not in system:
             raise KeyError("system/n_alpha and system/n_beta need to be present.")
@@ -137,7 +146,7 @@ class ScfParameters(ParameterMap):
             raise KeyError("No integrals subtree found in ScfParameters.")
 
         integrals = self["integrals"]
-        if "basis_type" not in self:
+        if "basis_type" not in integrals:
             raise KeyError("No key basis_type found in integrals subtree.")
 
         if integrals["basis_type"] not in gint.available_basis_types:
@@ -146,7 +155,7 @@ class ScfParameters(ParameterMap):
 
         # Get the backend string and the basis class type
         Basis, backend = split_basis_type(integrals["basis_type"])
-        if isinstance(basis, gint.gaussian.Basis):
+        if Basis == gint.gaussian.Basis:
             if "basis_set_name" not in integrals:
                 raise KeyError("Required key basis_set_name not found in integrals "
                                "subtree.")
@@ -157,7 +166,7 @@ class ScfParameters(ParameterMap):
             #      to do at the moment unfortunately. One should remove that soon.
             integrals.setdefault("orbital_type", ParamSpecial("real_molecular",
                                                               type="orbital_type"))
-        elif isinstance(basis, gint.sturmian.atomic.Basis):
+        elif Basis == gint.sturmian.atomic.Basis:
             if (system.n_atoms > 1):
                 raise ValueError("Invalid basis: Atomic Coulomb-Strumians can only be"
                                  " used on atoms and not on molecules.")
@@ -174,8 +183,8 @@ class ScfParameters(ParameterMap):
             # TODO This is only temporary and until the gint layer has fully moved
             #      to using nlm_basis.
             if "n_max" in integrals:
-                integrals.setdefault("l_max") = integrals["n_max"] - 1
-                integrals.setdefault("m_max") = integrals["l_max"]
+                integrals.setdefault("l_max", integrals["n_max"] - 1)
+                integrals.setdefault("m_max", integrals["l_max"])
 
                 if "nlm_basis" in integrals:
                     warnings.warn("Overriding integrals/nlm_basis in ScfParameters")
@@ -196,7 +205,8 @@ class ScfParameters(ParameterMap):
                 raise TypeError("integrals/nlm_basis needs to be a numpy array")
 
             n_bas = len(integrals["nlm_basis"].value)
-            __assert_c_contiguous_numpy(integrals["nlm_basis"].value, (n_bas, 3))
+            _assert_c_contiguous_numpy(integrals["nlm_basis"].value, (n_bas, 3),
+                                       prefix="integrals/nlm_basis")
         else:
             raise AssertionError("Unrecognised Basis type")
 
@@ -206,14 +216,14 @@ class ScfParameters(ParameterMap):
 
         Return an ScfSizes object (since the __normalise_guess function needs this)
         """
-        if "scf" not in self:
-            raise KeyError("No scf subtree found in ScfParameters.")
+        self.setdefault("scf/eigensolver/method", "auto")
         scf = self["scf"]
 
         # Convergence tolerance parameters:
         if "conv_tol" in scf:
             if "max_error_norm" in scf:
-                warnings.warn("Overriding scf/nlm_basis in ScfParameters, since scf/conv_tol is given.")
+                warnings.warn("Overriding scf/nlm_basis in ScfParameters, "
+                              "since scf/conv_tol is given.")
             scf["max_error_norm"] = scf["conv_tol"]
             del scf["conv_tol"]
         scf.setdefault("max_error_norm", 5e-7)
@@ -221,25 +231,23 @@ class ScfParameters(ParameterMap):
         scf.setdefault("max_tot_energy_change", float(scf["max_error_norm"] / 4.))
 
         # Iteration control parameters:
-        scf.setdefault("max_iter", np.uint64(25))
         scf.setdefault("diis_size", np.uint64(4))
+        scf.setdefault("max_iter", np.uint64(25))
         scf.setdefault("print_iterations", False)
-        scf.setdefault("eigensolver/method", "auto")
 
         # Scf kind
         if "restricted" in scf:
-            if "scf/kind" in scf:
+            if "kind" in scf:
                 warnings.warn("Overriding scf/kind in ScfParameters, since "
                               "scf/restricted is given.")
             scf["kind"] = "restricted-open" if scf["restricted"] else "unrestricted"
-            if system.is_closed_shell:
-                param_tree["scf/kind"] = "restricted"
-        scf.setdefault("scf/kind",
-                       "restricted" if system.is_closed_shell else "unrestricted")
+            if system.is_closed_shell and scf["restricted"]:
+                scf["kind"] = "restricted"
+        scf.setdefault("kind", "restricted" if system.is_closed_shell else "unrestricted")
 
         if scf["kind"] == "restricted-open":
             raise NotImplementedError("restricted-open is currently not implemented.")
-        n_spin = 1 if self["scf/kind"] == "restricted" else 2
+        n_spin = 1 if scf["kind"] == "restricted" else 2
 
         # Number of eigenpairs to obtain:
         # Our convention here is that we count both alpha and beta eigenpairs,
@@ -256,11 +264,11 @@ class ScfParameters(ParameterMap):
                              "further require this number to be even number.")
 
         # Check enough eigenpairs are requested.
-        n_fock = scf["n_eigenpairs"] // 2
+        n_fock = int(scf["n_eigenpairs"] // 2)
         if n_fock < max(system.n_alpha, system.n_beta):
             raise ValueError("Cannot treat a system with " +
                              str(system.n_alpha) + " alpha and " + str(system.n_beta) +
-                             " beta electrons with computing only " + 
+                             " beta electrons with computing only " +
                              str(scf["n_eigenpairs"]) +
                              " eigenpairs. You need to use a large enough basis and "
                              "request enough eigenpairs (scf/n_eigenpairs parameter).")
@@ -268,6 +276,8 @@ class ScfParameters(ParameterMap):
         return ScfSizes(n_bas=basis.size, n_fock=n_fock, n_spin=n_spin)
 
     def __normalise_guess(self, system, basis, scf_sizes):
+        n_bas, n_spin, n_fock = scf_sizes
+
         self.setdefault("guess/method", "hcore")
         self.setdefault("guess/eigensolver/method", "auto")
         guess = self["guess"]
@@ -280,12 +290,12 @@ class ScfParameters(ParameterMap):
                 raise KeyError("For external guesses the key "
                                "guess/orbcoeff_bf is required")
 
-            orben = param_tree["guess/orben_f"].value
-            orbcoeff = param_tree["guess/orbcoeff_bf"].value
-
-            __assert_c_contiguous_numpy(orben, (scf_sizes.n_spin, scf_sizes.n_fock), "guess/orben_f")
-            __assert_c_contiguous_numpy(orbceoff, (scf_sizes.n_spin, scf_sizes.n_bas, scf_sizes.n_fock),
-                                        "guess/orbcoeff_bf")
+            _assert_c_contiguous_numpy(guess["orben_f"].value,
+                                       (n_spin, n_fock),
+                                       prefix="guess/orben_f")
+            _assert_c_contiguous_numpy(guess["orbcoeff_bf"].value,
+                                       (n_spin, n_bas, n_fock),
+                                       prefix="guess/orbcoeff_bf")
 
     def normalise(self):
         """
@@ -322,11 +332,11 @@ class ScfParameters(ParameterMap):
         i.e. as blocks for the individual spin components. For restricted
         we expect n_spin == 1 and for unrestricted n_spin == 2
         """
-        param_tree["guess/method"] = "external"
+        self["guess/method"] = "external"
         orben_f = np.ascontiguousarray(orben_f)
         orbcoeff_bf = np.ascontiguousarray(orbcoeff_bf)
-        param_tree["guess/orben_f"] = ParamSpecial(orben_f, type="ignore")
-        param_tree["guess/orbcoeff_bf"] = ParamSpecial(orbcoeff_bf, type="ignore")
+        self["guess/orben_f"] = ParamSpecial(orben_f, type="ignore")
+        self["guess/orbcoeff_bf"] = ParamSpecial(orbcoeff_bf, type="ignore")
 
         # Check and normalise what we have:
         self.normalise()
@@ -342,9 +352,8 @@ class ScfParameters(ParameterMap):
         """
         assert self["scf/kind"] in ["restricted", "unrestricted"]
         assert self["scf/n_eigenpairs"] % 2 == 0
-        return Sizes(self.basis.size, 1 if self["scf/kind"] == "restricted" else 2,
-                     self["scf/n_eigenpairs"] // 2)
-
+        return ScfSizes(self.basis.size, 1 if self["scf/kind"] == "restricted" else 2,
+                        int(self["scf/n_eigenpairs"] // 2))
 
     @property
     def system(self):
@@ -352,7 +361,7 @@ class ScfParameters(ParameterMap):
         Return the MolecularSystem which is represented by the
         internal parameters.
         """
-        self.__assert_tree_system()
+        self.__assert_system()
         return MolecularSystem(
             atoms=self["system/atom_numbers"].value,
             coords=self["system/coords"].value,
@@ -380,14 +389,14 @@ class ScfParameters(ParameterMap):
 
         # TODO This explicit branching is a bit ugly
         if Basis == gint.gaussian.Basis:
-            return gint.gaussian.Basis(self.system(), integrals["basis_set_name"],
+            return gint.gaussian.Basis(self.system, integrals["basis_set_name"],
                                        backend=backend)
         elif Basis == gint.sturmian.atomic.Basis:
             warnings.warn("ScfParameters.basis assumes that the atomic Coulomb-Sturmian"
-                         " basis is dense and in nlm order.")
+                          " basis is dense and in nlm order.")
             n_max, l_max, m_max = np.max(integrals["nlm_basis"].value, axis=0)
 
-            return gint.sturmian.atomic.Basis(self.system(), integrals["k_exp"],
+            return gint.sturmian.atomic.Basis(self.system, integrals["k_exp"],
                                               integrals["n_max"], integrals["l_max"],
                                               integrals["m_max"])
         else:
@@ -429,3 +438,28 @@ class ScfParameters(ParameterMap):
             self["integrals/m_max"] = int(m_max)
         else:
             raise TypeError("basis has an unrecognised type.")
+
+    def __strip_special(self, dicti):
+        for k, v in dicti.items():
+            if isinstance(v, dict):
+                dicti[k] = self.__strip_special(v)
+            if isinstance(v, ParamSpecial):
+                dicti[k] = v.value
+        return dicti
+
+    def to_dict(self, strip_special=True):
+        """
+        Return a dict of dicts which represents the same data
+
+        strip_special  Should the ParamSpecial instances be stripped off
+        when returning the values (default: True)
+        """
+        if not strip_special:
+            return super().to_dict()
+        else:
+            return self.__strip_special(super().to_dict())
+
+        return {
+            k: p.value if strip_special and isinstance(p, ParamSpecial) else p
+            for k, p in super().to_dict().items()
+        }

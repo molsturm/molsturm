@@ -21,7 +21,7 @@
 ## ---------------------------------------------------------------------
 
 import sys
-from ._hartree_fock import compute_derived_hartree_fock_energies
+from ._scf import compute_derived_hartree_fock_energies
 #
 # Functions to help with printing nicely formatted output
 # of the results obtained
