@@ -22,22 +22,24 @@
 ## ---------------------------------------------------------------------
 
 import molsturm
+import gint
 
 
-def run(**extra):
-    params = {
-        "atom_numbers": [4],
-        "coords":       [[0, 0, 0]],
-        #
-        "basis_type":   "sturmian/atomic/cs_reference_pc",
-        "k_exp":        2.1,
-        #
-        "eigensolver":   "lapack",
-        "guess_esolver": "lapack",
-    }
+system = molsturm.MolecularSystem(atoms=[4], coords=[[0, 0, 0]])
+basis = gint.sturmian.atomic.Basis(system, k_exp=2.3, n_max=4, l_max=1)
+
+
+def run_matrix_free(system, basis, extra={}):
+    params = molsturm.ScfParameters()
+    params.system = system
+    params.basis = basis
+    params["guess/method"] = "random"
+    params["guess/eigensolver/method"] = "arpack"
+    params["scf/eigensolver/method"] = "arpack"
+    params["scf/n_eigenpairs"] = 2 * (basis.size // 2)
     params.update(extra)
-    res = molsturm.hartree_fock(**params)
 
+    res = molsturm.self_consistent_field(params)
     molsturm.print_convergence_summary(res)
     molsturm.print_energies(res)
     molsturm.print_mo_occupation(res)
@@ -45,9 +47,12 @@ def run(**extra):
     return res
 
 
-def run_matrix_free(**extra):
-    return run(n_eigenpairs=8, eigensolver="arpack", guess_esolver="arpack", **extra)
+def run(basis, system):
+    run_matrix_free(basis, system, {
+        "scf/eigensolver/method": "lapack",
+        "guess/eigensolver/method": "lapack"
+    })
 
 
 if __name__ == "__main__":
-    run_matrix_free(n_max=4, l_max=1)
+    run_matrix_free(system, basis)

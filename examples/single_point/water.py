@@ -1,3 +1,4 @@
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -18,9 +19,12 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-atoms =  [ "O", "H", "H" ]
-coords = [[0,0,0],
-          [0,0,1.795239827225189],
-          [1.693194615993441, 0, -0.599043184453037]]
+import molsturm
+
+water = molsturm.MolecularSystem(
+    atoms=["O", "H", "H"],
+    coords=[[0, 0, 0],
+            [0, 0, 1.795239827225189],
+            [1.693194615993441, 0, -0.599043184453037]]
+)

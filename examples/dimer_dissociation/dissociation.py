@@ -32,27 +32,19 @@ def compute_curve(atom, basis_set="sto-3g", conv_tol=1e-6, zrange=(0.5, 8.0), n_
     previous_hf = None
 
     for i in range(len(z) - 1, -1, -1):
-        params = {
-            "basis_type": "gaussian/libint",
-            "basis_set":  basis_set,
-            "atoms":      [atom, atom],
-            "coords":     [(0, 0, 0), (0, 0, z[i])],
-            "conv_tol":   conv_tol,
-            "restricted": restricted,
-            "print_iterations": verbose,
-        }
+        sys = molsturm.MolecularSystem(atoms=[atom, atom],
+                                       coords=[(0, 0, 0), (0, 0, z[i])])
 
-        if previous_hf:
-            params["guess"] = previous_hf
-        else:
-            params["guess"] = "random"
-
+        guess = previous_hf if previous_hf is not None else "hcore"
         try:
-            hf = molsturm.hartree_fock(**params)
+            hf = molsturm.hartree_fock(sys, basis_type="gaussian", conv_tol=conv_tol,
+                                       basis_set_name=basis_set, guess=guess,
+                                       restricted=restricted, print_iterations=verbose,
+                                       max_iter=100)
             f[i] = hf["energy_ground_state"]
             previous_hf = hf
         except RuntimeError as e:
-            print("Caught error for z=", z)
+            print("Caught error for z=", z[i])
             print(str(e))
             print()
             f[i] = np.nan
