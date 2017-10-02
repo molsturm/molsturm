@@ -37,7 +37,12 @@ class ParameterMap(dict):
             else:
                 self[fullkey] = v
 
-    # TODO Have the init_values initialisation?
+    @classmethod
+    def from_dict(cls, d):
+        params = ParameterMap()
+        params.__from_dict_inner(d, "")
+        return params
+
     def __init__(self, init_values={}):
         """
         Construct a ParameterMap and optionally initialise some inner
@@ -126,6 +131,17 @@ class ParameterMap(dict):
     def setdefault(self, key, value):
         return self.__recursive_setter("setdefault", key, value)
 
+    def update(self, E=None, **F):
+        if E is not None:
+            if hasattr(E, "keys"):
+                for k in E:
+                    self.__setitem__(k, E[k])
+            else:
+                for k, v in E:
+                    self.__setitem__(k, E[k])
+        for k in F:
+            self.__setitem__(k, F[k])
+
     def keys_recursive(self):
         return list(self.__iter__())
 
@@ -157,4 +173,7 @@ if __name__ == "__main__":
     m.setdefault("/a/b/c", 6)
     m.setdefault("/a/d/c", 6)
 
+    print(m)
+
+    m.update({"/a/b/c": 7, "d/e": 9})
     print(m)
