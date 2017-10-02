@@ -122,11 +122,8 @@ def self_consistent_field(params):
 
 def hartree_fock(system, basis=None, basis_type=None,
                  conv_tol=None, max_iter=None, n_eigenpairs=None,
-                 restricted=None,
-                 guess=None, guess_esolver=None,
-                 eigensolver=None, diis_size=None,
-                 print_iterations=None,
-                 **kwargs):
+                 restricted=None, guess=None, eigensolver=None,
+                 print_iterations=None, **kwargs):
     """
     Run a Hartree-Fock calculation with molsturm.
 
@@ -190,11 +187,9 @@ def hartree_fock(system, basis=None, basis_type=None,
         ("conv_tol", "scf/conv_tol", float),
         ("max_iter", "scf/max_iter", np.uint64),
         ("n_eigenpairs", "scf/n_eigenpairs", np.uint64),
-        ("diis_size", "scf/diis_size", np.uint64),
         ("print_iterations", "scf/print_iterations", bool),
         ("eigensolver", "scf/eigensolver/method", str),
         ("restricted", "scf/restricted", bool),
-        ("guess_esolver", "guess/eigensolver/method", str),
     ]:
         val = locals()[frm]
         if val is not None:
