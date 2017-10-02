@@ -103,7 +103,7 @@ class ScfParameters(ParameterMap):
         a ParameterMap from it, then fill with
         default values, then check for validity.
         """
-        params = cls()
+        params = ScfParameters()
         params.__from_dict_inner(d, "")
         params.normalise()
         return params
@@ -183,13 +183,14 @@ class ScfParameters(ParameterMap):
             # TODO This is only temporary and until the gint layer has fully moved
             #      to using nlm_basis.
             if "n_max" in integrals:
+                integrals["n_max"] = int(integrals["n_max"])
                 integrals.setdefault("l_max", integrals["n_max"] - 1)
                 integrals.setdefault("m_max", integrals["l_max"])
 
                 if "nlm_basis" in integrals:
                     warnings.warn("Overriding integrals/nlm_basis in ScfParameters")
-                tmpbas = Basis(system, 1, integrals["n_max"], integrals["l_max"],
-                               integrals["m_max"])
+                tmpbas = Basis(system, k_exp=1, n_max=integrals["n_max"],
+                               l_max=integrals["l_max"], m_max=integrals["m_max"])
                 integrals["nlm_basis"] = ParamSpecial(tmpbas.functions, type="nlm_basis")
             else:
                 if "nlm_basis" not in integrals:

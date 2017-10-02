@@ -46,7 +46,11 @@ def self_consistent_field(params):
     For a more high-level entry point to start a calculation see
     also the function hartree_fock
     """
-    if not isinstance(params, ScfParameters):
+    if isinstance(params, ScfParameters):
+        pass
+    elif isinstance(params, dict):
+        return self_consistent_field(ScfParameters.from_dict(params))
+    else:
         raise TypeError("params needs to be an ScfParameters object.")
 
     # Check and normalise parameters:
