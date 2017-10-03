@@ -23,7 +23,7 @@
 
 from .._constants import HFRES_OPTIONAL
 from .._constants import INPUT_PARAMETER_KEY
-from .._basis import has_real_harmonics
+from ..ScfParameters import ScfParameters
 
 try:
   import pyscf
@@ -38,6 +38,7 @@ __pyscf_remap_fci_keys = {
 }
 
 def run_fci_pyscf(hfres, **params):
+  hfparams = ScfParameters.from_dict(hfres[INPUT_PARAMETER_KEY])
   import pyscf.fci
 
   required_keys = [ "eri_ffff", "hcore_ff" ]
@@ -54,8 +55,7 @@ def run_fci_pyscf(hfres, **params):
 
   # If the underlying basis uses complex harmonics than we cannot
   # assume that (ij|kl) = (ji|kl) (Shell-pair, Mullikan notation)
-  real_harmonics = has_real_harmonics(**hfres[INPUT_PARAMETER_KEY])
-
+  real_harmonics = hfparams.basis.has_real_harmonics
   if rhf and real_harmonics:
     fci = pyscf.fci.direct_spin1.FCI()
     spin_square_multipl = pyscf.fci.spin_op.spin_square
