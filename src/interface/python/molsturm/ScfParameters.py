@@ -22,7 +22,7 @@
 ## ---------------------------------------------------------------------
 
 
-from gint.util import split_basis_type
+from gint._basis_types import split as split_basis_type
 from .ParameterMap import ParameterMap
 from .MolecularSystem import MolecularSystem
 import gint.gaussian
@@ -105,6 +105,54 @@ class ScfParameters(ParameterMap):
         """
         params = ScfParameters()
         params.__from_dict_inner(d, "")
+        params.normalise()
+        return params
+
+    @classmethod
+    def from_args(cls, system, basis, conv_tol=None, max_iter=None, n_eigenpairs=None,
+                  restricted=None, eigensolver=None, print_iterations=None):
+        """
+        Construct an ScfParameter set from some arguments.
+        The resulting structure will be normalised (i.e. default values other than the
+        one accessible by this present interface added) and checked
+        for valididty thereafter.
+
+        system        The molecular system to model
+        basis         A valid basis object. If None the basis will be constructed
+                      on the fly from teh basis_type and the kwargs.
+        basis_type    String describing the type of basis function to use.
+        conv_tol      SCF convergence tolerance
+        max_iter      Maximum number of SCF iterations
+        n_eigenpairs  Number of orbitals to compute
+        eigensolver   SCF eigensolver to use
+        print_iterations  Shall some diagnostics about the SCF iterations be printed
+        restricted    Shall an restricted or an unrestricted SCF be run
+        """
+
+        if isinstance(system, str):
+            system = MolecularSystem(system)
+        elif not isinstance(system, MolecularSystem):
+            raise TypeError("The first argument needs to be a MolecularSystem object or "
+                            "a string of exactly one atom.")
+
+        # Build a parameter tree from the commandline arguments
+        params = ScfParameters()
+        params.system = system
+        params.basis = basis
+
+        # Add the scf parameters
+        for frm, to, typ in [
+            ("conv_tol", "scf/conv_tol", float),
+            ("max_iter", "scf/max_iter", np.uint64),
+            ("n_eigenpairs", "scf/n_eigenpairs", np.uint64),
+            ("print_iterations", "scf/print_iterations", bool),
+            ("eigensolver", "scf/eigensolver/method", str),
+            ("restricted", "scf/restricted", bool),
+        ]:
+            val = locals()[frm]
+            if val is not None:
+                params[to] = typ(val)
+
         params.normalise()
         return params
 
@@ -228,7 +276,7 @@ class ScfParameters(ParameterMap):
             scf["max_error_norm"] = scf["conv_tol"]
             del scf["conv_tol"]
         scf.setdefault("max_error_norm", 5e-7)
-        scf.setdefault("max_1e_energy_change", float(scf["max_error_norm"] / 100.))
+        scf.setdefault("max_1e_energy_change", float(scf["max_error_norm"] * 100.))
         scf.setdefault("max_tot_energy_change", float(scf["max_error_norm"] / 4.))
 
         # Iteration control parameters:
@@ -244,6 +292,7 @@ class ScfParameters(ParameterMap):
             scf["kind"] = "restricted-open" if scf["restricted"] else "unrestricted"
             if system.is_closed_shell and scf["restricted"]:
                 scf["kind"] = "restricted"
+            del scf["restricted"]
         scf.setdefault("kind", "restricted" if system.is_closed_shell else "unrestricted")
 
         if scf["kind"] == "restricted-open":
@@ -399,7 +448,7 @@ class ScfParameters(ParameterMap):
 
             return gint.sturmian.atomic.Basis(self.system, integrals["k_exp"],
                                               integrals["n_max"], integrals["l_max"],
-                                              integrals["m_max"])
+                                              integrals["m_max"], backend=backend)
         else:
             raise AssertionError("Unrecognised Basis type")
 

@@ -23,13 +23,11 @@
 
 from .State import State
 from .ScfParameters import ScfParameters
-from .MolecularSystem import MolecularSystem
 import numpy as np
 from . import _iface as iface
 from ._iface_conversion import __to_iface_parameters
 from .scf_guess import extrapolate_from_previous
-import inspect
-from gint.util import split_basis_type
+import gint
 
 # Old stuff ... will probably go some day
 from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
@@ -127,99 +125,60 @@ def hartree_fock(system, basis=None, basis_type=None,
     """
     Run a Hartree-Fock calculation with molsturm.
 
-    system    The molecular system to model
-    basis    A valid basis object. If None the basis will be constructed
-             on the fly from teh basis_type and the kwargs.
+    system        The molecular system to model
+    basis         A valid basis object. If None the basis will be constructed
+                  on the fly from teh basis_type and the kwargs.
     basis_type    String describing the type of basis function to use.
-    params        Path to a yaml file containing the parameter hierachy
-                  or a ParameterMap object containing the parameter hierachy.
+    conv_tol      SCF convergence tolerance
+    max_iter      Maximum number of SCF iterations
+    n_eigenpairs  Number of orbitals to compute
+    eigensolver   SCF eigensolver to use
+    print_iterations  Shall some diagnostics about the SCF iterations be printed
+    restricted    Shall an restricted or an unrestricted SCF be run
+    guess         Use another state or chose the guess method (as a string)
 
     Examples:
-        hartree_fock(system=("Be",), basis_type="gaussian",
+        hartree_fock(system="Be", basis_type="gaussian",
                      basis_set_name="sto-3g")
 
-    For a more low-level entry point starting directly from a set of parameters
-    see the function self_consistent_field
+    For a more low-level entry point, which offers a larger range of parameters to
+    influence the bahaviour of an SCF, see the function self_consistent_field.
+    This function "hartree_fock" is essentially a wrapper around
+    self_consistent_field, which performs roughly the steps:
+        basis = molsturm.Basis.construct(system, **kwargs)
+        params = ScfParameters.from_args(system, basis, conv_tol, max_iter, ...)
+        self_consistent_field(params)
     """
-    #
-    # Input normalisation and building of parameter tree
-    #
-    if isinstance(system, str):
-        # Only a single atom
-        system = MolecularSystem(system)
-    elif not isinstance(system, MolecularSystem):
-        raise TypeError("The first argument needs to be a MolecularSystem object or a "
-                        "tuple to setup a MolecularSystem object on the fly.")
-
     if basis is None:
         if basis_type is None:
             raise ValueError("Either the basis or the basis_type needs to be given.")
-        Basis, backend = split_basis_type(basis_type)
+        basis = gint.Basis.construct(basis_type, system, **kwargs)
 
-        # Get the name of the parameters which are accepted by the constructor
-        # of the Basis object
-        init_params = inspect.signature(Basis.__init__).parameters.keys()
+    # Construct guess from the HF arguments
+    params = ScfParameters.from_args(system, basis, conv_tol, max_iter, n_eigenpairs,
+                                     restricted, eigensolver, print_iterations)
 
-        bas_kwargs = dict()
-        for p in kwargs:
-            if p in init_params:
-                bas_kwargs[p] = kwargs[p]
-        for key in bas_kwargs:
-            del kwargs[key]
-
-        try:
-            basis = Basis(system, **bas_kwargs, backend=backend)
-        except (TypeError, ValueError) as e:
-            raise ValueError("Invalid kwarg for basis construction: " + str(e))
-    else:
-        if basis_type is not None:
-            raise ValueError("Only one of basis or basis_type may be given.")
-
-    # TODO Check for wrongful or unused kwargs.
-
-    # Build a parameter tree from the commandline arguments
-    param_tree = ScfParameters()
-    param_tree.system = system
-    param_tree.basis = basis
-
-    # Add the scf parameters
-    for frm, to, typ in [
-        ("conv_tol", "scf/conv_tol", float),
-        ("max_iter", "scf/max_iter", np.uint64),
-        ("n_eigenpairs", "scf/n_eigenpairs", np.uint64),
-        ("print_iterations", "scf/print_iterations", bool),
-        ("eigensolver", "scf/eigensolver/method", str),
-        ("restricted", "scf/restricted", bool),
-    ]:
-        val = locals()[frm]
-        if val is not None:
-            param_tree[to] = typ(val)
-
-    # Set all other key-value pairs given on the commandline
-    for k, v in kwargs.items():
-        param_tree[k] = v
-
-    # Build guess parameters
+    # Build and add guess parameters
     if isinstance(guess, str):
         if guess == "external":
             raise ValueError("External guess is only available via the "
                              "ScfParameters object.")
         else:
-            param_tree["guess/method"] = str(guess)
+            params["guess/method"] = str(guess)
     elif isinstance(guess, State):
         # Normalise parameter tree such that the extrapolate_from_previous
         # has access to a proper set of parameters.
-        param_tree.normalise()
+        params.normalise()
 
         # Extrapolate and add the external guess:
-        orben_f, orbcoeff_bf = extrapolate_from_previous(guess, param_tree)
-        param_tree.set_guess_external(orben_f, orbcoeff_bf)
+        orben_f, orbcoeff_bf = extrapolate_from_previous(guess, params)
+        params.set_guess_external(orben_f, orbcoeff_bf)
     elif guess is None:
         pass
     else:
         raise TypeError("guess can only be a string or a State object.")
 
-    return self_consistent_field(param_tree)
+    return self_consistent_field(params)
 
 
 def compute_derived_hartree_fock_energies(hfres):
