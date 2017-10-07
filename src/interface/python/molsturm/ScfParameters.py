@@ -22,6 +22,7 @@
 ## ---------------------------------------------------------------------
 
 
+import gint.element
 from gint.Basis import split_basis_type
 from .ParameterMap import ParameterMap
 from .MolecularSystem import MolecularSystem
@@ -58,6 +59,7 @@ class ScfParameters(ParameterMap):
         "integrals/orbital_type": "orbital_type",
         "system/coords": "structure",
         "system/atom_numbers": "structure",
+        "system/atoms": "ignore",
         "integrals/nlm_basis": "nlm_basis",
     }
 
@@ -172,23 +174,60 @@ class ScfParameters(ParameterMap):
     def __normalise_system(self):
         """
         Check wether the system subtree is valid. Throws if not.
+
+        Transforms these keys:
+            system/atoms -> system/atom_numbers
+            system/charge -> system/n_alpha, system/n_beta
+            system/multipliciy -> system/n_alpha, system/n_beta
         """
+        if "system" not in self:
+            raise KeyError("No system subtree found in ScfParameters.")
+
+        system = self["system"]
 
         # TODO This could be made much simpler if the MolecularSystem
         #      class had a from_params function which constructed
         #      (and checked) the class from such a subtree.
 
-        if "system" not in self:
-            raise KeyError("No system subtree found in ScfParameters.")
+        if "atoms" in system:
+            if "atom_numbers" in system:
+                warnings.warn("Overriding system/atom_numbers in ScfParameters since "
+                              "system/atoms is present.")
+            atnums = np.array([gint.element.by_anything(at).atom_number
+                               for at in system["atoms"].value], dtype=int)
+            system["atom_numbers"] = ParamSpecial(atnums, "structure")
+            del system["atoms"]
 
-        system = self["system"]
         if len(system["coords"].value) != len(system["atom_numbers"].value):
             raise ValueError("Length of the system/coords and length of "
                              "system/atom_numbers needs to agree.")
 
-        n_atom = len(system["atom_numbers"].value)
+        n_atom = len(system["coords"].value)
         self.__normalise_numpy_array("system/coords", (n_atom, 3), dtype=float)
         self.__normalise_numpy_array("system/atom_numbers", (n_atom,), dtype=int)
+
+        if "multiplicity" in system or "charge" in system:
+            if "n_alpha" in system or "n_beta" in system:
+                warnings.warn("Overriding system/n_alpha and system/n_beta in "
+                              "ScfParameters, since system/multiplicity or "
+                              "system/charge is present")
+            try:
+                sysobj = MolecularSystem(
+                    atoms=system["atom_numbers"].value,
+                    coords=system["coords"].value,
+                    multiplicity=system.get("multiplicity", None),
+                    charge=system.get("charge", None)
+                )
+            except (ValueError, TypeError) as e:
+                raise ValueError("system/multiplicity or system/charge erroneous: " +
+                                 str(e))
+
+            system["n_alpha"] = np.uint64(sysobj.n_alpha)
+            system["n_beta"] = np.uint64(sysobj.n_beta)
+
+            for k in ["charge", "multiplicity"]:
+                if k in system:
+                    del system[k]
 
         if "n_alpha" not in system or "n_beta" not in system:
             raise KeyError("system/n_alpha and system/n_beta need to be present.")
@@ -275,6 +314,11 @@ class ScfParameters(ParameterMap):
         Normalise and check the scf parameters.
 
         Return an ScfSizes object (since the __normalise_guess function needs this)
+
+        Transforms these keys:
+            scf/conv_tol -> scf/max_error_norm, scf/max_1e_energy_change,
+                            scf/max_tot_energy_change
+            scf/restricted -> scf/kind
         """
         self.setdefault("scf/eigensolver/method", "auto")
         scf = self["scf"]
