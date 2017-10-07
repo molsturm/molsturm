@@ -22,7 +22,7 @@
 ## ---------------------------------------------------------------------
 
 
-from gint._basis_types import split as split_basis_type
+from gint.Basis import split_basis_type
 from .ParameterMap import ParameterMap
 from .MolecularSystem import MolecularSystem
 import gint.gaussian
