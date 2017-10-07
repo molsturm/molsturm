@@ -27,9 +27,12 @@ import collections
 import numpy as np
 
 
-"""Named tuple to contain value and type of an parameter,
-   which is treated with a special update function on the C++ side."""
-ParamSpecial = collections.namedtuple("ParamSpecial", ["value", "type"])
+class ParamSpecial:
+    """Named tuple to contain value and type of an parameter,
+       which is treated with a special update function on the C++ side."""
+    def __init__(self, value, type):
+        self.value = value
+        self.type = type
 
 
 def __to_iface_parameters(params, interface_type):
@@ -75,7 +78,8 @@ def __to_iface_parameters(params, interface_type):
 
         if isinstance(params[key_in], ParamSpecial):
             # Deal with special nodes
-            value, typestr = params[key_in]
+            value = params[key_in].value
+            typestr = params[key_in].type
             if typestr not in ["structure", "ignore"]:
                 # Setting the value has not been already done above
                 getattr(ret, "update_" + typestr)(key, value)

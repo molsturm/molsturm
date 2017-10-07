@@ -33,21 +33,6 @@ import warnings
 import collections
 
 
-def _assert_c_contiguous_numpy(arr, shape, dtype=None, prefix="numpy array"):
-    if not isinstance(arr, np.ndarray):
-        raise TypeError(prefix + " is not a numpy array, but a " + str(type(arr)))
-    if arr.shape != shape:
-        raise ValueError(prefix + " has not the expected shape " + str(shape) +
-                         ", but " + str(arr.shape))
-    if dtype:
-        if arr.dtype != dtype:
-            raise TypeError(prefix + " has not the expected dtype " + str(dtype) +
-                            ", but " + str(arr.dtype))
-
-    if not arr.flags["C_CONTIGUOUS"]:
-        raise ValueError(prefix + " needs to be a C-contiguous numpy array.")
-
-
 """
 A tuple with the following named components:
     n_bas     Number of basis functions
@@ -59,10 +44,13 @@ ScfSizes = collections.namedtuple("ScfSizes", ["n_bas", "n_spin", "n_fock"])
 
 
 class ScfParameters(ParameterMap):
-    """The keys which do not start with n_ and which still need to be
-       of type size_t
+
+    """The keys which do not start with "n_" and
+       which still need to be of type size_t
     """
     __size_t_keys = ["scf/max_iter", "scf/diis_size"]
+
+    """The keys which need a ParamSpecial wrapper"""
     __special_keys = {
         # key : special type
         "guess/orben_f": "ignore",
@@ -156,7 +144,32 @@ class ScfParameters(ParameterMap):
         params.normalise()
         return params
 
-    def __assert_system(self):
+    def __normalise_numpy_array(self, key, shape, dtype=None):
+        try:
+            # The .value is around, since all keys going through
+            # this point to ParameterSpecial objects.
+            arr = np.array(self[key].value, copy=False, dtype=dtype)
+        except TypeError as e:
+            raise TypeError(key + " is not a numpy array and casting returned an "
+                            "error: " + str(e))
+        except ValueError as e:
+            raise ValueError(key + " cannot be uses as a numpy array: " + str(e))
+
+        if arr.shape != shape:
+            raise ValueError(key + " has not the expected shape " + str(shape) +
+                             ", but " + str(arr.shape))
+
+        if dtype:
+            if arr.dtype != dtype:
+                raise TypeError(key + " has not the expected dtype " + str(dtype) +
+                                ", but " + str(arr.dtype))
+
+        if not arr.flags["C_CONTIGUOUS"]:
+            raise ValueError(key + " needs to be a C-contiguous numpy array.")
+
+        self[key].value = arr
+
+    def __normalise_system(self):
         """
         Check wether the system subtree is valid. Throws if not.
         """
@@ -172,11 +185,10 @@ class ScfParameters(ParameterMap):
         if len(system["coords"].value) != len(system["atom_numbers"].value):
             raise ValueError("Length of the system/coords and length of "
                              "system/atom_numbers needs to agree.")
-        n_atom = len(system["coords"].value)
-        _assert_c_contiguous_numpy(system["coords"].value, (n_atom, 3),
-                                   prefix="system/coords")
-        _assert_c_contiguous_numpy(system["atom_numbers"].value, (n_atom,),
-                                   prefix="system/atom_numbers")
+
+        n_atom = len(system["atom_numbers"].value)
+        self.__normalise_numpy_array("system/coords", (n_atom, 3), dtype=float)
+        self.__normalise_numpy_array("system/atom_numbers", (n_atom,), dtype=int)
 
         if "n_alpha" not in system or "n_beta" not in system:
             raise KeyError("system/n_alpha and system/n_beta need to be present.")
@@ -254,8 +266,7 @@ class ScfParameters(ParameterMap):
                 raise TypeError("integrals/nlm_basis needs to be a numpy array")
 
             n_bas = len(integrals["nlm_basis"].value)
-            _assert_c_contiguous_numpy(integrals["nlm_basis"].value, (n_bas, 3),
-                                       prefix="integrals/nlm_basis")
+            self.__normalise_numpy_array("integrals/nlm_basis", (n_bas, 3), dtype=int)
         else:
             raise AssertionError("Unrecognised Basis type")
 
@@ -340,12 +351,9 @@ class ScfParameters(ParameterMap):
                 raise KeyError("For external guesses the key "
                                "guess/orbcoeff_bf is required")
 
-            _assert_c_contiguous_numpy(guess["orben_f"].value,
-                                       (n_spin, n_fock),
-                                       prefix="guess/orben_f")
-            _assert_c_contiguous_numpy(guess["orbcoeff_bf"].value,
-                                       (n_spin, n_bas, n_fock),
-                                       prefix="guess/orbcoeff_bf")
+            self.__normalise_numpy_array("guess/orben_f", (n_spin, n_fock), dtype=float)
+            self.__normalise_numpy_array("guess/orbcoeff_bf", (n_spin, n_bas, n_fock),
+                                         dtype=float)
 
     def normalise(self):
         """
@@ -358,7 +366,7 @@ class ScfParameters(ParameterMap):
         or the function will throw KeyError, ValueError or TypeError exceptions
         to indicate that this is not the case.
         """
-        self.__assert_system()
+        self.__normalise_system()
         system = self.system
 
         self.__normalise_integrals(system)
@@ -411,7 +419,7 @@ class ScfParameters(ParameterMap):
         Return the MolecularSystem which is represented by the
         internal parameters.
         """
-        self.__assert_system()
+        self.__normalise_system()
         return MolecularSystem(
             atoms=self["system/atom_numbers"].value,
             coords=self["system/coords"].value,
@@ -502,14 +510,9 @@ class ScfParameters(ParameterMap):
         Return a dict of dicts which represents the same data
 
         strip_special  Should the ParamSpecial instances be stripped off
-        when returning the values (default: True)
+                       when returning the values (default: True)
         """
-        if not strip_special:
-            return super().to_dict()
-        else:
+        if strip_special:
             return self.__strip_special(super().to_dict())
-
-        return {
-            k: p.value if strip_special and isinstance(p, ParamSpecial) else p
-            for k, p in super().to_dict().items()
-        }
+        else:
+            return super().to_dict()

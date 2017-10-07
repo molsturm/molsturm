@@ -28,139 +28,136 @@ from ._hdf5 import emplace_dict, extract_group, h5py
 import numpy as np
 from datetime import datetime
 from io import IOBase
-from yaml import safe_load as yaml_load
-from yaml import safe_dump as yaml_dump
+import yaml
 from distutils.version import StrictVersion
 
+
 def metadata_common():
-  """
-  Return metadata about the file format and the
-  version of molsturm.
-  """
-  return {
-    "molsturm_version": Version.as_string(),
-    "date": datetime.now().isoformat(),
-  }
+    """
+    Return metadata about the file format and the
+    version of molsturm.
+    """
+    return {
+        "molsturm_version": Version.as_string(),
+        "date": datetime.now().isoformat(),
+    }
+
 
 #
 # Yaml
 #
-
 def dump_yaml(hfres, stream):
-  """Take a HartreeFock result and dump the data
-     in yaml format.
+    """Take a HartreeFock result and dump the data
+       in yaml format.
 
-     It can later be picked up using load_yaml.
+       It can later be picked up using load_yaml.
 
-     Note that files are stored fully in plain text,
-     so they can get quite large if you choose to
-     dump the two electron integral tensor as well.
+       Note that files are stored fully in plain text,
+       so they can get quite large if you choose to
+       dump the two electron integral tensor as well.
 
-     This is mainly intended for debugging and
-     to 'look' at the data at hand. For archiving
-     and transferring data dump_hdf5 should be preferred.
+       This is mainly intended for debugging and
+       to 'look' at the data at hand. For archiving
+       and transferring data dump_hdf5 should be preferred.
 
-     stream:   Path or file stream to write the data to
-  """
-  if isinstance(stream,str):
-    with open(stream,"w") as f:
-      return dump_yaml(hfres,f)
-  elif not isinstance(stream,IOBase):
-    raise TypeError("stream parameter needs to be a string or a stream object")
+       stream:   Path or file stream to write the data to
+    """
+    if isinstance(stream, str):
+        with open(stream, "w") as f:
+            return dump_yaml(hfres, f)
+    elif not isinstance(stream, IOBase):
+        raise TypeError("stream parameter needs to be a string or a stream object")
 
-  # Make a copy and populate with metadata:
-  res=dict(hfres)
-  res["meta"] = metadata_common()
-  res["meta"]["format_type"] = "yaml"
-  res["meta"]["format_version"] = "1.0.0"
+    # Make a copy and populate with metadata:
+    res = dict(hfres)
+    res["meta"] = metadata_common()
+    res["meta"]["format_type"] = "yaml"
+    res["meta"]["format_version"] = "0.1.0"
 
-  # Convert numpy arrays to plain list of lists
-  for k in HFRES_ARRAY_KEYS:
-    if k in res:
-      res[k] = res[k].tolist()
+    # Convert numpy arrays to plain list of lists
+    for k in HFRES_ARRAY_KEYS:
+        if k in res:
+            res[k] = res[k].tolist()
 
-  print("WARNING exporting / importing the new interface does not work.")
-  INPUT_PARAMETER_ARRAY_KEYS = []
-
-  if INPUT_PARAMETER_KEY in res:
-    ipkey = INPUT_PARAMETER_KEY
-    for k in INPUT_PARAMETER_ARRAY_KEYS:
-      if not k in res[ipkey]: continue
-      if not isinstance(res[ipkey][k], np.ndarray): continue
-      res[ipkey][k] = res[ipkey][k].tolist()
-
-  yaml_dump(res, stream)
+    if INPUT_PARAMETER_KEY in res:
+        res[INPUT_PARAMETER_KEY] = res[INPUT_PARAMETER_KEY]
+    yaml.safe_dump(res, stream)
 
 
 def load_yaml(stream):
-  """Read an input file or stream in the molsturm yaml format
-     and return the parsed hfres dictionary.
+    """Read an input file or stream in the molsturm yaml format
+       and return the parsed hfres dictionary.
 
-     Note that ``dump_yaml(dict,file); dict = load_yaml(file)``
-     is an identity.
+       Note that ``dump_yaml(dict,file); dict = load_yaml(file)``
+       is an identity.
 
-     stream:   Path or file stream
+       stream:   Path or file stream
 
-     throws: ValueError if the file is not in the expected format.
-  """
-  parser_max_version = "1.0.0"   # Maximal file format version this parser can do
+       throws: ValueError if the file is not in the expected format.
+    """
+    # Minimal and maximal version this parser understands
+    parser_min_version = "0.1.0"
+    parser_max_version = parser_min_version
 
-  if isinstance(stream,str):
-    with open(stream,"r") as f:
-      return load_yaml(f)
-  elif not isinstance(stream,IOBase):
-    raise TypeError("stream parameter needs to be a string or a stream object")
+    if isinstance(stream, str):
+        with open(stream, "r") as f:
+            return load_yaml(f)
+    elif not isinstance(stream, IOBase):
+        raise TypeError("stream parameter needs to be a string or a stream object")
 
-  res = yaml_load(stream)
+    res = yaml.load(stream)
 
-  # Check metadata:
-  try:
-    meta_type = res["meta"]["format_type"]
-    meta_version = res["meta"]["format_version"]
-  except KeyError as e:
-    raise ValueError("Yaml stream metadata seems to be missing or corrupted. "
-                     "The key " + str(e.args[0]) + " is missing.")
-
-  if meta_type != "yaml":
-    raise ValueError("Yaml stream format is not 'yaml', but '"
-                     +str(meta_type)+ "'.")
-
-  if StrictVersion(meta_version) > StrictVersion(parser_max_version):
-    raise ValueError("Parser not compatible to versions beyond "
-                     + parser_max_version + ". Encountered version "
-                     + meta_version + ".")
-
-  # Remove metadata block
-  del res["meta"]
-
-  # Convert plain list of lists to numpy arrays
-  for k in HFRES_ARRAY_KEYS:
+    # Check metadata:
     try:
-      res[k] = np.array(res[k])
-    except KeyError:
-      pass
-  return res
+        meta_type = res["meta"]["format_type"]
+        meta_version = res["meta"]["format_version"]
+    except KeyError as e:
+        raise ValueError("Yaml stream metadata seems to be missing or corrupted. "
+                         "The key " + str(e.args[0]) + " is missing.")
+
+    if meta_type != "yaml":
+        raise ValueError("Yaml stream format is not 'yaml', but '" +
+                         str(meta_type) + "'.")
+
+    if StrictVersion(meta_version) < StrictVersion(parser_min_version):
+        raise ValueError("Parser not compatible to versions below " +
+                         parser_min_version + ". Encountered version " +
+                         meta_version + ".")
+    elif StrictVersion(meta_version) > StrictVersion(parser_max_version):
+        raise ValueError("Parser not compatible to versions beyond " +
+                         parser_max_version + ". Encountered version " +
+                         meta_version + ".")
+
+    # Remove metadata block
+    del res["meta"]
+
+    # Convert plain list of lists to numpy arrays
+    for k in HFRES_ARRAY_KEYS:
+        if k in res:
+            res[k] = np.array(res[k])
+    return res
+
 
 def metadata_yaml(stream):
-  """Extract meta data block of a molsturm yaml file and return as a dictionary
-     Returns None no meta data block found
-  """
-  if isinstance(stream,str):
-    with open(stream,"r") as f:
-      return metadata_yaml(f)
-  elif not isinstance(stream,IOBase):
-    raise TypeError("stream parameter needs to be a string or a stream object")
+    """Extract meta data block of a molsturm yaml file and return as a dictionary
+       Returns None no meta data block found
+    """
+    if isinstance(stream, str):
+        with open(stream, "r") as f:
+            return metadata_yaml(f)
+    elif not isinstance(stream, IOBase):
+        raise TypeError("stream parameter needs to be a string or a stream object")
 
-  res = yaml_load(stream)
-  try:
-    return res["meta"]
-  except KeyError:
-    return None
+    res = yaml.load(stream)
+    try:
+        return res["meta"]
+    except KeyError:
+        return None
+
 
 #
 # HDF5
 #
-
 def dump_hdf5(hfres, path):
   """Take a HartreeFock result and dump the data in hdf5 format.
      Most of the data will be plain text, but the large numpy
@@ -223,9 +220,10 @@ def load_hdf5(path, meta_check=True):
                          + meta_version + ".")
     return extract_group(h5f)
 
+
 def metadata_hdf5(path):
-  """Extract meta data block of an hdf5 file and return as a dictionary
-     Returns None no meta data block found
-  """
-  with h5py.File(path,"r") as h5f:
-    return { at : h5f.attrs[at] for at in h5f.attrs }
+    """Extract meta data block of an hdf5 file and return as a dictionary
+       Returns None no meta data block found
+    """
+    with h5py.File(path, "r") as h5f:
+        return {at: h5f.attrs[at] for at in h5f.attrs}

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,38 +20,60 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 import numpy as np
 import yaml
 
+
 def ndarray_representer(dumper, data):
-  """YAML representer for numpy arrays"""
-  return dumper.represent_sequence('!ndarray', data.tolist())
+    """YAML representer for numpy arrays"""
+    return dumper.represent_sequence('!ndarray', data.tolist())
 
 
 def numpy_scalar_representer(dumper, data):
-  """YAML representer for numpy scalar values.
-  They are represented as their python equivalents.
-  """
-  return dumper.represent_data(np.asscalar(data))
+    """YAML representer for numpy scalar values.
+    They are represented as their python equivalents.
+    """
+    return dumper.represent_data(np.asscalar(data))
 
 
 def ndarray_constructor(loader, node):
-  """YAML constructor for numpy arrays"""
-  value = loader.construct_sequence(node)
-  return np.array(value)
+    """YAML constructor for numpy arrays"""
+    value = loader.construct_sequence(node)
+    return np.array(value)
 
 
 def install_constructors():
-  """Install all YAML constructors defined in this module"""
-  yaml.constructor.SafeConstructor.add_constructor("!ndarray", ndarray_constructor)
+    """Install all YAML constructors defined in this module"""
+    yaml.add_constructor("!ndarray", ndarray_constructor)
 
 
 def install_representers():
-  """Install all YAML representers defined in this module"""
-  yaml.representer.SafeRepresenter.add_representer(np.ndarray, ndarray_representer)
+    """Install all YAML representers defined in this module"""
+    yaml.add_representer(np.ndarray, ndarray_representer)
 
-  for np_type_category in [ 'complex', 'float', 'int' ]:
-    for tpe in np.sctypes[np_type_category]:
-      yaml.representer.SafeRepresenter.add_representer(tpe, numpy_scalar_representer)
+    for np_type_category in ['complex', 'float', 'int']:
+        for tpe in np.sctypes[np_type_category]:
+            yaml.add_representer(tpe, numpy_scalar_representer)
+
+
+def strip_special(dtree):
+    """
+    Parse through a dict of dicts and strip the special
+    constructs by replacing them by their python analoguous, i.e.
+
+    numpy array => python list of lists
+    numpy scalar => python types
+    """
+    dout = {}
+    for k, v in dtree.items():
+        if isinstance(v, dict):
+            dout[k] = strip_special(v)
+        elif isinstance(v, tuple(np.sctypes["uint"] + np.sctypes["int"] +
+                                 np.sctypes["complex"])):
+            dout[k] = np.asscalar(v)
+        elif isinstance(v, np.ndarray):
+            dout[k] = v.tolist()
+        else:
+            dout[k] = v
+    return dout

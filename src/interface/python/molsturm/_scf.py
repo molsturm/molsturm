@@ -21,13 +21,14 @@
 ##
 ## ---------------------------------------------------------------------
 
-from .State import State
-from .ScfParameters import ScfParameters
-import numpy as np
-from . import _iface as iface
 from ._iface_conversion import __to_iface_parameters
+from . import _iface as iface
+from . import yaml_utils
 from .scf_guess import extrapolate_from_previous
+from .ScfParameters import ScfParameters
+from .State import State
 import gint
+import numpy as np
 
 # Old stuff ... will probably go some day
 from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
@@ -98,6 +99,9 @@ def self_consistent_field(params):
 
     out = {k: getattr(res, k) for k in res_keys if k not in HFRES_ARRAY_KEYS}
     for k in HFRES_ARRAY_KEYS:
+        if k == "fock_bb":
+            continue
+
         # Build the shape to cast the numpy arrays into from the
         # suffixes (e.g. _ffff, _bf) and the shape lookup object
         # we created above
@@ -113,7 +117,8 @@ def self_consistent_field(params):
         out["fock_bb"] = f_bb.reshape(2 * res.n_bas, 2 * res.n_bas)
 
     # Forward input parameters to output
-    out[INPUT_PARAMETER_KEY] = params.to_dict()
+    # TODO Later store as a ScfParameters object in the state.
+    out[INPUT_PARAMETER_KEY] = yaml_utils.strip_special(params.to_dict())
 
     return State(out)
 
