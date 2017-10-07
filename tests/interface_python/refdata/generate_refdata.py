@@ -27,7 +27,6 @@ import numpy as np
 import os
 import re
 import subprocess
-import tempfile
 import yaml
 
 def dir_of_this_script():
@@ -56,32 +55,29 @@ def build_input_params():
 
 def build_orca_input(params, simple_keywords, input_file):
   """
-  params: The params array
+  params: The ScfParameters object for this calculation
   simple_keywords: Extra keywords to put on the simple input line
   input_file: The file to write
   """
   os.makedirs(os.path.dirname(input_file), exist_ok=True)
 
-  for key in [ "atoms", "basis_set", "coords", "multiplicity" ]:
-    if not key in params:
-      raise ValueError("Missing required key '" + key + "' in input parameters.")
-  if len(params["atoms"]) != len(params["coords"]):
-    raise ValueError("The length of the atoms array and of the coords array "+
-                     "does not agree.")
-
   simple_keywords = ["bohrs", "extremescf", "nofrozencore", "nopop", "noprintmos",
                      "largeprint"] + simple_keywords
-  simple_keywords.append(params["basis_set"])
+
+  # Assert that a gaussian calculation is to be done
+  if not params["integrals/basis_type"].startswith("gaussian/"):
+    raise ValueError("Orca can only do gaussian calculations")
+  simple_keywords.append(params.basis.basis_set_name)
+  system = params.system
 
   with open(input_file, "w") as f:
     f.write("! " + " ".join(simple_keywords)+"\n")
-    f.write("* xyz " + str(params.get("charge", 0)) + " " +
-            str(params["multiplicity"]) + "\n")
+    f.write("* xyz " + str(int(system.charge)) + " " + str(int(system.multiplicity)) + "\n")
 
-    for atom, coords in itertools.zip_longest(params["atoms"], params["coords"]):
-      f.write(str(atom))
+    for atom, coords in itertools.zip_longest(system.atoms, system.coords):
+      f.write(str(atom.symbol))
       for c in coords:
-        f.write("  " + str(c))
+        f.write("  {0:.17g}".format(c))
       f.write("\n")
 
     f.write("*\n")
@@ -282,7 +278,7 @@ def job_orca_fci(name, params):
     } ],
   }
   with open(os.path.join(dir_of_this_script(), name + ".fci.yaml"), "w") as f:
-    f.write("# Data from ORCA calculation " + orca_in_file + "\n")
+    f.write("# Data from ORCA calculation " + os.path.relpath(orca_in_file) + "\n")
     yaml.safe_dump(reference, f)
 
 
@@ -296,12 +292,17 @@ if __name__ == "__main__":
     # The include list of jobs which should be performed
     # on this input:
     include = params["include"]
-    del params["include"]
 
     for job in include:
       try:
-        locals()["job_" + job](name, params)
-      except KeyError:
+        scfparams = molsturm.ScfParameters.from_dict(params["input_parameters"])
+      except (KeyError, ValueError, TypeError) as e:
+        print("Erroneous input parameters in '" + name + ".in.yaml': " + str(type(e)) + " " + str(e))
+        continue
+
+      try:
+        locals()["job_" + job](name, scfparams)
+      except KeyError as e:
         raise SystemExit("Unknown job name '" + job + "' in input file '" +
                          name + ".in.yaml'")
 

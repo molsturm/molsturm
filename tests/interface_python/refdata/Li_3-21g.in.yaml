@@ -17,12 +17,16 @@ testing:
   #      with enough accuracy
   spin_squared_tolerance: 1.e-6
 
-# Input
-atoms:           [ "Li" ]
-coords:          [ [0,0,0] ]
-multiplicity:    2
-guess:           "hcore"
-basis_type:      "gaussian/libint"
-basis_set:       "3-21g"
-max_iter:        15
-conv_tol:        1.e-9
+input_parameters:
+  system:
+    atoms:          [ "Li" ]
+    coords:         [ [0,0,0] ]
+    multiplicity:   2
+  guess:
+    method:         hcore
+  integrals:
+    basis_type:     "gaussian/libint"
+    basis_set_name: "3-21g"
+  scf:
+    max_iter:       15
+    conv_tol:       1.e-9

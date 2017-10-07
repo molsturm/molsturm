@@ -5,8 +5,8 @@ energy_ground_state: -2.855704667706
 energy_kinetic: 2.84543131
 energy_nuclear_repulsion: 0.0
 energy_potential: -5.70113598
-meta: {date: '2017-07-12T16:30:03.337111', format_type: yaml, format_version: 1.0.0,
-  molsturm_version: 0.0.1}
+meta: {date: '2017-10-07T21:52:09.741767', format_type: yaml, format_version: 0.1.0,
+  molsturm_version: 0.0.2}
 orben_f: [-0.917124, 0.174366, 0.530376, 0.530376, 0.530376, 1.713453, 3.024883, 3.024883,
   3.024883, -0.917124, 0.174366, 0.530376, 0.530376, 0.530376, 1.713453, 3.024883,
   3.024883, 3.024883]
