@@ -58,6 +58,7 @@ addons:
       - ubuntu-toolchain-r-test     # libstdc++-4.9-dev (gcc 4.8's libstdc++ is buggy)
       - llvm-toolchain-trusty-4.0   # clang-4.0
     packages:
+      - python3-pip
       - ninja-build
       #
       # Packages for lazyten
@@ -71,6 +72,7 @@ addons:
       #
       # Packages for python interface
       - swig
+      - python3-numpy
 
 matrix:
   include:
