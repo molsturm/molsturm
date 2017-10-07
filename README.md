@@ -135,9 +135,8 @@ to `python` functions of the `molsturm` module.
 For example the snippet
 ```python
 import molsturm
-hfres = molsturm.hartree_fock(basis_set="sto-3g",
-                              basis_type="gaussian/libint",
-                              atoms="Be")
+hfres = molsturm.hartree_fock("Be", basis_type="gaussian",
+                              basis_set_name="6-31g")
 print("Be HF energy", hfres["energy_ground_state"])
 ```
 just performs a Hartree-Fock calculation on a beryllium atom and
