@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,29 +20,27 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from NumCompTestCase import NumCompTestCase
 
+
 class MP2TestCase(NumCompTestCase):
-  def compare_mp2_0_energies(self, case, mp2):
-    num_tol = case["testing"]["numeric_tolerance"]
-    ref     = case["mp2"]
+    def compare_mp2_0_energies(self, case, mp2):
+        num_tol = case["testing"]["numeric_tolerance"]
+        ref = case["mp2"]
 
-    for key in ref:
-      if not key.startswith("energy_"):
-        continue
-      self.assertAlmostEqual(mp2[key], ref[key], tol=num_tol, prefix=key+": ")
+        for key in ref:
+            if not key.startswith("energy_"):
+                continue
+            self.assertAlmostEqual(mp2[key], ref[key], tol=num_tol, prefix=key + ": ")
 
+    def compare_mp2_results(self, case, mp2):
+        """
+        Call all compare functions after another
+        """
+        for fun in dir(MP2TestCase):
+            if fun == "compare_mp2_results":
+                continue  # Do not call ourselves.
 
-  def compare_mp2_results(self, case, mp2):
-    """
-    Call all compare functions after another
-    """
-    for fun in dir(MP2TestCase):
-      if fun == "compare_mp2_results":
-        continue # Do not call ourselves.
-
-      if fun.startswith("compare_mp2_"):
-        getattr(self, fun) (case, mp2)
-
+            if fun.startswith("compare_mp2_"):
+                getattr(self, fun)(case, mp2)
