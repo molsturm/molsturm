@@ -135,6 +135,7 @@ script:
            -DENABLE_TESTS=OFF -DMOLSTURM_ENABLE_TESTS=ON
            -DRC_ENABLE_TESTS=OFF
            -DGINT_ENABLE_STATIC_INTEGRALS=ON
+           -DGINT_ENABLE_LIBCINT=ON
            -DGINT_ENABLE_LIBINT=ON ${LIBINT_OPTS}
            ${EXTRA_OPTS} ${GEN_OPTS} ..
   - cmake --build  . --target ${BUILD_TARGET:-all} -- -j ${CORES}
