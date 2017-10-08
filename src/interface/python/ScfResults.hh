@@ -92,6 +92,9 @@ struct ScfResults {
   // Overlap matrix
   std::vector<double> overlap_ff;
 
+  // Overlap in AOs
+  std::vector<double> overlap_bb;
+
   // Matrix of all one electron integrals accumulated
   std::vector<double> hcore_ff;
 

@@ -99,7 +99,7 @@ def self_consistent_field(params):
 
     out = {k: getattr(res, k) for k in res_keys if k not in HFRES_ARRAY_KEYS}
     for k in HFRES_ARRAY_KEYS:
-        if k == "fock_bb":
+        if k in ["fock_bb", "overlap_bb"]:
             continue
 
         # Build the shape to cast the numpy arrays into from the
@@ -115,6 +115,10 @@ def self_consistent_field(params):
     f_bb = np.array(getattr(res, "fock_bb"))
     if f_bb.size != 0:
         out["fock_bb"] = f_bb.reshape(2 * res.n_bas, 2 * res.n_bas)
+
+    s_bb = np.array(getattr(res, "overlap_bb"))
+    if s_bb.size != 0:
+        out["overlap_bb"] = s_bb.reshape(2 * res.n_bas, 2 * res.n_bas)
 
     # Forward input parameters to output
     # TODO Later store as a ScfParameters object in the state.

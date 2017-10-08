@@ -379,6 +379,16 @@ ScfResults export_hf_results(const State& state,
   }
 
   if (true) {
+    // This is a bit counter-intuitive, but this function works for basis times basis
+    // as well, since in the end it just replicates the balpha block to the beta
+    // block in case the calculation is restricted
+    matrix_type sbb_stored = static_cast<matrix_type>(state.overlap_matrix());
+    export_ff_matrix(restricted, sbb_stored, ret.overlap_bb);
+  } else {
+    ret.overlap_bb.resize(0);
+  }
+
+  if (true) {
     // Compute the full fock matrix in MO space, i.e.  C^T * (F * C)
     // => Need a dot product here, so actually the dot of all vectors with another
     auto fock_ff = lazyten::dot(soln.evectors(), fbb * soln.evectors());
