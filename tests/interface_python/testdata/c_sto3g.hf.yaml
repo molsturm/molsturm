@@ -1138,9 +1138,17 @@ hcore_ff:
 - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.670492636861688, 0.0, 0.0]
 - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.670492636861688, 0.0]
 - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.670492636861688]
-input_parameters: {atoms: c, basis_set: sto-3g, basis_type: gaussian/libint, conv_tol: 1.0e-08,
-  export_fock_matrix: true, export_repulsion_integrals: true, multiplicity: 3}
-meta: {date: '2017-07-14T14:44:25.928982', format_type: yaml, format_version: 1.0.0,
+input_parameters:
+  system:
+    atoms:          [ C ]
+    coords:         [ [0,0,0] ]
+    multiplicity:   3
+  integrals:
+    basis_type:     "gaussian/libint"
+    basis_set_name: sto-3g
+  scf:
+    conv_tol:     1.e-8
+meta: {date: '2017-07-14T14:44:25.928982', format_type: yaml, format_version: 0.1.0,
   molsturm_version: 0.0.1}
 n_alpha: 4
 n_bas: 5

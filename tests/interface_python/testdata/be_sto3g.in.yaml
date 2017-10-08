@@ -12,10 +12,14 @@ testing:
   numeric_tolerance: 1.e-7
 
 # Input:
-atoms:       [ be ]
-coords:      [[ 0,0,0 ]]
-basis_set:   sto-3g
-basis_type:  "gaussian/libint"
-export_repulsion_integrals: True
-export_fock_matrix: True
-conv_tol:    1.e-8
+input_parameters:
+  system:
+    atoms:          [ be ]
+    coords:         [ [0,0,0] ]
+    n_alpha:        2
+    n_beta:         2
+  integrals:
+    basis_type:     "gaussian/libint"
+    basis_set_name: sto-3g
+  scf:
+    conv_tol:       1.e-8

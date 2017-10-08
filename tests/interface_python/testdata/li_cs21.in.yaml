@@ -10,13 +10,15 @@ testing:
   numeric_tolerance: 1.e-7
 
 # Input:
-atoms:        Li
-coords:       [ 0,0,0 ]
-basis_type:   "sturmian/atomic/cs_static14"
-n_max:        2
-l_max:        1
-k_exp:        1.4
-export_repulsion_integrals: True
-export_fock_matrix: True
-guess_esolver: lapack
-multiplicity:  2
+input_parameters:
+  system:
+    atoms:          [ Li ]
+    coords:         [ [0,0,0] ]
+    multiplicity:   2
+  integrals:
+    basis_type:     "sturmian/atomic/cs_reference_pc"
+    n_max:          2
+    l_max:          1
+    k_exp:          1.4
+  guess:
+    eigensolver:    { method: lapack }

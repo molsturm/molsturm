@@ -12,11 +12,15 @@ testing:
   numeric_tolerance: 1.e-9
 
 # Input:
-atoms:        "He"
-basis_type:   "sturmian/atomic/cs_dummy"
-n_max:        6
-l_max:        0
-k_exp:        2.6
-export_repulsion_integrals: True
-export_fock_matrix: True
-guess_esolver: lapack
+input_parameters:
+  system:
+    atoms:          [ He ]
+    coords:         [ [0,0,0] ]
+    multiplicity:   1
+  integrals:
+    basis_type:     "sturmian/atomic/cs_dummy"
+    n_max:          6
+    l_max:          0
+    k_exp:          2.6
+  guess:
+    eigensolver:    { method: lapack }
