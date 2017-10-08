@@ -51,10 +51,9 @@ def extrapolate_from_previous(old_state, scf_params):
         if not n_spin == 2:
             raise ValueError("Unrestricted guess for restricted computation")
 
-        orben_f = old_state["orben_f"].reshape(n_fock, n_spin)
-        orben_f = orben_f.transpose(1, 0)
+        orben_f = old_state["orben_f"].reshape(n_spin, n_fock)
 
-        orbcoeff_bf = old_state["orbcoeff_bf"].reshape(n_bas, n_fock, n_spin)
-        orbcoeff_bf = orbcoeff_bf.transpose(2, 0, 1)
+        orbcoeff_bf = old_state["orbcoeff_bf"].reshape(n_bas, n_spin, n_fock)
+        orbcoeff_bf = orbcoeff_bf.transpose(1, 0, 2)
 
     return orben_f, orbcoeff_bf
