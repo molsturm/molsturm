@@ -57,42 +57,55 @@ def print_status(key, message):
 
 
 # Cache of calculations we already did
-calculation_hf_cache = dict()
+calculation_scf_cache = dict()
 
 
-def run_hf_calculation(name, params):
-    if name not in calculation_hf_cache:
+def run_scf_calculation(name, scfparams):
+    if name not in calculation_scf_cache:
         print_status("run_hf", "Running HF calculation")
-        calculation_hf_cache[name] = molsturm.hartree_fock(**params)
-    return calculation_hf_cache[name]
+        calculation_scf_cache[name] = molsturm.self_consistent_field(scfparams)
+    return calculation_scf_cache[name]
 
 # --------------------------------------------------------------------
 
 
-def job_dump_yaml(name, hfparams, dump_params):
+def job_dump_yaml(name, scfparams, dump_params):
     """Run a full calculation and dump the result as a yaml file"""
     output = name + ".hf.yaml"
     if not os.path.exists(output):
-        res = run_hf_calculation(name, hfparams)
+        res = run_scf_calculation(name, scfparams)
+
+        # Remove keys which are given by the parameters
+        for key in dump_params.get("remove_keys", []):
+            if key in res:
+                del res[key]
+
         molsturm.dump_yaml(res, output)
     else:
         print_status("dump_yaml", message=SKIPPED_SINCE_DONE)
 
 
-def job_dump_hdf5(name, hfparams, dump_params):
+def job_dump_hdf5(name, scfparams, dump_params):
     """Run a full calculation and dump the result as a yaml file"""
     output = name + ".hf.hdf5"
     if not os.path.exists(output):
-        res = run_hf_calculation(name, hfparams)
+        res = run_scf_calculation(name, scfparams)
+
+        # Remove keys which are given by the parameters
+        for key in dump_params.get("remove_keys", []):
+            if key in res:
+                del res[key]
+
         molsturm.dump_hdf5(res, output)
     else:
         print_status("dump_hdf5", message=SKIPPED_SINCE_DONE)
 
 
-def job_posthf_mp2(name, hfparams, mp_params):
+def job_posthf_mp2(name, scfparams, mp_params):
     output = name + ".mp2.yaml"
     if not os.path.exists(output):
-        hfres = run_hf_calculation(name, hfparams)
+        hfres = run_scf_calculation(name, scfparams)
+        print_status("posthf_mp2", "Running MP2")
         mp2 = molsturm.posthf.mp2(hfres, **mp_params)
 
         molsturm.yaml_utils.install_representers()
@@ -102,10 +115,10 @@ def job_posthf_mp2(name, hfparams, mp_params):
         print_status("posthf_mp2", message=SKIPPED_SINCE_DONE)
 
 
-def job_posthf_fci(name, hfparams, fci_params):
+def job_posthf_fci(name, scfparams, fci_params):
     output = name + ".fci.yaml"
     if not os.path.exists(output):
-        hfres = run_hf_calculation(name, hfparams)
+        hfres = run_scf_calculation(name, scfparams)
         print_status("posthf_fci", "Running Full-CI")
         fci = molsturm.posthf.fci(hfres, **fci_params)
 
@@ -118,7 +131,7 @@ def job_posthf_fci(name, hfparams, fci_params):
 # --------------------------------------------------------------------
 
 
-def work_on_case(name, hfparams, jobs):
+def work_on_case(name, scfparams, jobs):
     print_file_start(name)
     for job in jobs:
         if isinstance(job, str):
@@ -131,7 +144,7 @@ def work_on_case(name, hfparams, jobs):
                              "' found.")
 
         try:
-            globals()["job_" + jobname](name, hfparams, jobparams)
+            globals()["job_" + jobname](name, scfparams, jobparams)
         except KeyError:
             raise SystemExit("Unknown job name '" + jobname + "' in input file '" +
                              name + ".in.yaml'")
@@ -139,19 +152,16 @@ def work_on_case(name, hfparams, jobs):
 
 def main():
     inputs = build_input_params()
-    for name in inputs:
-        hfparams = inputs[name]
+    for name in sorted(inputs):
+        # Build the ScfParameters object to run the
+        # SCF for producing the reference data.
+        scfparams = molsturm.ScfParameters.from_dict(inputs[name]["input_parameters"])
 
         # The include list of jobs which should be performed
         # on this input:
-        include = hfparams["include"]
-        del hfparams["include"]
+        include = inputs[name]["include"]
 
-        # Remove the testing key since its values are only used
-        # when performing the tests later.
-        del hfparams["testing"]
-
-        work_on_case(name, hfparams, include)
+        work_on_case(name, scfparams, include)
 
 
 if __name__ == "__main__":
