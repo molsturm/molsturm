@@ -57,22 +57,23 @@ def install_representers():
             yaml.add_representer(tpe, numpy_scalar_representer)
 
 
-def strip_special(dtree):
+def strip_special(dtree, convert_np_arrays=False, convert_np_scalars=True):
     """
     Parse through a dict of dicts and strip the special
     constructs by replacing them by their python analoguous, i.e.
 
-    numpy array => python list of lists
-    numpy scalar => python types
+    numpy array => python list of lists   (convert_np_arrays)
+    numpy scalar => python types          (convert_np_scalars)
     """
     dout = {}
     for k, v in dtree.items():
         if isinstance(v, dict):
             dout[k] = strip_special(v)
-        elif isinstance(v, tuple(np.sctypes["uint"] + np.sctypes["int"] +
-                                 np.sctypes["complex"])):
+        elif convert_np_scalars and \
+                isinstance(v, tuple(np.sctypes["uint"] + np.sctypes["int"] +
+                                    np.sctypes["complex"])):
             dout[k] = np.asscalar(v)
-        elif isinstance(v, np.ndarray):
+        elif convert_np_arrays and isinstance(v, np.ndarray):
             dout[k] = v.tolist()
         else:
             dout[k] = v

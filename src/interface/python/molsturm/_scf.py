@@ -118,7 +118,9 @@ def self_consistent_field(params):
 
     # Forward input parameters to output
     # TODO Later store as a ScfParameters object in the state.
-    out[INPUT_PARAMETER_KEY] = yaml_utils.strip_special(params.to_dict())
+    out[INPUT_PARAMETER_KEY] = yaml_utils.strip_special(params.to_dict(),
+                                                        convert_np_arrays=True,
+                                                        convert_np_scalars=True)
 
     return State(out)
 

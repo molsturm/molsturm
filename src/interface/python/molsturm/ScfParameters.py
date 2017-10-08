@@ -297,8 +297,8 @@ class ScfParameters(ParameterMap):
                 integrals["nlm_basis"] = ParamSpecial(tmpbas.functions, type="nlm_basis")
             else:
                 if "nlm_basis" not in integrals:
-                    raise KeyError("Required key nlm_basis not found in integrals "
-                                   "subtree.")
+                    raise KeyError("Required key integrals/nlm_basis not found in "
+                                   "ScfParameters.")
 
                 n_max, l_max, m_max = np.max(integrals["nlm_basis"].value, axis=0)
                 integrals["n_max"] = n_max
