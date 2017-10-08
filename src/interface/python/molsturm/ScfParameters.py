@@ -206,11 +206,10 @@ class ScfParameters(ParameterMap):
         self.__normalise_numpy_array("system/coords", (n_atom, 3), dtype=float)
         self.__normalise_numpy_array("system/atom_numbers", (n_atom,), dtype=int)
 
-        if "multiplicity" in system or "charge" in system:
+        if "multiplicity" in system:
             if "n_alpha" in system or "n_beta" in system:
                 warnings.warn("Overriding system/n_alpha and system/n_beta in "
-                              "ScfParameters, since system/multiplicity or "
-                              "system/charge is present")
+                              "ScfParameters, since system/multiplicity is present.")
             try:
                 sysobj = MolecularSystem(
                     atoms=system["atom_numbers"].value,
@@ -229,8 +228,13 @@ class ScfParameters(ParameterMap):
                 if k in system:
                     del system[k]
 
+        if "charge" in system:
+            raise ValueError("If system/charge is present, system/multiplicity "
+                             "needs to be present as well.")
+
         if "n_alpha" not in system or "n_beta" not in system:
-            raise KeyError("system/n_alpha and system/n_beta need to be present.")
+            raise KeyError("system/n_alpha and system/n_beta or alternatively "
+                           "system/multiplicity need to be present.")
         if type(system["n_alpha"]) != np.uint64:
             raise TypeError("system/n_alpha needs to be pof type np.uint64")
         if type(system["n_beta"]) != np.uint64:
