@@ -1139,15 +1139,26 @@ hcore_ff:
 - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.670492636861688, 0.0]
 - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.670492636861688]
 input_parameters:
-  system:
-    atoms:          [ C ]
-    coords:         [ [0,0,0] ]
-    multiplicity:   3
-  integrals:
-    basis_type:     "gaussian/libint"
-    basis_set_name: sto-3g
+  guess:
+    eigensolver: {method: auto}
+    method: hcore
+  integrals: {basis_set_name: sto-3g, basis_type: gaussian/libint, orbital_type: real_molecular}
   scf:
-    conv_tol:     1.e-8
+    diis_size: 4
+    eigensolver: {method: auto}
+    kind: unrestricted
+    max_1e_energy_change: 1.0e-06
+    max_error_norm: 1.0e-08
+    max_iter: 25
+    max_tot_energy_change: 2.5e-09
+    n_eigenpairs: 10
+    print_iterations: false
+  system:
+    atom_numbers: [6]
+    coords:
+    - [0.0, 0.0, 0.0]
+    n_alpha: 4
+    n_beta: 2
 meta: {date: '2017-07-14T14:44:25.928982', format_type: yaml, format_version: 0.1.0,
   molsturm_version: 0.0.1}
 n_alpha: 4

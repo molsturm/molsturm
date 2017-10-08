@@ -2650,9 +2650,41 @@ hcore_ff:
   0.4364679500883358, 8.959838972902425, 0.4406682097337873]
 - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.014927156263550456, 0.022680181889345397, -0.0772315047229356,
   0.11515476217991294, 0.4406682097337882, 47.35161774972444]
-input_parameters: {atoms: He, basis_type: sturmian/atomic/cs_dummy, export_fock_matrix: true,
-  export_repulsion_integrals: true, guess_esolver: lapack, k_exp: 2.6, l_max: 0, n_max: 6}
-meta: {date: '2017-07-13T17:46:33.662331', format_type: yaml, format_version: 1.0.0,
+input_parameters:
+  guess:
+    eigensolver: {method: lapack}
+    method: hcore
+  integrals:
+    basis_type: sturmian/atomic/cs_dummy
+    k_exp: 2.6
+    l_max: 0
+    m_max: 0
+    n_max: 6
+    nlm_basis:
+    - [1, 0, 0]
+    - [2, 0, 0]
+    - [3, 0, 0]
+    - [4, 0, 0]
+    - [5, 0, 0]
+    - [6, 0, 0]
+    orbital_type: complex_atomic
+  scf:
+    diis_size: 4
+    eigensolver: {method: auto}
+    kind: restricted
+    max_1e_energy_change: 4.9999999999999996e-05
+    max_error_norm: 5.0e-07
+    max_iter: 25
+    max_tot_energy_change: 1.25e-07
+    n_eigenpairs: 12
+    print_iterations: false
+  system:
+    atom_numbers: [2]
+    coords:
+    - [0.0, 0.0, 0.0]
+    n_alpha: 1
+    n_beta: 1
+meta: {date: '2017-07-13T17:46:33.662331', format_type: yaml, format_version: 0.1.0,
   molsturm_version: 0.0.1}
 n_alpha: 1
 n_bas: 6

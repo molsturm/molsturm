@@ -1,7 +1,7 @@
 # Info for the data generator script
 include:
   - dump_yaml:
-      remove_keys: [ "eri_ffff", "hcore_ff", "fock_bb", "fock_ff", "overlap_ff" ]
+      remove_keys: [ "eri_ffff", "hcore_ff", "fock_bb", "fock_ff", "overlap_ff", "overlap_bb" ]
 
 # Info for the test execution
 testing:

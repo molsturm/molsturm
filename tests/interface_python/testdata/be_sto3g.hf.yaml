@@ -1139,15 +1139,27 @@ hcore_ff:
 - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.6341574655066098, 0.0]
 - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.6341574655066098]
 input_parameters:
-  atoms: [be]
-  basis_set: sto-3g
-  basis_type: gaussian/libint
-  conv_tol: 1.0e-08
-  coords:
-  - [0, 0, 0]
-  export_fock_matrix: true
-  export_repulsion_integrals: true
-meta: {date: '2017-07-12T18:20:24.567910', format_type: yaml, format_version: 1.0.0,
+  guess:
+    eigensolver: {method: auto}
+    method: hcore
+  integrals: {basis_set_name: sto-3g, basis_type: gaussian/libint, orbital_type: real_molecular}
+  scf:
+    diis_size: 4
+    eigensolver: {method: auto}
+    kind: restricted
+    max_1e_energy_change: 1.0e-06
+    max_error_norm: 1.0e-08
+    max_iter: 25
+    max_tot_energy_change: 2.5e-09
+    n_eigenpairs: 10
+    print_iterations: false
+  system:
+    atom_numbers: [4]
+    coords:
+    - [0.0, 0.0, 0.0]
+    n_alpha: 2
+    n_beta: 2
+meta: {date: '2017-07-12T18:20:24.567910', format_type: yaml, format_version: 0.1.0,
   molsturm_version: 0.0.1}
 n_alpha: 2
 n_bas: 5

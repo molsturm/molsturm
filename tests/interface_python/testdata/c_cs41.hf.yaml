@@ -8,18 +8,46 @@ final_1e_energy_change: 4.742283010727988e-08
 final_error_norm: 5.8133573085927306e-08
 final_tot_energy_change: 2.842170943040401e-14
 input_parameters:
-  system:
-    atoms:          [ C ]
-    coords:         [ [0,0,0] ]
-    multiplicity:   3
-  integrals:
-    basis_type:     "sturmian/atomic/cs_reference_pc"
-    k_exp:          3.3
-    n_max:          4
-    l_max:          1
   guess:
-    eigensolver:    { method: lapack }
-    method:         hcore
+    eigensolver: {method: lapack}
+    method: hcore
+  integrals:
+    basis_type: sturmian/atomic/cs_reference_pc
+    k_exp: 3.3
+    l_max: 1
+    m_max: 1
+    n_max: 4
+    nlm_basis:
+    - [1, 0, 0]
+    - [2, 0, 0]
+    - [2, 1, -1]
+    - [2, 1, 0]
+    - [2, 1, 1]
+    - [3, 0, 0]
+    - [3, 1, -1]
+    - [3, 1, 0]
+    - [3, 1, 1]
+    - [4, 0, 0]
+    - [4, 1, -1]
+    - [4, 1, 0]
+    - [4, 1, 1]
+    orbital_type: complex_atomic
+  scf:
+    diis_size: 4
+    eigensolver: {method: auto}
+    kind: unrestricted
+    max_1e_energy_change: 4.9999999999999996e-05
+    max_error_norm: 5.0e-07
+    max_iter: 25
+    max_tot_energy_change: 1.25e-07
+    n_eigenpairs: 26
+    print_iterations: false
+  system:
+    atom_numbers: [6]
+    coords:
+    - [0.0, 0.0, 0.0]
+    n_alpha: 4
+    n_beta: 2
 meta: {date: '2017-10-08T17:03:00.010018', format_type: yaml, format_version: 0.1.0,
   molsturm_version: 0.0.2}
 n_alpha: 4
