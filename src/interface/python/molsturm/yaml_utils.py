@@ -45,16 +45,17 @@ def ndarray_constructor(loader, node):
 
 def install_constructors():
     """Install all YAML constructors defined in this module"""
-    yaml.add_constructor("!ndarray", ndarray_constructor)
+    yaml.constructor.SafeConstructor.add_constructor("!ndarray", ndarray_constructor)
 
 
 def install_representers():
     """Install all YAML representers defined in this module"""
-    yaml.add_representer(np.ndarray, ndarray_representer)
+    yaml.representer.SafeRepresenter.add_representer(np.ndarray, ndarray_representer)
 
     for np_type_category in ['complex', 'float', 'int']:
         for tpe in np.sctypes[np_type_category]:
-            yaml.add_representer(tpe, numpy_scalar_representer)
+            yaml.representer.SafeRepresenter.add_representer(tpe,
+                                                             numpy_scalar_representer)
 
 
 def strip_special(dtree, convert_np_arrays=False, convert_np_scalars=True):
@@ -68,10 +69,11 @@ def strip_special(dtree, convert_np_arrays=False, convert_np_scalars=True):
     dout = {}
     for k, v in dtree.items():
         if isinstance(v, dict):
-            dout[k] = strip_special(v)
+            dout[k] = strip_special(v, convert_np_arrays=convert_np_arrays,
+                                    convert_np_scalars=convert_np_scalars)
         elif convert_np_scalars and \
                 isinstance(v, tuple(np.sctypes["uint"] + np.sctypes["int"] +
-                                    np.sctypes["complex"])):
+                                    np.sctypes["float"] + np.sctypes["complex"])):
             dout[k] = np.asscalar(v)
         elif convert_np_arrays and isinstance(v, np.ndarray):
             dout[k] = v.tolist()
