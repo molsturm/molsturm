@@ -49,9 +49,6 @@ before_cache:
   - cd ${TRAVIS_BUILD_DIR}
   - .travis/update_cached_libint.sh
 
-before_install:
-    - travis_retry pip3 install --user pyyaml numpy h5py
-
 addons:
   apt:
     sources:
@@ -73,6 +70,8 @@ addons:
       # Packages for python interface
       - swig
       - python3-numpy
+      - python3-h5py
+      - python3-yaml
 
 matrix:
   include:
