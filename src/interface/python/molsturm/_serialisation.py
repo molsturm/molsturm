@@ -79,8 +79,6 @@ def dump_yaml(hfres, stream):
         if k in res:
             res[k] = res[k].tolist()
 
-    if INPUT_PARAMETER_KEY in res:
-        res[INPUT_PARAMETER_KEY] = res[INPUT_PARAMETER_KEY]
     yaml.safe_dump(res, stream)
 
 
