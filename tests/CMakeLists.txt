@@ -60,6 +60,8 @@ set_tests_properties(molsturm_interface_python_tests
 	ENVIRONMENT "PYTHONPATH=${molsturm_SOURCE_DIR}/src/interface/python:\
 ${molsturm_BINARY_DIR}/src/interface/python:\
 ${molsturm_SOURCE_DIR}/modules/gint/src/interface/python:\
-${molsturm_BINARY_DIR}/modules/gint/src/interface/python"
+${molsturm_BINARY_DIR}/modules/gint/src/interface/python:\
+${molsturm_SOURCE_DIR}/modules/gint/external/sturmint/src/interface/python:\
+${molsturm_BINARY_DIR}/modules/gint/external/sturmint/src/interface/python"
 	TIMEOUT 600 # This one is quite a lot and hence takes longer
 )

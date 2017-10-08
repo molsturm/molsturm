@@ -51,14 +51,10 @@ class TestReference(HartreeFockTestCase, MP2TestCase, FciTestCase):
       testing = case["testing"]
       name = testing["name"]
       with self.subTest(label=name):
-        params = case["params"]
+        scfparams = molsturm.ScfParameters.from_dict(case["input_parameters"])
 
         # Update parameters if posthf is done
-        if testing["any_posthf"]:
-          params.setdefault("export_fock_matrix",         True)
-          params.setdefault("export_repulsion_integrals", True)
-          params.setdefault("export_hcore_matrix",        True)
-        hf = molsturm.hartree_fock(**params)
+        hf = molsturm.self_consistent_field(scfparams)
 
         self.compare_hf_results(case, hf)
         self.hf_results[ testing["name"] ] = hf

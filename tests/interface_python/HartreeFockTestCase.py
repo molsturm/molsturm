@@ -22,7 +22,6 @@
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from NumCompTestCase import NumCompTestCase
-from molsturm._basis import has_real_harmonics
 from molsturm import INPUT_PARAMETER_KEY
 import molsturm
 import numpy as np
@@ -67,11 +66,10 @@ class HartreeFockTestCase(NumCompTestCase):
 
   def compare_hf_2_convergence(self, case, hfres):
     testing          = case["testing"]
-    params           = case["params"]
+    scfparams        = molsturm.ScfParameters.from_dict(case["input_parameters"])
     num_tol          = testing["numeric_tolerance"]
 
-    if "conv_tol" in params:
-      self.assertLessEqual(hfres["final_error_norm"], params["conv_tol"])
+    self.assertLessEqual(hfres["final_error_norm"], scfparams["scf/max_error_norm"])
     self.assertLessEqual(hfres["n_iter"], testing["max_n_iter"])
 
 
@@ -141,6 +139,7 @@ class HartreeFockTestCase(NumCompTestCase):
             + ", since eri_ffff not available")
       return
 
+
     #
     # Test permutational symmetry
     #
@@ -151,7 +150,8 @@ class HartreeFockTestCase(NumCompTestCase):
       (3,2,1,0),  # Both (1) and (2)
     ]
 
-    if has_real_harmonics(**hfres[INPUT_PARAMETER_KEY]):
+    scfparams = molsturm.ScfParameters.from_dict(hfres[INPUT_PARAMETER_KEY])
+    if scfparams.basis.has_real_harmonics:
       allowed_permutations.extend([
         (1,0,2,3),  # (3) Permutation inside 1st shell pair
         (0,1,3,2),  # (4) Permutation inside 2nd shell pair

@@ -27,8 +27,9 @@ import data_cs_be as data
 import numpy as np
 import unittest
 
-@unittest.skipUnless(data.params["basis_type"] in molsturm.available_basis_types,
-                     "Required basis type " + data.params["basis_type"]
+basis_type = data.input_parameters["integrals"]["basis_type"]
+@unittest.skipUnless(basis_type in molsturm.available_basis_types,
+                     "Required basis type " + basis_type
                      + " is not available")
 class TestHartreeFockFull(NumCompTestCase):
   """This test should ensure, that we get exactly the same data
@@ -37,33 +38,39 @@ class TestHartreeFockFull(NumCompTestCase):
   """
   @classmethod
   def setUpClass(cls):
-    cls._hf_result = molsturm.hartree_fock(**data.params)
+    scfparams = molsturm.ScfParameters.from_dict(data.input_parameters)
+    cls._hf_result = molsturm.self_consistent_field(scfparams)
 
   def test_energies(self):
+    conv_tol = data.input_parameters["scf"]["conv_tol"]
     for ene in data.ref_energies:
       self.assertAlmostEqual(self._hf_result[ene], data.ref_energies[ene],
-                             tol=data.params["conv_tol"],prefix=ene+": ")
+                             tol=conv_tol,prefix=ene+": ")
 
   def test_scf_convergence(self):
+    conv_tol = data.input_parameters["scf"]["conv_tol"]
     self.assertGreaterEqual(data.ref_n_iter,self._hf_result["n_iter"])
-    self.assertLessEqual(self._hf_result["final_error_norm"],data.params["conv_tol"])
+    self.assertLessEqual(self._hf_result["final_error_norm"],conv_tol)
 
     for key in data.ref_convergence_result:
       self.assertEqual(self._hf_result[key], data.ref_convergence_result[key])
 
   def test_orbital_energies(self):
+    conv_tol = data.input_parameters["scf"]["conv_tol"]
     self.assertArrayAlmostEqual(self._hf_result["orben_f"],
                                 data.ref_orbital_energies,
-                                tol=data.params["conv_tol"],
+                                tol=conv_tol,
                                 prefix="Orbital energies: ")
 
   def test_coefficients(self):
+    conv_tol = data.input_parameters["scf"]["conv_tol"]
     self.assertArrayAlmostEqual(self._hf_result["orbcoeff_bf"],
                                 data.ref_coefficients,
-                                tol=data.params["conv_tol"],
+                                tol=conv_tol,
                                 prefix="Coefficients: ")
 
   def test_fock(self):
+    conv_tol = data.input_parameters["scf"]["conv_tol"]
     n_oa = self._hf_result["n_orbs_alpha"]
     slicemap = { "a": slice(None,n_oa), "b": slice(n_oa,None), }
     sizemap = { "a": n_oa, "b": self._hf_result["n_orbs_beta"], }
@@ -75,10 +82,11 @@ class TestHartreeFockFull(NumCompTestCase):
           ref_fij = data.ref_fock[i+j]
         except KeyError as e:
           ref_fij = np.zeros((sizemap[i],sizemap[j]))
-        self.assertArrayAlmostEqual(fij, ref_fij, tol=data.params["conv_tol"],
+        self.assertArrayAlmostEqual(fij, ref_fij, tol=conv_tol,
                                     prefix="Fock "+i+"-"+j+": ")
 
   def test_repulsion_integrals(self):
+    conv_tol = data.input_parameters["scf"]["conv_tol"]
     n_oa = self._hf_result["n_orbs_alpha"]
     slicemap = { "a": slice(None,n_oa), "b": slice(n_oa,None), }
     sizemap = { "a": n_oa, "b": self._hf_result["n_orbs_beta"], }
@@ -94,6 +102,6 @@ class TestHartreeFockFull(NumCompTestCase):
             except KeyError as e:
               ref_Jijkl = np.zeros( (sizemap[i], sizemap[j], sizemap[k], sizemap[l]) )
 
-            self.assertArrayAlmostEqual(Jijkl, ref_Jijkl, tol=data.params["conv_tol"],
+            self.assertArrayAlmostEqual(Jijkl, ref_Jijkl, tol=conv_tol,
                                         prefix="Repulsion tensor "+i+"-"+j+"-"+k+\
                                         "-"+l+": ")

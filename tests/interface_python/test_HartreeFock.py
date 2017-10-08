@@ -38,13 +38,13 @@ class TestHartreeFock(HartreeFockTestCase):
   def test_hf(self):
     for case in self.cases:
       testing = case["testing"]
-      params = case["params"]
 
       with self.subTest(label=testing["name"]):
-        if not params["basis_type"] in molsturm.available_basis_types:
-          raise unittest.SkipTest("Skipped subtest " + testing["name"] + ", since"
-                                  + " basis_type " + params["basis_type"]
-                                  + " is not available.")
+        try:
+            scfparams = molsturm.ScfParameters.from_dict(case["input_parameters"])
+        except (ValueError, KeyError, TypeError) as e:
+            raise unittest.SkipTest("Skipped subtest " + testing["name"] + ", since"
+                                    "construction of ScfParameters failed: " + str(e))
 
-        hfres = molsturm.hartree_fock(**params)
+        hfres = molsturm.self_consistent_field(scfparams)
         self.compare_hf_results(case, hfres)

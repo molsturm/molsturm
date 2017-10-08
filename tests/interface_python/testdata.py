@@ -59,18 +59,14 @@ def __parse_test_case(infile):
   else:
     raise ValueError("No hf results found for " + infile)
 
-  # Load "params" and "testing" subtree from in file
+  # Load "input_parameters" and "testing" subtree from in file
   with open(basepath + ".in.yaml", "r") as f:
-    ret["params"] = yaml.safe_load(f)
+    params = yaml.safe_load(f)
+  ret["input_parameters"] = params["input_parameters"]
 
-  # Remove the "include" subbranch since it is only
-  # needed for test data generation
-  del ret["params"]["include"]
-
-  # Bring the existing testing metadata one level up
-  if "testing" in ret["params"]:
-    ret["testing"].update(ret["params"]["testing"])
-    del ret["params"]["testing"]
+  # Forward testing metadata and ScfParameters
+  if "testing" in params:
+    ret["testing"].update(params["testing"])
 
   # Read posthf subcases:
   molsturm.yaml_utils.install_constructors()
@@ -79,9 +75,6 @@ def __parse_test_case(infile):
     if os.path.isfile(yamlfile):
       with open(yamlfile) as f:
         ret[sub] = yaml.safe_load(f)
-
-  # Store if we have any posthf case:
-  ret["testing"]["any_posthf"] = any( sub in ret for sub in posthf_cases )
 
   return ret
 
@@ -120,8 +113,6 @@ def test_cases_by_pred(pred):
 
 def test_cases_by_name(nameRegex):
   """Return the test case which matches the given name"""
-
   if isinstance(nameRegex, str):
     nameRegex = re.compile(nameRegex)
   return test_cases_by_pred(lambda x : nameRegex.match(x["testing"]["name"]))
-
