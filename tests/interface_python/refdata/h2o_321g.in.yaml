@@ -24,7 +24,7 @@ input_parameters:
       -             [ 1.693194615993441, 0, -0.599043184453037 ]
   guess:
     method:         hcore
-  integrals:
+  discretisation:
     basis_type:     "gaussian/libint"
     basis_set_name: "3-21g"
   scf:

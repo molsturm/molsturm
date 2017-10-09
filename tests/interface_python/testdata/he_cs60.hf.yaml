@@ -2654,7 +2654,7 @@ input_parameters:
   guess:
     eigensolver: {method: lapack}
     method: hcore
-  integrals:
+  discretisation:
     basis_type: sturmian/atomic/cs_dummy
     k_exp: 2.6
     l_max: 0

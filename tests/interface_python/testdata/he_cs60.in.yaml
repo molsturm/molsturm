@@ -17,7 +17,7 @@ input_parameters:
     atoms:          [ He ]
     coords:         [ [0,0,0] ]
     multiplicity:   1
-  integrals:
+  discretisation:
     basis_type:     "sturmian/atomic/cs_dummy"
     n_max:          6
     l_max:          0

@@ -15,7 +15,7 @@ input_parameters:
     atoms:          [ Li ]
     coords:         [ [0,0,0] ]
     multiplicity:   2
-  integrals:
+  discretisation:
     basis_type:     "sturmian/atomic/cs_reference_pc"
     n_max:          2
     l_max:          1

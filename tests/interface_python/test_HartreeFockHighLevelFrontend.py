@@ -41,9 +41,9 @@ class TestHartreeFockHighLevelFrontend(HartreeFockTestCase):
                                     ", since construction of ScfParameters failed: " +
                                     str(e))
         system = params.system
-        integrals = params["integrals"]
+        discretisation = params["discretisation"]
         scf = params["scf"]
-        hfres = molsturm.hartree_fock(system, basis_type=integrals["basis_type"],
+        hfres = molsturm.hartree_fock(system, basis_type=discretisation["basis_type"],
                                       conv_tol=scf["max_error_norm"],
                                       max_iter=scf["max_iter"],
                                       n_eigenpairs=scf["n_eigenpairs"],
@@ -51,10 +51,10 @@ class TestHartreeFockHighLevelFrontend(HartreeFockTestCase):
                                       guess=params["guess/method"],
                                       eigensolver=scf["eigensolver/method"],
                                       print_iterations=scf["print_iterations"],
-                                      k_exp=integrals["k_exp"],
-                                      n_max=integrals["n_max"],
-                                      l_max=integrals["l_max"],
-                                      m_max=integrals["m_max"])
+                                      k_exp=discretisation["k_exp"],
+                                      n_max=discretisation["n_max"],
+                                      l_max=discretisation["l_max"],
+                                      m_max=discretisation["m_max"])
 
         # TODO test guess from previous via this interface, too
 
@@ -72,9 +72,9 @@ class TestHartreeFockHighLevelFrontend(HartreeFockTestCase):
                                     ", since construction of ScfParameters failed: " +
                                     str(e))
         system = params.system
-        integrals = params["integrals"]
+        discretisation = params["discretisation"]
         scf = params["scf"]
-        hfres = molsturm.hartree_fock(system, basis_type=integrals["basis_type"],
+        hfres = molsturm.hartree_fock(system, basis_type=discretisation["basis_type"],
                                       conv_tol=scf["max_error_norm"],
                                       max_iter=scf["max_iter"],
                                       n_eigenpairs=scf["n_eigenpairs"],
@@ -82,7 +82,7 @@ class TestHartreeFockHighLevelFrontend(HartreeFockTestCase):
                                       guess=params["guess/method"],
                                       eigensolver=scf["eigensolver/method"],
                                       print_iterations=scf["print_iterations"],
-                                      basis_set_name=integrals["basis_set_name"])
+                                      basis_set_name=discretisation["basis_set_name"])
 
         # TODO test guess from previous via this interface, too
 

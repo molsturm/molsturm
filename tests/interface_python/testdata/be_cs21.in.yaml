@@ -16,7 +16,7 @@ input_parameters:
     atoms:          [ "Be" ]
     coords:         [ [0,0,0] ]
     multiplicity:   1
-  integrals:
+  discretisation:
     basis_type:     "sturmian/atomic/cs_naive"
     k_exp:          2.0
     n_max:          2

@@ -32,7 +32,7 @@ input_parameters = {
         "n_alpha":  2,
         "n_beta":   2,
     },
-    "integrals": {
+    "discretisation": {
         "basis_type": "sturmian/atomic/cs_naive",
         "n_max":      3,
         "l_max":      2,

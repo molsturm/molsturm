@@ -293,7 +293,7 @@ input_parameters:
   guess:
     eigensolver: {method: lapack}
     method: loewdin
-  integrals:
+  discretisation:
     basis_type: sturmian/atomic/cs_reference
     k_exp: 2.0
     l_max: 2

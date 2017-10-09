@@ -22,7 +22,7 @@ input_parameters:
     multiplicity:   1
   guess:
     method:         hcore
-  integrals:
+  discretisation:
     basis_type:     "gaussian/libint"
     basis_set_name: "cc-pvdz"
   scf:

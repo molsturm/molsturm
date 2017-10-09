@@ -56,11 +56,11 @@ class ScfParameters(ParameterMap):
         # key : special type
         "guess/orben_f": "ignore",
         "guess/orbcoeff_bf": "ignore",
-        "integrals/orbital_type": "orbital_type",
+        "discretisation/orbital_type": "orbital_type",
         "system/coords": "structure",
         "system/atom_numbers": "structure",
         "system/atoms": "ignore",
-        "integrals/nlm_basis": "nlm_basis",
+        "discretisation/nlm_basis": "nlm_basis",
     }
 
     def __from_dict_inner(self, d, prefix):
@@ -240,35 +240,35 @@ class ScfParameters(ParameterMap):
         if type(system["n_beta"]) != np.uint64:
             raise TypeError("system/n_beta needs to be pof type np.uint64")
 
-    def __normalise_integrals(self, system):
+    def __normalise_discretisation(self, system):
         # TODO This could be made much simpler if the Basis classes
         #      had a from_params function which constructed
         #      (and checked) the class from such a subtree.
 
-        if "integrals" not in self:
-            raise KeyError("No integrals subtree found in ScfParameters.")
+        if "discretisation" not in self:
+            raise KeyError("No discretisation subtree found in ScfParameters.")
 
-        integrals = self["integrals"]
-        if "basis_type" not in integrals:
-            raise KeyError("No key basis_type found in integrals subtree.")
+        discretisation = self["discretisation"]
+        if "basis_type" not in discretisation:
+            raise KeyError("No key basis_type found in discretisation subtree.")
 
-        if integrals["basis_type"] not in gint.available_basis_types:
-            raise ValueError("Basis type " + integrals["basis_type"] +
+        if discretisation["basis_type"] not in gint.available_basis_types:
+            raise ValueError("Basis type " + discretisation["basis_type"] +
                              " is not available.")
 
         # Get the backend string and the basis class type
-        Basis, backend = split_basis_type(integrals["basis_type"])
+        Basis, backend = split_basis_type(discretisation["basis_type"])
         if Basis == gint.gaussian.Basis:
-            if "basis_set_name" not in integrals:
-                raise KeyError("Required key basis_set_name not found in integrals "
+            if "basis_set_name" not in discretisation:
+                raise KeyError("Required key basis_set_name not found in discretisation "
                                "subtree.")
-            if type(integrals["basis_set_name"]) != str:
-                raise TypeError("integrals/basis_set_name needs to be a str.")
+            if type(discretisation["basis_set_name"]) != str:
+                raise TypeError("discretisation/basis_set_name needs to be a str.")
 
             # TODO This is still some sort of legacy stuff we kind of need
             #      to do at the moment unfortunately. One should remove that soon.
-            integrals.setdefault("orbital_type", ParamSpecial("real_molecular",
-                                                              type="orbital_type"))
+            discretisation.setdefault("orbital_type",
+                                      ParamSpecial("real_molecular", type="orbital_type"))
         elif Basis == gint.sturmian.atomic.Basis:
             if (system.n_atoms > 1):
                 raise ValueError("Invalid basis: Atomic Coulomb-Strumians can only be"
@@ -276,40 +276,43 @@ class ScfParameters(ParameterMap):
 
             # TODO This is still some sort of legacy stuff we kind of need
             #      to do at the moment unfortunately. One should remove that soon.
-            integrals.setdefault("orbital_type", ParamSpecial("complex_atomic",
-                                                              type="orbital_type"))
-            if "k_exp" not in integrals:
-                raise KeyError("Required key k_exp not found in integrals subtree.")
-            if type(integrals["k_exp"]) != float:
-                raise TypeError("integrals/k_exp needs to be a float")
+            discretisation.setdefault("orbital_type",
+                                      ParamSpecial("complex_atomic", type="orbital_type"))
+            if "k_exp" not in discretisation:
+                raise KeyError("Required key k_exp not found in discretisation subtree.")
+            if type(discretisation["k_exp"]) != float:
+                raise TypeError("discretisation/k_exp needs to be a float")
 
             # TODO This is only temporary and until the gint layer has fully moved
             #      to using nlm_basis.
-            if "n_max" in integrals:
-                integrals["n_max"] = int(integrals["n_max"])
-                integrals.setdefault("l_max", integrals["n_max"] - 1)
-                integrals.setdefault("m_max", integrals["l_max"])
+            if "n_max" in discretisation:
+                discretisation["n_max"] = int(discretisation["n_max"])
+                discretisation.setdefault("l_max", discretisation["n_max"] - 1)
+                discretisation.setdefault("m_max", discretisation["l_max"])
 
-                if "nlm_basis" in integrals:
-                    warnings.warn("Overriding integrals/nlm_basis in ScfParameters")
-                tmpbas = Basis(system, k_exp=1, n_max=integrals["n_max"],
-                               l_max=integrals["l_max"], m_max=integrals["m_max"])
-                integrals["nlm_basis"] = ParamSpecial(tmpbas.functions, type="nlm_basis")
+                if "nlm_basis" in discretisation:
+                    warnings.warn("Overriding discretisation/nlm_basis in ScfParameters")
+                tmpbas = Basis(system, k_exp=1, n_max=discretisation["n_max"],
+                               l_max=discretisation["l_max"],
+                               m_max=discretisation["m_max"])
+                discretisation["nlm_basis"] = ParamSpecial(tmpbas.functions,
+                                                           type="nlm_basis")
             else:
-                if "nlm_basis" not in integrals:
-                    raise KeyError("Required key integrals/nlm_basis not found in "
+                if "nlm_basis" not in discretisation:
+                    raise KeyError("Required key discretisation/nlm_basis not found in "
                                    "ScfParameters.")
 
-                n_max, l_max, m_max = np.max(integrals["nlm_basis"].value, axis=0)
-                integrals["n_max"] = n_max
-                integrals["l_max"] = l_max
-                integrals["m_max"] = m_max
+                n_max, l_max, m_max = np.max(discretisation["nlm_basis"].value, axis=0)
+                discretisation["n_max"] = n_max
+                discretisation["l_max"] = l_max
+                discretisation["m_max"] = m_max
 
-            if not isinstance(integrals["nlm_basis"].value, np.ndarray):
-                raise TypeError("integrals/nlm_basis needs to be a numpy array")
+            if not isinstance(discretisation["nlm_basis"].value, np.ndarray):
+                raise TypeError("discretisation/nlm_basis needs to be a numpy array")
 
-            n_bas = len(integrals["nlm_basis"].value)
-            self.__normalise_numpy_array("integrals/nlm_basis", (n_bas, 3), dtype=int)
+            n_bas = len(discretisation["nlm_basis"].value)
+            self.__normalise_numpy_array("discretisation/nlm_basis",
+                                         (n_bas, 3), dtype=int)
         else:
             raise AssertionError("Unrecognised Basis type")
 
@@ -417,7 +420,7 @@ class ScfParameters(ParameterMap):
         self.__normalise_system()
         system = self.system
 
-        self.__normalise_integrals(system)
+        self.__normalise_discretisation(system)
         basis = self.basis
 
         sizes = self.__normalise_scf(system, basis)
@@ -428,7 +431,7 @@ class ScfParameters(ParameterMap):
         Convenience function to set an external guess by supplying
         a guess for the orbital energies and the orbital coefficients.
 
-        This function only works proprly after the relevant integrals
+        This function only works properly after the relevant discretisation
         and scf parameters have been set up and will throw errors
         if this has not been done yet.
 
@@ -487,24 +490,25 @@ class ScfParameters(ParameterMap):
         """
         Return the basis object represented by the internal parameters.
         """
-        self.__normalise_integrals(self.system)
+        self.__normalise_discretisation(self.system)
 
         # Get the backend string and the basis class type
-        integrals = self["integrals"]
-        Basis, backend = split_basis_type(integrals["basis_type"])
+        discretisation = self["discretisation"]
+        Basis, backend = split_basis_type(discretisation["basis_type"])
 
         # TODO This explicit branching is a bit ugly
         if Basis == gint.gaussian.Basis:
-            return gint.gaussian.Basis(self.system, integrals["basis_set_name"],
+            return gint.gaussian.Basis(self.system, discretisation["basis_set_name"],
                                        backend=backend)
         elif Basis == gint.sturmian.atomic.Basis:
             warnings.warn("ScfParameters.basis assumes that the atomic Coulomb-Sturmian"
                           " basis is dense and in nlm order.")
-            n_max, l_max, m_max = np.max(integrals["nlm_basis"].value, axis=0)
+            n_max, l_max, m_max = np.max(discretisation["nlm_basis"].value, axis=0)
 
-            return gint.sturmian.atomic.Basis(self.system, integrals["k_exp"],
-                                              integrals["n_max"], integrals["l_max"],
-                                              integrals["m_max"], backend=backend)
+            return gint.sturmian.atomic.Basis(self.system, discretisation["k_exp"],
+                                              discretisation["n_max"],
+                                              discretisation["l_max"],
+                                              discretisation["m_max"], backend=backend)
         else:
             raise AssertionError("Unrecognised Basis type")
 
@@ -513,17 +517,17 @@ class ScfParameters(ParameterMap):
         """
         Set the basis into the parameters.
         """
-        self["integrals/basis_type"] = str(basis.basis_type)
+        self["discretisation/basis_type"] = str(basis.basis_type)
         if isinstance(basis, gint.gaussian.Basis):
             # TODO Instead set basis functions here directly and omit passing
             #      the basis set name here and allow to pass the full description
             #      down to gint
-            self["integrals/basis_set_name"] = str(basis.basis_set_name)
+            self["discretisation/basis_set_name"] = str(basis.basis_set_name)
 
             # TODO This is still some sort of legacy stuff we kind of need
             #      to do at the moment unfortunately. One should remove that soon.
-            self["integrals/orbital_type"] = ParamSpecial("real_molecular",
-                                                          type="orbital_type")
+            self["discretisation/orbital_type"] = ParamSpecial("real_molecular",
+                                                               type="orbital_type")
         elif isinstance(basis, gint.sturmian.atomic.Basis):
             if (self.system.n_atoms > 1):
                 raise ValueError("Invalid basis: Atomic Coulomb-Strumians can only be"
@@ -531,17 +535,17 @@ class ScfParameters(ParameterMap):
 
             # TODO This is still some sort of legacy stuff we kind of need
             #      to do at the moment unfortunately. One should remove that soon.
-            self["integrals/orbital_type"] = ParamSpecial("complex_atomic",
-                                                          type="orbital_type")
+            self["discretisation/orbital_type"] = ParamSpecial("complex_atomic",
+                                                               type="orbital_type")
 
-            self["integrals/k_exp"] = float(basis.k_exp)
-            self["integrals/nlm_basis"] = ParamSpecial(basis.functions, "nlm_basis")
+            self["discretisation/k_exp"] = float(basis.k_exp)
+            self["discretisation/nlm_basis"] = ParamSpecial(basis.functions, "nlm_basis")
 
             warnings.warn("Right now we assume all sturmian basis sets to be dense.")
             n_max, l_max, m_max = np.max(basis.functions, axis=0)
-            self["integrals/n_max"] = int(n_max)
-            self["integrals/l_max"] = int(l_max)
-            self["integrals/m_max"] = int(m_max)
+            self["discretisation/n_max"] = int(n_max)
+            self["discretisation/l_max"] = int(l_max)
+            self["discretisation/m_max"] = int(m_max)
         else:
             raise TypeError("basis has an unrecognised type.")
 

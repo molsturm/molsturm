@@ -67,7 +67,7 @@ def build_orca_input(params, simple_keywords, input_file):
                        "largeprint"] + simple_keywords
 
     # Assert that a gaussian calculation is to be done
-    if not params["integrals/basis_type"].startswith("gaussian/"):
+    if not params["discretisation/basis_type"].startswith("gaussian/"):
         raise ValueError("Orca can only do gaussian calculations")
     simple_keywords.append(params.basis.basis_set_name)
     system = params.system
@@ -204,10 +204,10 @@ def job_orca_hf(name, params):
             "convert":  float,
             "default":  None,
         }, {
-            "key":      "restricted",
-            "regex":    "Hartree-Fock type\s*HFTyp\s*\.*\s*(?P<value>\w+)",
-            "convert":  lambda value: False if value == "UHF" else True,
-            "default":  None,
+            "key":     "restricted",
+            "regex":   "Hartree-Fock type\s*HFTyp\s*\.*\s*(?P<value>\w+)",
+            "convert": lambda value: False if value == "UHF" else True,
+            "default": None,
         }, {
             "key":      "spin_squared",
             "regex":    "Expectation value of <S\*\*2>\s*:\s*(?P<value>" + FLPAT + ")",

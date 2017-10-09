@@ -28,7 +28,7 @@ import numpy as np
 import unittest
 
 
-basis_type = data.input_parameters["integrals"]["basis_type"]
+basis_type = data.input_parameters["discretisation"]["basis_type"]
 
 
 @unittest.skipUnless(basis_type in molsturm.available_basis_types,

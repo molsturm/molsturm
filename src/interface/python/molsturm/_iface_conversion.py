@@ -46,7 +46,7 @@ def __to_iface_parameters(params, interface_type):
     # (this is for legacy and compatiblity reasons)
     map_key_remap = {
         "scf/diis_size": "scf/diis_n_prev_steps",
-        "integrals/k_exp": "integrals/k_exponent"
+        "discretisation/k_exp": "discretisation/k_exponent"
     }
 
     # Construct the actual object, which we will return

@@ -1142,7 +1142,7 @@ input_parameters:
   guess:
     eigensolver: {method: auto}
     method: hcore
-  integrals: {basis_set_name: sto-3g, basis_type: gaussian/libint, orbital_type: real_molecular}
+  discretisation: {basis_set_name: sto-3g, basis_type: gaussian/libint, orbital_type: real_molecular}
   scf:
     diis_size: 4
     eigensolver: {method: auto}

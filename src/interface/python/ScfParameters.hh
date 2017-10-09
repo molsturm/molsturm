@@ -60,8 +60,10 @@ struct SystemKeys {
  * Contains the following submaps:
  *    - guess     Will be used as the guess parameters i.e. to setup the scf guess
  *    - scf       Will be used as the scf parameters to be passed to the actual SCF solver
- *    - integrals Controls the integral backend, i.e. the basis function types which are
- *                   used and the parameters for these.
+ *    - discretisation
+ *                Controls the type of basis function used as well as the precise integral
+ *                backend, i.e. all parameters to do with the computation of the one-
+ *                and two-electron integrals as well as their derivatives.
  *    - system    The chemical system to be modelled.
  *                   Contains the description of the nuclei and electrons.
  */

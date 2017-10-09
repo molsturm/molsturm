@@ -73,13 +73,14 @@ ScfResults self_consistent_field(const ScfParameters& params,
   assert_implemented(scf_kind != "restricted-open");
 
   // Add the structure for the integral library if not done yet:
-  params.insert_default("integrals/structure", params.at_raw_value("system/structure"));
+  params.insert_default("discretisation/structure",
+                        params.at_raw_value("system/structure"));
 
   // TODO Potentially setting up this thing is expensive.
   //      Ideally we want to keep this around until it is no longer needed
   //      in other words, we probably want to pass it back to the caller
   //      inside the ScfResults or so.
-  gint::IntegralLookup<matrix_type> integrals(params.submap("integrals"));
+  gint::IntegralLookup<matrix_type> integrals(params.submap("discretisation"));
   const size_t n_bas    = integrals.n_bas();
   const size_t n_alpha  = params.at<size_t>("system/" + SystemKeys::n_alpha);
   const size_t n_beta   = params.at<size_t>("system/" + SystemKeys::n_beta);

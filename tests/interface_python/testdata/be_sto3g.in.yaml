@@ -18,7 +18,7 @@ input_parameters:
     coords:         [ [0,0,0] ]
     n_alpha:        2
     n_beta:         2
-  integrals:
+  discretisation:
     basis_type:     "gaussian/libint"
     basis_set_name: sto-3g
   scf:

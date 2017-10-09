@@ -15,7 +15,7 @@ input_parameters:
     atoms:          [ C ]
     coords:         [ [0,0,0] ]
     multiplicity:   3
-  integrals:
+  discretisation:
     basis_type:     "gaussian/libint"
     basis_set_name: "3-21g"
   scf:
