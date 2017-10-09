@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,7 +20,6 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from NumCompTestCase import NumCompTestCase
 import molsturm
@@ -27,85 +27,89 @@ import data_cs_be as data
 import numpy as np
 import unittest
 
+
 basis_type = data.input_parameters["integrals"]["basis_type"]
+
+
 @unittest.skipUnless(basis_type in molsturm.available_basis_types,
-                     "Required basis type " + basis_type
-                     + " is not available")
+                     "Required basis type " + basis_type +
+                     " is not available")
 class TestHartreeFockFull(NumCompTestCase):
-  """This test should ensure, that we get exactly the same data
-     through the python interface as we get without it by directly
-     invoking the library via a C++ program.
-  """
-  @classmethod
-  def setUpClass(cls):
-    scfparams = molsturm.ScfParameters.from_dict(data.input_parameters)
-    cls._hf_result = molsturm.self_consistent_field(scfparams)
+    """This test should ensure, that we get exactly the same data
+       through the python interface as we get without it by directly
+       invoking the library via a C++ program.
+    """
+    @classmethod
+    def setUpClass(cls):
+        scfparams = molsturm.ScfParameters.from_dict(data.input_parameters)
+        cls._hf_result = molsturm.self_consistent_field(scfparams)
 
-  def test_energies(self):
-    conv_tol = data.input_parameters["scf"]["conv_tol"]
-    for ene in data.ref_energies:
-      self.assertAlmostEqual(self._hf_result[ene], data.ref_energies[ene],
-                             tol=conv_tol,prefix=ene+": ")
+    def test_energies(self):
+        conv_tol = data.input_parameters["scf"]["conv_tol"]
+        for ene in data.ref_energies:
+            self.assertAlmostEqual(self._hf_result[ene], data.ref_energies[ene],
+                                   tol=conv_tol, prefix=ene + ": ")
 
-  def test_scf_convergence(self):
-    conv_tol = data.input_parameters["scf"]["conv_tol"]
-    self.assertGreaterEqual(data.ref_n_iter,self._hf_result["n_iter"])
-    self.assertLessEqual(self._hf_result["final_error_norm"],conv_tol)
+    def test_scf_convergence(self):
+        conv_tol = data.input_parameters["scf"]["conv_tol"]
+        self.assertGreaterEqual(data.ref_n_iter, self._hf_result["n_iter"])
+        self.assertLessEqual(self._hf_result["final_error_norm"], conv_tol)
 
-    for key in data.ref_convergence_result:
-      self.assertEqual(self._hf_result[key], data.ref_convergence_result[key])
+        for key in data.ref_convergence_result:
+            self.assertEqual(self._hf_result[key], data.ref_convergence_result[key])
 
-  def test_orbital_energies(self):
-    conv_tol = data.input_parameters["scf"]["conv_tol"]
-    self.assertArrayAlmostEqual(self._hf_result["orben_f"],
-                                data.ref_orbital_energies,
-                                tol=conv_tol,
-                                prefix="Orbital energies: ")
+    def test_orbital_energies(self):
+        conv_tol = data.input_parameters["scf"]["conv_tol"]
+        self.assertArrayAlmostEqual(self._hf_result["orben_f"],
+                                    data.ref_orbital_energies,
+                                    tol=conv_tol,
+                                    prefix="Orbital energies: ")
 
-  def test_coefficients(self):
-    print("test_coefficients disabled (Need unitary rotation first).")
-    return
-    conv_tol = data.input_parameters["scf"]["conv_tol"]
-    self.assertArrayAlmostEqual(self._hf_result["orbcoeff_bf"],
-                                data.ref_coefficients,
-                                tol=conv_tol,
-                                prefix="Coefficients: ")
+    def test_coefficients(self):
+        print("test_coefficients disabled (Need unitary rotation first).")
+        return
+        conv_tol = data.input_parameters["scf"]["conv_tol"]
+        self.assertArrayAlmostEqual(self._hf_result["orbcoeff_bf"],
+                                    data.ref_coefficients,
+                                    tol=conv_tol,
+                                    prefix="Coefficients: ")
 
-  def test_fock(self):
-    conv_tol = data.input_parameters["scf"]["conv_tol"]
-    n_oa = self._hf_result["n_orbs_alpha"]
-    slicemap = { "a": slice(None,n_oa), "b": slice(n_oa,None), }
-    sizemap = { "a": n_oa, "b": self._hf_result["n_orbs_beta"], }
+    def test_fock(self):
+        conv_tol = data.input_parameters["scf"]["conv_tol"]
+        n_oa = self._hf_result["n_orbs_alpha"]
+        slicemap = {"a": slice(None, n_oa), "b": slice(n_oa, None), }
+        sizemap = {"a": n_oa, "b": self._hf_result["n_orbs_beta"], }
 
-    for i in [ "a", "b" ]:
-      for j in [ "a", "b" ]:
-        fij = self._hf_result["fock_ff"][slicemap[i],slicemap[j]]
-        try:
-          ref_fij = data.ref_fock[i+j]
-        except KeyError as e:
-          ref_fij = np.zeros((sizemap[i],sizemap[j]))
-        self.assertArrayAlmostEqual(fij, ref_fij, tol=conv_tol,
-                                    prefix="Fock "+i+"-"+j+": ")
+        for i in ["a", "b"]:
+            for j in ["a", "b"]:
+                fij = self._hf_result["fock_ff"][slicemap[i], slicemap[j]]
+                try:
+                    ref_fij = data.ref_fock[i + j]
+                except KeyError as e:
+                    ref_fij = np.zeros((sizemap[i], sizemap[j]))
+                self.assertArrayAlmostEqual(fij, ref_fij, tol=conv_tol,
+                                            prefix="Fock " + i + "-" + j + ": ")
 
-  def test_repulsion_integrals(self):
-    print("test_repulsion_integrals disabled (Need unitary rotation first).")
-    return
-    conv_tol = data.input_parameters["scf"]["conv_tol"]
-    n_oa = self._hf_result["n_orbs_alpha"]
-    slicemap = { "a": slice(None,n_oa), "b": slice(n_oa,None), }
-    sizemap = { "a": n_oa, "b": self._hf_result["n_orbs_beta"], }
+    def test_repulsion_integrals(self):
+        print("test_repulsion_integrals disabled (Need unitary rotation first).")
+        return
+        conv_tol = data.input_parameters["scf"]["conv_tol"]
+        n_oa = self._hf_result["n_orbs_alpha"]
+        slicemap = {"a": slice(None, n_oa), "b": slice(n_oa, None), }
+        sizemap = {"a": n_oa, "b": self._hf_result["n_orbs_beta"], }
 
-    for i in [ "a", "b" ]:
-      for j in [ "a", "b" ]:
-        for k in [ "a", "b" ]:
-          for l in [ "a", "b" ]:
-            Jijkl = self._hf_result["eri_ffff"][slicemap[i],slicemap[j],
-                                                slicemap[k], slicemap[l]]
-            try:
-              ref_Jijkl = data.ref_repulsion_integrals[i+j+k+l]
-            except KeyError as e:
-              ref_Jijkl = np.zeros( (sizemap[i], sizemap[j], sizemap[k], sizemap[l]) )
+        for i in ["a", "b"]:
+            for j in ["a", "b"]:
+                for k in ["a", "b"]:
+                    for l in ["a", "b"]:
+                        Jijkl = self._hf_result["eri_ffff"][slicemap[i], slicemap[j],
+                                                            slicemap[k], slicemap[l]]
+                        try:
+                            ref_Jijkl = data.ref_repulsion_integrals[i + j + k + l]
+                        except KeyError as e:
+                            ref_Jijkl = np.zeros((sizemap[i], sizemap[j],
+                                                  sizemap[k], sizemap[l]))
 
-            self.assertArrayAlmostEqual(Jijkl, ref_Jijkl, tol=conv_tol,
-                                        prefix="Repulsion tensor "+i+"-"+j+"-"+k+\
-                                        "-"+l+": ")
+                        self.assertArrayAlmostEqual(Jijkl, ref_Jijkl, tol=conv_tol,
+                                                    prefix="Repulsion tensor " + i + "-" +
+                                                    j + "-" + k + "-" + l + ": ")

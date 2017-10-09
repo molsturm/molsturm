@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,32 +20,33 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from HartreeFockTestCase import HartreeFockTestCase
 import molsturm
 import testdata
 import unittest
 
+
 class TestHartreeFock(HartreeFockTestCase):
-  """This test should assure that molsturm results stay the same
-     between code changes or algorithm updates
-  """
+    """This test should assure that molsturm results stay the same
+       between code changes or algorithm updates
+    """
 
-  @classmethod
-  def setUpClass(cls):
-    cls.cases = testdata.test_cases()
+    @classmethod
+    def setUpClass(cls):
+        cls.cases = testdata.test_cases()
 
-  def test_hf(self):
-    for case in self.cases:
-      testing = case["testing"]
+    def test_hf(self):
+        for case in self.cases:
+            testing = case["testing"]
 
-      with self.subTest(label=testing["name"]):
-        try:
-            scfparams = molsturm.ScfParameters.from_dict(case["input_parameters"])
-        except (ValueError, KeyError, TypeError) as e:
-            raise unittest.SkipTest("Skipped subtest " + testing["name"] + ", since"
-                                    "construction of ScfParameters failed: " + str(e))
+            with self.subTest(label=testing["name"]):
+                try:
+                    scfparams = molsturm.ScfParameters.from_dict(case["input_parameters"])
+                except (ValueError, KeyError, TypeError) as e:
+                    raise unittest.SkipTest("Skipped subtest " + testing["name"] +
+                                            ", since construction of ScfParameters "
+                                            "failed: " + str(e))
 
-        hfres = molsturm.self_consistent_field(scfparams)
-        self.compare_hf_results(case, hfres)
+                hfres = molsturm.self_consistent_field(scfparams)
+                self.compare_hf_results(case, hfres)

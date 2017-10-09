@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,7 +20,6 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from FciTestCase import FciTestCase
 from molsturm import INPUT_PARAMETER_KEY
@@ -27,28 +27,27 @@ import molsturm.posthf
 import testdata
 import unittest
 
+
 @unittest.skipUnless("fci" in molsturm.posthf.available_methods,
                      "fci not available => Skipping fci tests")
 class TestFCI(FciTestCase):
-  """This test should assure that molsturm results stay the same
-     between code changes or algorithm updates
-  """
+    """This test should assure that molsturm results stay the same
+       between code changes or algorithm updates
+    """
 
-  @classmethod
-  def setUpClass(cls):
-    cls.cases = testdata.test_cases()
+    @classmethod
+    def setUpClass(cls):
+        cls.cases = testdata.test_cases()
 
-  def test_fci(self):
-    for case in self.cases:
-      testing   = case["testing"]
-      hf        = case["hf"]
+    def test_fci(self):
+        for case in self.cases:
+            hf = case["hf"]
 
-      try:
-        fciparams = case["fci"][INPUT_PARAMETER_KEY]
-      except KeyError:
-        # No fci test data available for this case
-        continue
+            try:
+                fciparams = case["fci"][INPUT_PARAMETER_KEY]
+            except KeyError:
+                # No fci test data available for this case
+                continue
 
-      fci = molsturm.posthf.fci(hf, **fciparams)
-      self.compare_fci_results(case, fci)
-
+            fci = molsturm.posthf.fci(hf, **fciparams)
+            self.compare_fci_results(case, fci)

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,7 +20,6 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from molsturm import INPUT_PARAMETER_KEY
 from MP2TestCase import MP2TestCase
@@ -27,28 +27,27 @@ import molsturm.posthf
 import testdata
 import unittest
 
+
 @unittest.skipUnless("mp2" in molsturm.posthf.available_methods,
                      "mp2 not available => Skipping mp2 tests")
 class TestMP2(MP2TestCase):
-  """This test should assure that molsturm results stay the same
-     between code changes or algorithm updates
-  """
+    """This test should assure that molsturm results stay the same
+       between code changes or algorithm updates
+    """
 
-  @classmethod
-  def setUpClass(cls):
-    cls.cases = testdata.test_cases()
+    @classmethod
+    def setUpClass(cls):
+        cls.cases = testdata.test_cases()
 
-  def test_mp2(self):
-    for case in self.cases:
-      testing   = case["testing"]
-      hf        = case["hf"]
+    def test_mp2(self):
+        for case in self.cases:
+            hf = case["hf"]
 
-      try:
-        mp2params = case["mp2"][INPUT_PARAMETER_KEY]
-      except KeyError:
-        # No mp2 test data available for this case
-        continue
+            try:
+                mp2params = case["mp2"][INPUT_PARAMETER_KEY]
+            except KeyError:
+                # No mp2 test data available for this case
+                continue
 
-      mp2 = molsturm.posthf.mp2(hf, **mp2params)
-      self.compare_mp2_results(case, mp2)
-
+            mp2 = molsturm.posthf.mp2(hf, **mp2params)
+            self.compare_mp2_results(case, mp2)
