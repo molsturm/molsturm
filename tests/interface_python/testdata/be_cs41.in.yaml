@@ -1,6 +1,7 @@
 # Info for the data generator script
 include:
-  - dump_yaml
+  - dump_yaml:
+      remove_keys: [ "eri_ffff", "fock_ff", "fock_bb", "overlap_ff", "hcore_ff", "overlap_bb" ]
 
 # Info for the test execution
 testing:
@@ -9,13 +10,18 @@ testing:
   numeric_tolerance: 1.e-7
 
 # Input:
-atom_numbers: [ 4 ]
-coords:       [[ 0,0,0 ]]
-basis_type:   "sturmian/atomic/cs_reference_pc"
-n_max:        4
-l_max:        1
-k_exp:        1.3
-export_repulsion_integrals: False
-export_fock_matrix: True
-guess_esolver: lapack
-conv_tol:    5.e-7
+input_parameters:
+  system:
+    atoms:          [ 4 ]
+    coords:         [ [0,0,0] ]
+    n_alpha:        2
+    n_beta:         2
+  discretisation:
+    basis_type:     "sturmian/atomic/cs_reference_pc"
+    k_exp:          1.3
+    n_max:          4
+    l_max:          1
+  scf:
+    conv_tol:       5.e-7
+  guess:
+    eigensolver:    { method: lapack }

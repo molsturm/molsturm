@@ -20,23 +20,16 @@
 %module molsturm_iface
 
 %{
-#include "interface/python/available_features.hh"
 #include "interface/python/ExcInvalidParameters.hh"
-#include "interface/python/hartree_fock.hh"
-#include "interface/python/HfResults.hh"
-#include "interface/python/Parameters.hh"
+#include "interface/python/self_consistent_field.hh"
+#include "interface/python/ScfResults.hh"
+#include "interface/python/ScfSolutionView.hh"
+#include "interface/python/ScfParameters.hh"
 #include <molsturm/Version.hh>
+
+// Run the %init block (to setup numpy)
+#define SWIG_FILE_WITH_INIT
 %}
-
-%include "std_vector.i"
-%include "std_string.i"
-
-// Instantiate what is needed
-namespace std {
-  %template(DoubleVector)  vector<double>;
-  %template(IntVector)     vector<int>;
-  %template(StringVector)  vector<string>;
-}
 
 // TODO Extremely rudimentary exception handling
 %exception {
@@ -54,10 +47,24 @@ namespace std {
   }
 }
 
-%include "available_features.hh"
-%include "Parameters.hh"
-%include "HfResults.hh"
-%include "hartree_fock.hh"
+%include "numpy.i"
+%include "std_string.i"
+%include "std_vector.i"
+
+// Instantiate what is needed
+namespace std {
+  %template(DoubleVector)  vector<double>;
+}
+
+// Setup import of numpy array:
+%init %{
+import_array();
+%}
+
+%include "ScfParameters.hh"
+%include "ScfResults.hh"
+%include "ScfSolutionView.hh"
+%include "self_consistent_field.hh"
 %include "../../molsturm/Version.hh"
 
 // vi: syntax=c

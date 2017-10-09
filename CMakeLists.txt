@@ -54,9 +54,6 @@ enable_testing()
 ##########################################################################
 # Global options
 
-# Path where cmake wants the modules and config packages:
-set(PackageModuleLocation share/cmake)
-
 # setup global options
 include(GlobalOption)
 global_option(ENABLE_DOCUMENTATION "Build documentation"                       OFF )

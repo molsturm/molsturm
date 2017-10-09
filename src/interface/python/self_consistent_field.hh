@@ -18,14 +18,16 @@
 //
 
 #pragma once
-#include "HfResults.hh"
-#include "Parameters.hh"
-#include <krims/ExceptionSystem.hh>
+#include "ScfParameters.hh"
+#include "ScfResults.hh"
+#include "ScfSolutionView.hh"
 
 namespace molsturm {
 namespace iface {
 
-HfResults hartree_fock(const Parameters& p);
+/** Run a SCF calculation */
+ScfResults self_consistent_field(const ScfParameters& params,
+                                 ScfSolutionView& solution_view);
 
 }  // namespace iface
 }  // namespace molsturm

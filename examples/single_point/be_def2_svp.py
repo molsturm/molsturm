@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,29 +20,28 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 import molsturm
+import gint
 
-params = {
-  "atom_numbers": [4],
-  "coords":       [[0,0,0]],
-  #
-  "basis_type":   "gaussian/libint",
-  "basis_set":    "def2-svp",
-  #
-  "eigensolver":   "lapack",
-  "guess_esolver": "lapack",
-}
 
-def run(**extra):
-  params.update(extra)
-  res = molsturm.hartree_fock(**params)
-  molsturm.print_convergence_summary(res)
-  molsturm.print_energies(res)
-  molsturm.print_mo_occupation(res)
-  molsturm.print_quote(res)
-  return res
+system = molsturm.MolecularSystem(atoms=[4], coords=[[0, 0, 0]])
+basis = gint.gaussian.Basis(system, basis_set_name="def2-svp")
+
+
+def run(system, basis, extra={}):
+    params = molsturm.ScfParameters()
+    params.system = system
+    params.basis = basis
+    params.update(extra)
+
+    res = molsturm.self_consistent_field(params)
+    molsturm.print_convergence_summary(res)
+    molsturm.print_energies(res)
+    molsturm.print_mo_occupation(res)
+    molsturm.print_quote(res)
+    return res
+
 
 if __name__ == "__main__":
-  run()
+    run(system, basis, {"scf/print_iterations": True})

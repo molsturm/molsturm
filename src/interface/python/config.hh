@@ -19,6 +19,7 @@
 
 #pragma once
 #include <lazyten/SmallMatrix.hh>
+#include <lazyten/SmallVector.hh>
 
 // TODO Temporary config file to instantiate types.
 //      This file should become configurable and a part of molsturm per se.
@@ -28,6 +29,7 @@ namespace iface {
 
 typedef double scalar_type;
 typedef lazyten::SmallMatrix<scalar_type> matrix_type;
+typedef lazyten::SmallVector<scalar_type> vector_type;
 
 }  // namespace iface
 }  // namespace molsturm

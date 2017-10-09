@@ -26,7 +26,6 @@ set(MOLSTURM_SOURCES
 	read_xyz.cc
 	MolecularSystem.cc
 	GuessAlgorithms/guess_hcore.cc
-	GuessAlgorithms/guess_external.cc
 	GuessAlgorithms/GuessAlgorithmsKeysBase.cc
 )
 
@@ -77,6 +76,6 @@ export(EXPORT MolsturmTargets
 install(EXPORT MolsturmTargets
 	FILE "molsturmTargets.cmake"
 	NAMESPACE Upstream::
-	DESTINATION "${PackageModuleLocation}/molsturm"
+	DESTINATION "share/cmake/molsturm"
 )
 

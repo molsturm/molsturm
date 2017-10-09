@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,10 +20,14 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from ._utils import occ_range, virt_range
 import numpy as np
+import collections
+
+
+MP2Results = collections.namedtuple("MP2Results", ["energy_ground_state", "t2_ovov"])
+
 
 def mp2(hfres, **params):
   """
@@ -58,5 +63,15 @@ def mp2(hfres, **params):
 
           # MP2 energy contribution:
           emp2 += 0.25 * (t2[i,j,a,b] * np.conj(ga_aibj)).real
-  return emp2, t2
 
+  # TODO make ovov out of t2
+  n_occ  = hfres["n_alpha"] + hfres["n_beta"]
+  n_virt = n_orbs - n_occ
+  t2s = np.empty((n_occ, n_virt, n_occ, n_virt))
+  for ii,i in enumerate(occ_range(hfres)):
+    for jj,j in enumerate(occ_range(hfres)):
+      for aa,a in enumerate(virt_range(hfres)):
+        for bb,b in enumerate(virt_range(hfres)):
+            t2s[ii,aa,jj,bb] = t2[i,j,a,b]
+
+  return MP2Results(emp2, t2s)

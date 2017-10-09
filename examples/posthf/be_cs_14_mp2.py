@@ -21,31 +21,19 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
+import gint
 import molsturm
 import molsturm.posthf
 
-params = {
-  "atom_numbers": [4],
-  "coords":       [[0,0,0]],
-  #
-  "basis_type":   "sturmian/atomic/cs_reference_pc",
-  "n_max":        11,
-  "l_max":        0,
-  #
-  "print_iterations": True,
-  #
-  "eigensolver":   "lapack",
-  "guess_esolver": "lapack",
-  "error":          1e-10,
-  #
-  "export_repulsion_integrals": True,
-  "export_fock_matrix": True,
-}
+sys = molsturm.MolecularSystem(["beryllium"], [[0, 0, 0]])
+bas = gint.sturmian.atomic.Basis(sys, k_exp=2.1, n_max=11, l_max=0,
+                                 backend="cs_reference_pc")
+res = molsturm.hartree_fock(sys, bas, conv_tol=1e-10, print_iterations=True)
 
-res = molsturm.hartree_fock(**params)
 molsturm.print_convergence_summary(res)
 molsturm.print_energies(res)
 molsturm.print_mo_occupation(res)
+print()
 
 res_adc = molsturm.posthf.mp2(res)
 print("MP2 energy", res_adc["energy_mp2"])

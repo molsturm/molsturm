@@ -24,22 +24,9 @@
 import molsturm
 import molsturm.posthf
 
-params = {
-  "atom_numbers": [4],
-  "coords":       [[0,0,0]],
-  #
-  "basis_type":   "gaussian/libint",
-  "basis_set":    "cc-pvdz",
-  #
-  "print_iterations": True,
-  #
-  "error":          1e-10,
-  #
-  "export_repulsion_integrals": True,
-  "export_fock_matrix": True,
-}
-
-res = molsturm.hartree_fock(**params)
+sys = molsturm.MolecularSystem([4], [[0, 0, 0]])
+res = molsturm.hartree_fock(sys, basis_type="gaussian/libint", basis_set_name="cc-pvdz",
+                            print_iterations=True, conv_tol=1e-10)
 molsturm.print_convergence_summary(res)
 molsturm.print_energies(res)
 molsturm.print_mo_occupation(res)

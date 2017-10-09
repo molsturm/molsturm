@@ -166,8 +166,9 @@ std::pair<lazyten::MultiVector<Vector>, lazyten::MultiVector<Vector>> coeff_bloc
   for (size_t f = 0; f < n_orbs_alpha; ++f) {
     const size_t ff = f + n_orbs_alpha;
     for (size_t b = 0; b < n_bas; ++b) {
-      assert_internal(std::distance(coeff_bf_full[ff].begin() + n_bas,
-                                    coeff_bf_full[ff].end()) == cb_bf[f].size());
+      assert_internal(
+            std::distance(coeff_bf_full[ff].begin() + n_bas, coeff_bf_full[ff].end()) ==
+            static_cast<ptrdiff_t>(cb_bf[f].size()));
       std::copy(coeff_bf_full[ff].begin() + n_bas, coeff_bf_full[ff].end(),
                 cb_bf[f].begin());
     }
@@ -200,8 +201,8 @@ void export_eri_unrestricted(const gint::ERITensor_i<scalar_type>& eri,
   {
     // Partition into alpha-alpha and beta-beta blocks
     std::pair<MultiVector<Vector>, MultiVector<Vector>> cab_bf = coeff_blocks(coeff_bf);
-    const auto& ca_bf = cab_bf.first;
-    const auto& cb_bf = cab_bf.second;
+    const auto& ca_bf                                          = cab_bf.first;
+    const auto& cb_bf                                          = cab_bf.second;
 
     // Contract with the eri tensor
     eri.contract_with(ca_bf, ca_bf, ca_bf, ca_bf, eri_aaaa);
@@ -265,8 +266,8 @@ typename Vector::scalar_type compute_spin_squared(
       const bool restricted, const OverlapMatrix& S_bb,
       const lazyten::MultiVector<Vector>& coeff_bf, const size_t n_alpha,
       const size_t n_beta) {
-  using lazyten::MultiVector;
   using krims::range;
+  using lazyten::MultiVector;
 
   // If restricted the <S^2> is always zeros
   if (restricted) return 0.;
@@ -294,8 +295,8 @@ typename Vector::scalar_type compute_spin_squared(
 }  // namespace
 
 template <typename State>
-HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_type>& eri,
-                            const Parameters& params) {
+ScfResults export_hf_results(const State& state,
+                             const gint::ERITensor_i<scalar_type>& eri) {
   const auto& fbb       = state.problem_matrix();
   const auto& soln      = state.eigensolution();
   const bool restricted = fbb.restricted();
@@ -307,7 +308,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   const size_t n_orbs = n_orbs_alpha + n_orbs_beta;
 #endif
 
-  HfResults ret;
+  ScfResults ret;
 
   // Size information
   ret.n_beta       = fbb.indices_orbspace(gscf::OrbitalSpace::OCC_BETA).length();
@@ -356,7 +357,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
   assert_internal(ret.orben_f.size() == n_orbs);
   assert_internal(ret.orbcoeff_bf.size() == n_orbs * n_bas /* *2 */);
 
-  if (params.export_overlap_matrix) {
+  if (true) {
     // Compute the overlap matrix in MO space, i.e. C^T (S * C)
     auto overlap_ff =
           lazyten::dot(soln.evectors(), state.overlap_matrix() * soln.evectors());
@@ -367,7 +368,27 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
     ret.overlap_ff.resize(0);
   }
 
-  if (params.export_fock_matrix) {
+  if (true) {
+    // This is a bit counter-intuitive, but this function works for basis times basis
+    // as well, since in the end it just replicates the balpha block to the beta
+    // block in case the calculation is restricted
+    matrix_type fbb_stored = static_cast<matrix_type>(fbb);
+    export_ff_matrix(restricted, fbb_stored, ret.fock_bb);
+  } else {
+    ret.fock_bb.resize(0);
+  }
+
+  if (true) {
+    // This is a bit counter-intuitive, but this function works for basis times basis
+    // as well, since in the end it just replicates the balpha block to the beta
+    // block in case the calculation is restricted
+    matrix_type sbb_stored = static_cast<matrix_type>(state.overlap_matrix());
+    export_ff_matrix(restricted, sbb_stored, ret.overlap_bb);
+  } else {
+    ret.overlap_bb.resize(0);
+  }
+
+  if (true) {
     // Compute the full fock matrix in MO space, i.e.  C^T * (F * C)
     // => Need a dot product here, so actually the dot of all vectors with another
     auto fock_ff = lazyten::dot(soln.evectors(), fbb * soln.evectors());
@@ -378,7 +399,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
     ret.fock_ff.resize(0);
   }
 
-  if (params.export_hcore_matrix) {
+  if (true) {
     // Build the alpha-alpha block of the one electron terms in atomic basis function
     // space
     // (Note: This equals the beta-beta block for the one electron terms for both
@@ -394,7 +415,8 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
     // => Need a dot product here, so actually the dot of all vectors with another
     //    For restricted, where evectors() only runs over the alpha orbitals (betas are
     //    identical)
-    //    we only need the alpha-alpha block. For unrestricted, where the alphas and betas
+    //    we only need the alpha-alpha block. For unrestricted, where the alphas and
+    //    betas
     //    might
     //    differ, we need both blocks.
     auto hcore_ff = restricted
@@ -406,7 +428,7 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
     ret.hcore_ff.resize(0);
   }
 
-  if (params.export_repulsion_integrals) {
+  if (true) {
     export_eri(restricted, eri, soln.evectors(), ret.eri_ffff);
     assert_internal(ret.eri_ffff.size() == n_orbs * n_orbs * n_orbs * n_orbs);
   } else {
@@ -417,10 +439,10 @@ HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_t
 }
 
 #define INSTANTIATE(STATE_TYPE)                                           \
-  template HfResults export_hf_results(                                   \
+  template ScfResults export_hf_results(                                  \
         const IopScfState<FockOperator<matrix_type, STATE_TYPE>,          \
                           OverlapMatrix<matrix_type, STATE_TYPE>>& state, \
-        const gint::ERITensor_i<scalar_type>& eri, const Parameters&)
+        const gint::ERITensor_i<scalar_type>& eri)
 
 INSTANTIATE(RestrictionType::Unrestricted);
 INSTANTIATE(RestrictionType::RestrictedClosed);

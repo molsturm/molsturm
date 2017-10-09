@@ -31,20 +31,26 @@ For *building* `molsturm` the following things are required:
 
   See [github.com/lazyten/lazyten](https://github.com/lazyten/lazyten/blob/master/README.md)
   for more details about ``lazyten``'s dependencies.
+- If you want to use Gaussian integrals from
+  [``libint``](https://github.com/evaleev/libint) you further need
+    - Eigen3
+    - Autoconf
+    - GNU Multiprecision library
 
 In order to actually [use the `molsturm`-module](#using-molsturm-from-python) once
 it has been built the following `python` packages are required:
 - [h5py](https://pypi.python.org/pypi/h5py)
 - [numpy](https://pypi.python.org/pypi/numpy)
+- [scipy](https://pypi.python.org/pypi/scipy)
 - [PyYAML](https://pypi.python.org/pypi/PyYAML)
 
-On a recent **Debian/Ubuntu** you can install all these dependencies by running
+On a recent **Debian/Ubuntu** you can install all the aforementioned dependencies by running
 ```
 apt-get install cmake swig python3-dev libopenblas-dev liblapack-dev libarmadillo-dev \
-                python3-h5py python3-yaml python3-numpy
+                python3-h5py python3-yaml python3-numpy python3-scipy libeigen3-dev \
+                autoconf libgmp-dev
 ```
 as root.
-
 
 ### Optional dependencies
 The dependencies in this section are only needed for some extra functionality.
@@ -96,6 +102,8 @@ For example
 - `-DENABLE_DOCUMENTATION=ON`: Build and install the *sparse*
   [doxygen](http://www.stack.nl/~dimitri/doxygen/index.html)-generated
   in-source documentation.
+- `-DGINT_ENABLE_LIBCINT=ON`: Enable Gaussian integrals via the
+  [``libcint``](https://github.com/sunqm/libcint) library.
 - `-DGINT_ENABLE_STURMINT=ON`: Enable the Coulomb-Sturmian basis functions
   via `sturmint` (This library is not yet publicly available,
   but will be released soon)
@@ -128,9 +136,8 @@ to `python` functions of the `molsturm` module.
 For example the snippet
 ```python
 import molsturm
-hfres = molsturm.hartree_fock(basis_set="sto-3g",
-                              basis_type="gaussian/libint",
-                              atoms="Be")
+hfres = molsturm.hartree_fock("Be", basis_type="gaussian",
+                              basis_set_name="6-31g")
 print("Be HF energy", hfres["energy_ground_state"])
 ```
 just performs a Hartree-Fock calculation on a beryllium atom and

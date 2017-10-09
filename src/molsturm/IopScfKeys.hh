@@ -34,5 +34,12 @@ struct IopScfKeys : public gscf::ScfBaseKeys {
   /** Verbosity for the scf solver
    * (Type: ScfMsgType) */
   static const std::string verbosity;
+
+  /** Print the progress during the solve
+   *  (Type: bool)
+   *
+   *  Will add ScfMsgType::IterationProcess to the verbosity parameter.
+   */
+  static const std::string print_iterations;
 };
 }  // namespace molsturm

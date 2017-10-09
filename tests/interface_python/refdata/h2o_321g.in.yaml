@@ -14,16 +14,19 @@ testing:
   #      with enough accuracy
   orben_tolerance:   1.e-6
 
-# Input
-atoms:           [ "O", "H", "H" ]
-coords:
-  -              [ 0,                 0,  0                 ]
-  -              [ 0,                 0,  1.795239827225189 ]
-  -              [ 1.693194615993441, 0, -0.599043184453037 ]
-multiplicity:    1
-guess:           "hcore"
-basis_type:      "gaussian/libint"
-basis_set:       "3-21g"
-max_iter:        25
-conv_tol:        1.e-9
-
+input_parameters:
+  system:
+    atoms:          [ "O", "H", "H" ]
+    multiplicity:   1
+    coords:
+      -             [ 0,                 0,  0                 ]
+      -             [ 0,                 0,  1.795239827225189 ]
+      -             [ 1.693194615993441, 0, -0.599043184453037 ]
+  guess:
+    method:         hcore
+  discretisation:
+    basis_type:     "gaussian/libint"
+    basis_set_name: "3-21g"
+  scf:
+    max_iter:       25
+    conv_tol:       1.e-9

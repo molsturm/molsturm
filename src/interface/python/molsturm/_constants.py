@@ -24,18 +24,17 @@
 # This files include constants which are needed all over the code
 
 """The keys corresponding to numpy arrays in the HfResults class"""
-HFRES_ARRAY_KEYS = [ "orben_f", "eri_ffff", "fock_ff", "orbcoeff_bf", "hcore_ff", "overlap_ff" ]
+HFRES_ARRAY_KEYS = ["orben_f", "eri_ffff", "fock_ff", "orbcoeff_bf", "hcore_ff",
+                    "overlap_ff", "fock_bb", "overlap_bb"]
 
-"""The optional output arrays in the hartree_fock procedure along with the parameters to switch them on"""
-HFRES_OPTIONAL = { "eri_ffff":   "export_repulsion_integrals",
-                   "hcore_ff":   "export_hcore_matrix",
-                   "fock_ff":    "export_fock_matrix",
-                   "overlap_ff": "export_overlap_matrix" }
-
-"""Keys which could be numpy arrays in the input Parameters to hartree_fock"""
-INPUT_PARAMETER_ARRAY_KEYS = [ "atom_numbers", "atoms", "coords", "nlm_basis" ]
+"""The optional output arrays in the hartree_fock procedure along with the
+   parameters to switch them on"""
+HFRES_OPTIONAL = {"eri_ffff":   "export_repulsion_integrals",
+                  "hcore_ff":   "export_hcore_matrix",
+                  "fock_ff":    "export_fock_matrix",
+                  "overlap_ff": "export_overlap_matrix"}
 
 """The key used to indicate the input parameters in the dicts returned by the
 relevant methods.
 """
-INPUT_PARAMETER_KEY= "input_parameters"
+INPUT_PARAMETER_KEY = "input_parameters"

@@ -18,8 +18,7 @@
 //
 
 #pragma once
-#include "HfResults.hh"
-#include "Parameters.hh"
+#include "ScfResults.hh"
 #include "config.hh"
 #include <gint/ERITensor_i.hh>
 
@@ -27,8 +26,8 @@ namespace molsturm {
 namespace iface {
 
 template <typename State>
-HfResults export_hf_results(const State& state, const gint::ERITensor_i<scalar_type>& eri,
-                            const Parameters& params);
+ScfResults export_hf_results(const State& state,
+                             const gint::ERITensor_i<scalar_type>& eri);
 
 }  // namespace iface
 }  // namespace molsturm

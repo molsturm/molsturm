@@ -19,8 +19,8 @@
 
 #include "{{FILE}}.hh"
 
-namespace {{PROJECT}} {
+namespace {{NAMESPACE}} {
 
 {{CURSOR}}
 
-}  // namespace {{PROJECT}}
+}  // namespace {{NAMESPACE}}

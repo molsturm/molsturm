@@ -17,13 +17,27 @@
 // along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "Parameters.hh"
-#include <limits>
+#pragma once
+#include "ScfParameters.hh"
+#include "ScfSolutionView.hh"
 
 namespace molsturm {
 namespace iface {
 
-const int Parameters::all = std::numeric_limits<int>::max();
+// TODO This class is for AO2MO transformations and to extract stuff in the orbital basis
+//      e.g. fock matrix and hcore matrices.
+
+/** Extract the repulsion tensor in the orbital basis of the specified SCF solution*/
+void extract_eri_ffff(const ScfParameters& params, const ScfSolutionView& solution_view,
+                      double* eri);
+
+/** Extract the hcore matrix in the orbital basis of the specified SCF solution*/
+void hcore_ff(const ScfParameters& params, const ScfSolutionView& solution_view,
+              double* hcore);
+
+/** Extract the fock matrix in the orbital basis of the specified SCF solution*/
+void fock_ff(const ScfParameters& params, const ScfSolutionView& solution_view,
+             double* fock);
 
 }  // namespace iface
 }  // namespace molsturm

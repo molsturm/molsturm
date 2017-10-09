@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,52 +20,47 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 from NumCompTestCase import NumCompTestCase
 
+
 class FciTestCase(NumCompTestCase):
-  def compare_fci_0_energies(self, case, fci):
-    num_tol     = case["testing"]["numeric_tolerance"]
-    ref         = case["fci"]
-    ref_states  = case["fci"]["states"]
-    fci_states  = fci["states"]
+    def compare_fci_0_energies(self, case, fci):
+        num_tol = case["testing"]["numeric_tolerance"]
+        ref_states = case["fci"]["states"]
+        fci_states = fci["states"]
 
-    self.assertEqual(len(fci_states), len(ref_states))
-    for i in range(len(fci_states)):
-      self.assertAlmostEqual(fci_states[i]["energy"], ref_states[i]["energy"],
-                             tol=num_tol,
-                             prefix="root " + str(i) + " energy: ")
+        self.assertEqual(len(fci_states), len(ref_states))
+        for i in range(len(fci_states)):
+            self.assertAlmostEqual(fci_states[i]["energy"], ref_states[i]["energy"],
+                                   tol=num_tol,
+                                   prefix="root " + str(i) + " energy: ")
 
+    def compare_fci_1_spin(self, case, fci):
+        num_tol = case["testing"]["numeric_tolerance"]
+        ref_states = case["fci"]["states"]
+        fci_states = fci["states"]
 
-  def compare_fci_1_spin(self, case, fci):
-    num_tol     = case["testing"]["numeric_tolerance"]
-    ref         = case["fci"]
-    ref_states  = case["fci"]["states"]
-    fci_states  = fci["states"]
+        self.assertEqual(len(fci_states), len(ref_states))
+        for i in range(len(fci_states)):
+            for key in ["multiplicity", "spin_squared"]:
+                if ref_states[i][key] is None:
+                    print("Skipping FCI test for " + key + " for " +
+                          case["testing"]["name"] +
+                          ", since no reference data available.")
+                    continue  # Skip keys where the reference value is not available.
 
-    self.assertEqual(len(fci_states), len(ref_states))
-    for i in range(len(fci_states)):
-      for key in [ "multiplicity", "spin_squared" ]:
-        if ref_states[i][key] is None:
-          print("Skipping FCI test for " + key + " for " + case["testing"]["name"]
-                + ", since no reference data available.")
-          continue # Skip keys where the reference value is not available.
+                self.assertAlmostEqual(fci_states[i][key], ref_states[i][key],
+                                       tol=num_tol,
+                                       prefix="root " + str(i) + " " + key + " ")
 
-        self.assertAlmostEqual(fci_states[i][key], ref_states[i][key],
-                               tol=num_tol,
-                               prefix="root " + str(i) + " " + key + " ")
+    def compare_fci_results(self, case, fci):
+        """
+        Call all compare functions after another
+        """
+        for fun in dir(FciTestCase):
+            if fun == "compare_fci_results":
+                continue  # Do not call ourselves.
 
-
-  def compare_fci_results(self, case, fci):
-    """
-    Call all compare functions after another
-    """
-    for fun in dir(FciTestCase):
-      if fun == "compare_fci_results":
-        continue # Do not call ourselves.
-
-      if fun.startswith("compare_fci_"):
-        getattr(self, fun) (case, fci)
-
-
+            if fun.startswith("compare_fci_"):
+                getattr(self, fun)(case, fci)

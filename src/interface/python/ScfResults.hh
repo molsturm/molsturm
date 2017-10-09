@@ -23,7 +23,7 @@
 namespace molsturm {
 namespace iface {
 
-struct HfResults {
+struct ScfResults {
   unsigned int n_alpha = 0;
   unsigned int n_beta  = 0;
   unsigned int n_bas   = 0;
@@ -86,8 +86,14 @@ struct HfResults {
   // Fock matrix
   std::vector<double> fock_ff;
 
+  // Fock in AOs
+  std::vector<double> fock_bb;
+
   // Overlap matrix
   std::vector<double> overlap_ff;
+
+  // Overlap in AOs
+  std::vector<double> overlap_bb;
 
   // Matrix of all one electron integrals accumulated
   std::vector<double> hcore_ff;

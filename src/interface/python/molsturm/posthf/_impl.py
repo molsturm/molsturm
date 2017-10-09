@@ -55,10 +55,11 @@ def mp2(hfres, **params):
   Return the resulting dictionary of computed data.
   """
   __assert_available("mp2")
-  e_mp2, _ = run_mp2(hfres, **params)
+  e_mp2, t2 = run_mp2(hfres, **params)
   return {
     "energy_mp2":           e_mp2,
     "energy_ground_state":  hfres["energy_ground_state"] + e_mp2,
+    "t2_ovov":              t2,
     INPUT_PARAMETER_KEY:    params,
   }
 
