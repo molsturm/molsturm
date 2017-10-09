@@ -105,6 +105,9 @@ class ScfParameters(ParameterMap):
         """
         return ScfParameters.from_dict(self)
 
+    def copy(self):
+        return self.__copy__()
+
     @classmethod
     def from_args(cls, system, basis, conv_tol=None, max_iter=None, n_eigenpairs=None,
                   restricted=None, eigensolver=None, print_iterations=None):

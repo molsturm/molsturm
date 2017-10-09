@@ -49,6 +49,9 @@ class ParameterMap(dict):
         """
         return ParameterMap.from_dict(self)
 
+    def copy(self):
+        return self.__copy__()
+
     def __init__(self, init_values={}):
         """
         Construct a ParameterMap and optionally initialise some inner
@@ -147,6 +150,12 @@ class ParameterMap(dict):
                     self.__setitem__(k, E[k])
         for k in F:
             self.__setitem__(k, F[k])
+
+    def get(self, k, d=None):
+        try:
+            return self.__getitem__(k)
+        except KeyError:
+            return d
 
     def keys_recursive(self):
         return list(self.__iter__())

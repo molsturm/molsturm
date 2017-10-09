@@ -35,6 +35,9 @@ def extrapolate_from_previous(old_state, scf_params):
     # TODO This is just to make it work ... we need much more checking here.
     #      See the old version in scf_guess.old.py for ideas.
 
+    scf_params = scf_params.copy()
+    scf_params.normalise()
+
     scf_sizes = scf_params.scf_sizes
     n_spin = scf_sizes.n_spin
     n_fock = scf_sizes.n_fock

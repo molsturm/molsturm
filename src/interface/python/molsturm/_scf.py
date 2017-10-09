@@ -27,7 +27,6 @@ from . import yaml_utils
 from .scf_guess import extrapolate_from_previous
 from .ScfParameters import ScfParameters
 from .State import State
-import copy
 import gint
 import numpy as np
 
@@ -48,7 +47,7 @@ def self_consistent_field(params):
     """
     if isinstance(params, ScfParameters):
         # Make a shallow copy before we modify the parameters
-        params = copy.copy(params)
+        params = params.copy()
     elif isinstance(params, dict):
         return self_consistent_field(ScfParameters.from_dict(params))
     else:
