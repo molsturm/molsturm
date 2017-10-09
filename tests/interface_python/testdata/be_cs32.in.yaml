@@ -24,4 +24,4 @@ input_parameters:
     eigensolver:    { method: lapack }
   guess:
     eigensolver:    { method: lapack }
-    #method:         loewdin
+    method:         loewdin

@@ -104,5 +104,5 @@ class MolecularSystem(Structure):
 
     @property
     def charge(self):
+        """Return the total resulting charge of the system"""
         return self.__charge
-    charge.__doc__ = total_charge.__doc__

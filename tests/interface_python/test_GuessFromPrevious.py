@@ -39,7 +39,7 @@ class TestFromPrevious(HartreeFockTestCase):
       inp["scf"]["conv_tol"] = 1e-5
       scfparams_lowtol = molsturm.ScfParameters.from_dict(inp)
     except (ValueError, KeyError, TypeError) as e:
-      raise unittest.SkipTest("Skipped subtest " + testing["name"] + ", since"
+      raise unittest.SkipTest("Skipped subtest " + case["testing"]["name"] + ", since "
                               "construction of ScfParameters failed: " + str(e))
 
     res = molsturm.self_consistent_field(scfparams_lowtol)

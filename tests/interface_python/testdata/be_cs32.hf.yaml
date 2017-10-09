@@ -292,7 +292,7 @@ hcore_ff:
 input_parameters:
   guess:
     eigensolver: {method: lapack}
-    method: hcore
+    method: loewdin
   integrals:
     basis_type: sturmian/atomic/cs_reference
     k_exp: 2.0

@@ -74,15 +74,6 @@ struct ScfParameters : public krims::GenMap {
   void update(const std::string& key, T value) {
     krims::GenMap::update(key, value);
   }
-#ifdef SWIG
-  // clang-format off
-  %template(update_bool)    update<bool>;
-  %template(update_int)     update<int>;
-  %template(update_size_t)  update<size_t>;
-  %template(update_scalar)  update<double>;
-  %template(update_string)  update<std::string>;
-// clang-format on
-#endif
 
   //
   // Special parameter setters
@@ -97,6 +88,18 @@ struct ScfParameters : public krims::GenMap {
   void update_structure(const std::string& key, long* atom_numbers, int n_atoms_an,
                         double* coords, int n_atoms_c, int three_c);
 };
+
+#ifdef SWIG
+  // clang-format off
+%extend ScfParameters {
+  %template(update_bool)    update<bool>;
+  %template(update_int)     update<int>;
+  %template(update_size_t)  update<size_t>;
+  %template(update_scalar)  update<double>;
+  %template(update_string)  update<std::string>;
+} // %extend
+// clang-format on
+#endif
 
 }  // namespace iface
 }  // namespace molsturm
