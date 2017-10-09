@@ -34,6 +34,9 @@ class ParamSpecial:
         self.value = value
         self.type = type
 
+    def __repr__(self):
+        return "(value=" + str(self.value) + ", type=" + str(self.type) + ")"
+
 
 def __to_iface_parameters(params, interface_type):
     """Make an interface parametermap from a ParameterMap parameter tree."""

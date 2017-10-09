@@ -27,6 +27,7 @@ from . import yaml_utils
 from .scf_guess import extrapolate_from_previous
 from .ScfParameters import ScfParameters
 from .State import State
+import copy
 import gint
 import numpy as np
 
@@ -46,7 +47,8 @@ def self_consistent_field(params):
     also the function hartree_fock
     """
     if isinstance(params, ScfParameters):
-        pass
+        # Make a shallow copy before we modify the parameters
+        params = copy.copy(params)
     elif isinstance(params, dict):
         return self_consistent_field(ScfParameters.from_dict(params))
     else:
@@ -168,6 +170,7 @@ def hartree_fock(system, basis=None, basis_type=None,
     # Construct guess from the HF arguments
     params = ScfParameters.from_args(system, basis, conv_tol, max_iter, n_eigenpairs,
                                      restricted, eigensolver, print_iterations)
+    params.normalise()
 
     # Build and add guess parameters
     if isinstance(guess, str):

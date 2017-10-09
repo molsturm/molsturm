@@ -89,23 +89,29 @@ class ScfParameters(ParameterMap):
     @classmethod
     def from_dict(cls, d):
         """
-        Read the dict tree and construct
-        a ParameterMap from it, then fill with
-        default values, then check for validity.
+        Read the dict tree and construct a ParameterMap from it.
+
+        The input parameters are not checked for valididy.
+        In order to do so, call the function "normalise"
+        after constructing the object.
         """
         params = ScfParameters()
         params.__from_dict_inner(d, "")
-        params.normalise()
         return params
+
+    def __copy__(self):
+        """
+        Make an exact shallow copy of the ScfParameters
+        """
+        return ScfParameters.from_dict(self)
 
     @classmethod
     def from_args(cls, system, basis, conv_tol=None, max_iter=None, n_eigenpairs=None,
                   restricted=None, eigensolver=None, print_iterations=None):
         """
         Construct an ScfParameter set from some arguments.
-        The resulting structure will be normalised (i.e. default values other than the
-        one accessible by this present interface added) and checked
-        for valididty thereafter.
+        The resulting structure will not be normalised and not checked for validity.
+        You can enforce this by calling normalise() on the returned object.
 
         system        The molecular system to model
         basis         A valid basis object. If None the basis will be constructed
@@ -143,7 +149,6 @@ class ScfParameters(ParameterMap):
             if val is not None:
                 params[to] = typ(val)
 
-        params.normalise()
         return params
 
     def __normalise_numpy_array(self, key, shape, dtype=None):
@@ -431,9 +436,9 @@ class ScfParameters(ParameterMap):
         Convenience function to set an external guess by supplying
         a guess for the orbital energies and the orbital coefficients.
 
-        This function only works properly after the relevant discretisation
-        and scf parameters have been set up and will throw errors
-        if this has not been done yet.
+        No checking wether the guess is consistent with the other
+        internal parameters is performed. This can be done via a call
+        to normalise() after setting up the guess like this.
 
         The guess is expected in the format
            orben_f             (n_spin, n_fock)
@@ -447,9 +452,6 @@ class ScfParameters(ParameterMap):
         self["guess/orben_f"] = ParamSpecial(orben_f, type="ignore")
         self["guess/orbcoeff_bf"] = ParamSpecial(orbcoeff_bf, type="ignore")
 
-        # Check and normalise what we have:
-        self.normalise()
-
     @property
     def scf_sizes(self):
         """
@@ -458,17 +460,23 @@ class ScfParameters(ParameterMap):
             n_spin    Number of spin components (1 for restricted, else 2)
             n_fock    Number of spatial orbitals the computation contains
                       (equals n_eigenpairs // 2)
+
+        This function only works properly if the system and scf parameters
+        have been properly set up and throw KeyError or ValueError in case
+        things are missing or invalid.
         """
-        assert self["scf/kind"] in ["restricted", "unrestricted"]
-        assert self["scf/n_eigenpairs"] % 2 == 0
+        if self["scf/kind"] not in ["restricted", "unrestricted"]:
+            raise ValueError("Invalid value for scf/kind: " + self["scf/kind"])
+        if self["scf/n_eigenpairs"] % 2 != 0:
+            raise ValueError("scf/n_eigenpairs needs to be an even number.")
         return ScfSizes(self.basis.size, 1 if self["scf/kind"] == "restricted" else 2,
                         int(self["scf/n_eigenpairs"] // 2))
 
     @property
     def system(self):
         """
-        Return the MolecularSystem which is represented by the
-        internal parameters.
+        Normalise the system parameter subtree, then return the system
+        object represented by the internal parameters.
         """
         self.__normalise_system()
         return MolecularSystem(
@@ -488,7 +496,8 @@ class ScfParameters(ParameterMap):
     @property
     def basis(self):
         """
-        Return the basis object represented by the internal parameters.
+        Normalise the system and basis subtrees, then return the basis
+        object represented by the internal parameters.
         """
         self.__normalise_discretisation(self.system)
 

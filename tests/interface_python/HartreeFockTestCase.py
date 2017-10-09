@@ -66,6 +66,7 @@ class HartreeFockTestCase(NumCompTestCase):
     def compare_hf_2_convergence(self, case, hfres):
         testing = case["testing"]
         scfparams = molsturm.ScfParameters.from_dict(case["input_parameters"])
+        scfparams.normalise()
 
         self.assertLessEqual(hfres["final_error_norm"], scfparams["scf/max_error_norm"])
         self.assertLessEqual(hfres["n_iter"], testing["max_n_iter"])

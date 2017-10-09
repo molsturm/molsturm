@@ -43,6 +43,7 @@ class TestHartreeFock(HartreeFockTestCase):
             with self.subTest(label=testing["name"]):
                 try:
                     scfparams = molsturm.ScfParameters.from_dict(case["input_parameters"])
+                    scfparams.normalise()
                 except (ValueError, KeyError, TypeError) as e:
                     raise unittest.SkipTest("Skipped subtest " + testing["name"] +
                                             ", since construction of ScfParameters "

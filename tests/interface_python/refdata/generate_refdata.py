@@ -300,6 +300,7 @@ if __name__ == "__main__":
         for job in include:
             try:
                 scfparams = molsturm.ScfParameters.from_dict(params["input_parameters"])
+                scfparams.normalise()
             except (KeyError, ValueError, TypeError) as e:
                 print("Erroneous input parameters in '" + name + ".in.yaml': " +
                       str(type(e)) + " " + str(e))

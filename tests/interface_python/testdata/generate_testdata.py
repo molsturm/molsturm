@@ -156,6 +156,7 @@ def main():
         # Build the ScfParameters object to run the
         # SCF for producing the reference data.
         scfparams = molsturm.ScfParameters.from_dict(inputs[name]["input_parameters"])
+        scfparams.normalise()
 
         # The include list of jobs which should be performed
         # on this input:
