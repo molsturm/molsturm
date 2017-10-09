@@ -65,14 +65,47 @@ class TestHartreeFockFull(NumCompTestCase):
                                     tol=conv_tol,
                                     prefix="Orbital energies: ")
 
+    def build_coefficient_rotation_matrix(self):
+        """
+        Return the rotation matrix, which rotates the
+        coefficients from the obtained coefficients to the reference
+        coefficients. The shape of the returned array is
+        (n_spin, n_fock, n_fock)
+        """
+        n_oa = self._hf_result["n_orbs_alpha"]
+        n_ba = self._hf_result["n_bas"]
+        slicemap = {"a": slice(None, n_oa), "b": slice(n_oa, None), }
+        slicemap_b = {"a": slice(None, n_ba), "b": slice(n_ba, None), }
+
+        assert n_oa == self._hf_result["n_orbs_beta"]
+
+        overlap_bb = self._hf_result["overlap_bb"]
+        orbcoeff_bf = self._hf_result["orbcoeff_bf"]
+        refcoeff_bf = data.ref_coefficients
+
+        ret = np.empty((2, n_oa, n_oa))
+        for i, s in enumerate(["a", "b"]):
+            c_bf = orbcoeff_bf[:, slicemap[s]]
+            cref_bf = refcoeff_bf[:, slicemap[s]]
+            s_bb = overlap_bb[slicemap_b[s], slicemap_b[s]]
+            ret[i, :, :] = np.dot(cref_bf.transpose(), np.dot(s_bb, c_bf))
+        return ret
+
     def test_coefficients(self):
-        print("test_coefficients disabled (Need unitary rotation first).")
-        return
+        """
+        Test that reference coefficients and the coefficients
+        actually obtained are related by unitary rotation.
+        """
         conv_tol = data.input_parameters["scf"]["conv_tol"]
-        self.assertArrayAlmostEqual(self._hf_result["orbcoeff_bf"],
-                                    data.ref_coefficients,
-                                    tol=conv_tol,
-                                    prefix="Coefficients: ")
+        ui_sff = self.build_coefficient_rotation_matrix()
+
+        for i in range(2):
+            s = ["a", "b"][i]
+            ui_ff = ui_sff[i, :, :]
+            self.assertArrayAlmostEqual(np.dot(ui_ff.transpose(), ui_ff),
+                                        np.eye(*ui_ff.shape),
+                                        tol=conv_tol,
+                                        prefix=s + " coefficient rotation matrix: ")
 
     def test_fock(self):
         conv_tol = data.input_parameters["scf"]["conv_tol"]
@@ -91,12 +124,18 @@ class TestHartreeFockFull(NumCompTestCase):
                                             prefix="Fock " + i + "-" + j + ": ")
 
     def test_repulsion_integrals(self):
-        print("test_repulsion_integrals disabled (Need unitary rotation first).")
-        return
         conv_tol = data.input_parameters["scf"]["conv_tol"]
         n_oa = self._hf_result["n_orbs_alpha"]
         slicemap = {"a": slice(None, n_oa), "b": slice(n_oa, None), }
         sizemap = {"a": n_oa, "b": self._hf_result["n_orbs_beta"], }
+
+        u_sff = self.build_coefficient_rotation_matrix()
+        umap = {"a": u_sff[0, :, :], "b": u_sff[1, :, :], }
+
+        need_unitary_trans = True
+        if np.allclose(umap["a"], np.eye(*umap["a"].shape)) and \
+           np.allclose(umap["b"], np.eye(*umap["b"].shape)):
+            need_unitary_trans = False
 
         for i in ["a", "b"]:
             for j in ["a", "b"]:
@@ -109,6 +148,15 @@ class TestHartreeFockFull(NumCompTestCase):
                         except KeyError as e:
                             ref_Jijkl = np.zeros((sizemap[i], sizemap[j],
                                                   sizemap[k], sizemap[l]))
+
+                        if need_unitary_trans:
+                            # Transform from the reference coefficients to the expected
+                            # result for the actual coefficients obtained in this
+                            # calculation
+                            # Note, that the actual coeffiecients might be a unitary
+                            # rotation of the reference by numerical noise
+                            ref_Jijkl = np.einsum("ijkl,ia,jb,kc,ld->abcd", ref_Jijkl,
+                                                  umap[i], umap[j], umap[k], umap[l])
 
                         self.assertArrayAlmostEqual(Jijkl, ref_Jijkl, tol=conv_tol,
                                                     prefix="Repulsion tensor " + i + "-" +
