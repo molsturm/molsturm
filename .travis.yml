@@ -84,7 +84,7 @@ matrix:
             - *def_packages
             - libstdc++-4.9-dev
       install:
-      - export EXTRA_OPTS="-DDRB_MAXIMUM_CXX_STANDARD=11"
+        - export EXTRA_OPTS="-DDRB_MAXIMUM_CXX_STANDARD=11"
       compiler: clang
       env: CC_COMP="clang" CXX_COMP="clang++"
     #
@@ -98,11 +98,17 @@ matrix:
       compiler: clang
       env: CC_COMP="clang-4.0" CXX_COMP="clang++-4.0"
     #
-    # gcc-4.8 (c++11 and without tests, since rapidcheck does not compile like this)
-    - install:
-      - export TESTS=0 EXTRA_OPTS="-DMOLSTURM_ENABLE_TESTS=OFF"
+    # gcc-5 with disabled c++11
+    - addons:
+        apt:
+          sources: *def_sources
+          packages:
+            - *def_packages
+            - g++-5
+      install:
+        - export EXTRA_OPTS="-DDRB_MAXIMUM_CXX_STANDARD=11"
       compiler: gcc
-      env: CC_COMP="gcc" CXX_COMP="g++"
+      env: CC_COMP="gcc-5" CXX_COMP="g++-5"
     #
     # gcc-7 (with tests and c++14)
     - addons:
@@ -122,12 +128,11 @@ matrix:
             - *def_packages
             - *clang_newest
       install:
-      - export BUILD_TARGET="clang-tidy-molsturm"
-      - export TESTS=0
+        - export BUILD_TARGET="clang-tidy-molsturm"
+        - export TESTS=0
       compiler: clang
       env: CC_COMP="clang-4.0" CXX_COMP="clang++-4.0" BUILD_TARGET="clang-tidy-molsturm"
   allow_failures:
-    - env: CC_COMP="gcc" CXX_COMP="g++"
     - env: CC_COMP="clang-4.0" CXX_COMP="clang++-4.0" BUILD_TARGET="clang-tidy-molsturm"
 
 script:
