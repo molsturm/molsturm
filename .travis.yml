@@ -70,6 +70,7 @@ addons:
       # Packages for python interface
       - swig
       - python3-numpy
+      - python3-scipy
       - python3-h5py
       - python3-yaml
 

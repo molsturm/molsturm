@@ -47,7 +47,8 @@ it has been built the following `python` packages are required:
 On a recent **Debian/Ubuntu** you can install all the aforementioned dependencies by running
 ```
 apt-get install cmake swig python3-dev libopenblas-dev liblapack-dev libarmadillo-dev \
-                python3-h5py python3-yaml python3-numpy libeigen3-dev autoconf libgmp-dev
+                python3-h5py python3-yaml python3-numpy python3-scipy libeigen3-dev \
+                autoconf libgmp-dev
 ```
 as root.
 
