@@ -36,6 +36,7 @@ class TestHartreeFockHighLevelFrontend(HartreeFockTestCase):
 
         try:
             params = molsturm.ScfParameters.from_dict(case["input_parameters"])
+            params.normalise()
         except (ValueError, KeyError, TypeError) as e:
             raise unittest.SkipTest("Skipped subtest " + case["testing"]["name"] +
                                     ", since construction of ScfParameters failed: " +
@@ -67,6 +68,7 @@ class TestHartreeFockHighLevelFrontend(HartreeFockTestCase):
 
         try:
             params = molsturm.ScfParameters.from_dict(case["input_parameters"])
+            params.normalise()
         except (ValueError, KeyError, TypeError) as e:
             raise unittest.SkipTest("Skipped subtest " + case["testing"]["name"] +
                                     ", since construction of ScfParameters failed: " +

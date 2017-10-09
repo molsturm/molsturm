@@ -32,13 +32,14 @@ class TestFromPrevious(HartreeFockTestCase):
     def __run_test(self, name):
         case = testdata.test_cases_by_name(name)[0]
 
-        try:
-            inp = case["input_parameters"]
-            scfparams = molsturm.ScfParameters.from_dict(inp)
+        inp = case["input_parameters"]
+        scfparams = molsturm.ScfParameters.from_dict(inp)
+        scfparams_lowtol = molsturm.ScfParameters.from_dict(inp)
+        scfparams_lowtol["scf/con_tol"] = 1e-5
 
-            inp.setdefault("scf", {})
-            inp["scf"]["conv_tol"] = 1e-5
-            scfparams_lowtol = molsturm.ScfParameters.from_dict(inp)
+        try:
+            scfparams.normalise()
+            scfparams_lowtol.normalise()
         except (ValueError, KeyError, TypeError) as e:
             raise unittest.SkipTest("Skipped subtest " + case["testing"]["name"] +
                                     ", since construction of ScfParameters "

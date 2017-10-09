@@ -43,6 +43,12 @@ class ParameterMap(dict):
         params.__from_dict_inner(d, "")
         return params
 
+    def __copy__(self):
+        """
+        Return a shallow copy of a ParameterMap
+        """
+        return ParameterMap.from_dict(self)
+
     def __init__(self, init_values={}):
         """
         Construct a ParameterMap and optionally initialise some inner
