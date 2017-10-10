@@ -193,7 +193,7 @@ def find_kopt(scfparams, conv_tol=1e-3, n_repeat_random=3, print_iterations=Fals
 
             # Update conv_tol to gradually become more and more close to
             # what we want to achieve
-            scfparams["scf/conv_tol"] = max(conv_tol / 100, abs(diff))
+            scfparams["scf/conv_tol"] = max(conv_tol / 1000, abs(diff))
 
         if diff < guess_update_threshold and diff > 10 * conv_tol:
             # Use the state which is the best state, i.e. which has
