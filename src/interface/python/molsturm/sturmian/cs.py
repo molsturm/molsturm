@@ -158,6 +158,10 @@ def find_kopt(scfparams, conv_tol=1e-3, n_repeat_random=3, print_iterations=Fals
     bracket = (job_guess["k"], job_other["k"])
     bracket = (min(bracket), max(bracket))
 
+    # TODO If we have an actual guess, i.e. not need to resort to random stuff
+    #      it will probably speed up the optimisation a lot if we find a proper
+    #      bracket
+
     # Take the sate with the lowest energy as the guess
     guess = scf_guess.extrapolate_from_previous(
         min(job_guess, job_other, key=lambda x: x["energy_ground_state"])["state"],
@@ -206,7 +210,9 @@ def find_kopt(scfparams, conv_tol=1e-3, n_repeat_random=3, print_iterations=Fals
 
     oret = scipy.optimize.minimize_scalar(objective, method=optimisation_method,
                                           tol=conv_tol, bracket=bracket)
-    if not oret.success:
+
+    # In older versions it's impossible to find out about the success
+    if hasattr(oret, "success") and not oret.success:
         raise RuntimeError("Optimisation not successful: " + oret.message)
     else:
         if abs(oret.x - hfres.input_parameters.basis.k_exp) > conv_tol:
