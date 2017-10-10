@@ -24,7 +24,7 @@
 import molsturm
 import molsturm.sturmian
 
-l_max = 2
+l_max = 1
 n_max = 5
 
 for atom, mult in [("Be", 1), ("C", 3), ("Ne", 1)]:
@@ -40,7 +40,7 @@ for atom, mult in [("Be", 1), ("C", 3), ("Ne", 1)]:
     scfparams["guess/eigensolver/method"] = "lapack"
 
     print("Running for " + atom + " please wait")
-    best = molsturm.sturmian.cs.find_kopt(scfparams)
+    best = molsturm.sturmian.cs.find_kopt(scfparams, print_iterations=True)
 
     k = best["input_parameters"]["discretisation"]["k_exp"]
     print("kopt for " + atom + " is   {0:.4g}".format(k) +

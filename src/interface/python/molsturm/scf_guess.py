@@ -22,7 +22,7 @@
 ## ---------------------------------------------------------------------
 
 from ._scf import self_consistent_field
-import warnings
+import numpy as np
 
 
 def extrapolate_from_previous(old_state, scf_params):
@@ -30,35 +30,57 @@ def extrapolate_from_previous(old_state, scf_params):
     Extrapolate the old SCF result state onto the new parameters to build
     a guess for a new scf procedure
     """
-    warnings.warn("External guess of guess from previous is not yet "
-                  "re-implemented properly.")
-
-    # TODO This is just to make it work ... we need much more checking here.
-    #      See the old version in scf_guess.old.py for ideas.
-
     scf_params = scf_params.copy()
     scf_params.normalise()
+    old_params = old_state.input_parameters
 
-    scf_sizes = scf_params.scf_sizes
-    n_spin = scf_sizes.n_spin
-    n_fock = scf_sizes.n_fock
-    n_bas = scf_sizes.n_bas
+    def check_agreement(key, message):
+        if old_params[key] != scf_params[key]:
+            raise ValueError(message + "(guess: " + str(old_params[key]) +
+                             ", scfparams: " + str(scf_params[key]))
 
-    if old_state["restricted"]:
-        if not n_spin == 1:
-            raise ValueError("Restricted guess for unrestricted computation")
+    check_agreement("scf/kind", "Cannot use restricted guess for unrestricted "
+                    "calculation or vice versa.")
+    check_agreement("discretisation/basis_type",
+                    "discretisation/basis_type do not agree")
 
-        orben_f = old_state["orben_f"][:n_fock].reshape(n_spin, n_fock)
-        orbcoeff_bf = old_state["orbcoeff_bf"][:, :n_fock]
-        orbcoeff_bf = orbcoeff_bf.reshape(n_spin, n_bas, n_fock)
-    else:
-        if not n_spin == 2:
-            raise ValueError("Unrestricted guess for restricted computation")
+    old_orben_f = old_state["orben_f"]
+    old_orbcoeff_bf = old_state["orbcoeff_bf"]
+    try:
+        # Project the old SCF result onto the new basis:
+        P = old_params.basis.obtain_projection_to(scf_params.basis)
+        proj_orbcoeff_bf = np.matmul(P, old_orbcoeff_bf)
+    except (ValueError, NotImplementedError) as e:
+        raise ValueError(str(e))
 
-        orben_f = old_state["orben_f"].reshape(n_spin, n_fock)
+    # Check that sizes agree and build the actual guess:
+    old_sizes = old_params.scf_sizes
+    sizes = scf_params.scf_sizes
+    assert old_sizes.n_spin == sizes.n_spin
+    n_spin = sizes.n_spin
 
-        orbcoeff_bf = old_state["orbcoeff_bf"].reshape(n_bas, n_spin, n_fock)
-        orbcoeff_bf = orbcoeff_bf.transpose(1, 0, 2)
+    assert old_orben_f.shape == (2 * old_sizes.n_fock, )
+    assert proj_orbcoeff_bf.shape == (sizes.n_bas, 2 * old_sizes.n_fock)
+
+    # Note: This truncation scheme works for both restricted and unrestricted
+    #       cases due to the fact that the order is spin, bas, fock
+    #       In other words the fock index runs fastest.
+
+    # First reshape the old objects
+    old_orben_f = old_orben_f[:old_sizes.n_fock * n_spin]
+    proj_orbcoeff_bf = proj_orbcoeff_bf[:, :old_sizes.n_fock * n_spin]
+
+    old_orben_f = old_orben_f.reshape(n_spin, old_sizes.n_fock)
+    proj_orbcoeff_bf = proj_orbcoeff_bf.reshape(sizes.n_bas, n_spin, old_sizes.n_fock)
+    proj_orbcoeff_bf = proj_orbcoeff_bf.transpose(1, 0, 2)
+
+    # Then extend / truncate to the new expected shape
+    orben_f = np.zeros((n_spin, sizes.n_fock))
+    orbcoeff_bf = np.zeros((n_spin, sizes.n_bas, sizes.n_fock))
+
+    min_fock = min(sizes.n_fock, old_sizes.n_fock)
+    orben_f[:, :min_fock] = old_orben_f[:, :min_fock]
+    orbcoeff_bf[:, :, :min_fock] = proj_orbcoeff_bf[:, :, :min_fock]
 
     return orben_f, orbcoeff_bf
 
