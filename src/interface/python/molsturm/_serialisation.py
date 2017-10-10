@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,11 +20,11 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-from ._constants import HFRES_ARRAY_KEYS, INPUT_PARAMETER_KEY
+from ._constants import HFRES_ARRAY_KEYS
 from datetime import datetime
 from distutils.version import StrictVersion
+from .State import State
 from ._hdf5 import h5py
 from ._iface import Version
 from . import _hdf5 as hdf5
@@ -133,7 +134,7 @@ def load_yaml(stream):
     for k in HFRES_ARRAY_KEYS:
         if k in res:
             res[k] = np.array(res[k])
-    return res
+    return State(res)
 
 
 def metadata_yaml(stream):
@@ -226,7 +227,7 @@ def load_hdf5(path, meta_check=True):
     with h5py.File(path, "r") as h5f:
         if meta_check:
             check_metadata(h5f)
-        return hdf5.extract_group(h5f)
+        return State(hdf5.extract_group(h5f))
 
 
 def metadata_hdf5(path):
