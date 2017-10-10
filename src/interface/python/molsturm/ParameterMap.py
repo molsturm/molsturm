@@ -103,7 +103,7 @@ class ParameterMap(dict):
         namefct = getattr(super(), name)
         if len(splitted) == 2:
             try:
-                subdict = super.__getitem__(first)
+                subdict = super().__getitem__(first)
             except KeyError:
                 raise KeyError(key)
             namefct = getattr(subdict, name)
@@ -156,6 +156,21 @@ class ParameterMap(dict):
             return self.__getitem__(k)
         except KeyError:
             return d
+
+    def pop(self, k, *d):
+        try:
+            return self.__recursive_apply("pop", k)
+        except KeyError:
+            if d:
+                return d[0]
+            else:
+                raise
+
+    def popitem(self):
+        raise NotImplementedError()
+
+    def values(self):
+        raise NotImplementedError()
 
     def keys_recursive(self):
         return list(self.__iter__())
