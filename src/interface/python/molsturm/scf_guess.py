@@ -50,7 +50,7 @@ def extrapolate_from_previous(old_state, scf_params):
     try:
         # Project the old SCF result onto the new basis:
         P = old_params.basis.obtain_projection_to(scf_params.basis)
-        proj_orbcoeff_bf = np.matmul(P, old_orbcoeff_bf)
+        proj_orbcoeff_bf = np.dot(P, old_orbcoeff_bf)
     except (ValueError, NotImplementedError) as e:
         raise ValueError(str(e))
 
