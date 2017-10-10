@@ -21,6 +21,7 @@
 ##
 ## ---------------------------------------------------------------------
 
+from ._scf import self_consistent_field
 import warnings
 
 
@@ -60,3 +61,24 @@ def extrapolate_from_previous(old_state, scf_params):
         orbcoeff_bf = orbcoeff_bf.transpose(1, 0, 2)
 
     return orben_f, orbcoeff_bf
+
+
+def best_of_n(scfparams, n_repeats=4):
+    """
+    Find the best guess out of n_repeats random SCF calculations.
+
+    Is intended to produce a good guess in case hcore and other
+    methods fails
+    """
+
+    scfparams = scfparams.copy()
+    scfparams["guess/method"] = "random"
+
+    beststate = None
+    for i in range(n_repeats):
+        newstate = self_consistent_field(scfparams)
+
+        if beststate is None or \
+           newstate["energy_ground_state"] < beststate["energy_ground_state"]:
+            beststate = newstate
+    return extrapolate_from_previous(beststate, scfparams)

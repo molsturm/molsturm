@@ -34,11 +34,7 @@ class TestSturmian(NumCompTestCase):
         scfparams.system = molsturm.MolecularSystem(case.atom,
                                                     multiplicity=case.multiplicity)
 
-        if case.n_max == 3 and case.l_max == 2:
-            basis_type = "sturmian/atomic/cs_static14"
-        else:
-            basis_type = "sturmian/atomic/cs_reference_pc"
-
+        basis_type = "sturmian/atomic/cs_reference_pc"
         if basis_type not in molsturm.available_basis_types:
             raise unittest.SkipTest("Skipped subtest " + case.atom +
                                     ", since basis type not available: " +
@@ -69,9 +65,9 @@ class TestSturmian(NumCompTestCase):
                                                "n_max", "l_max",
                                                "ref_kexp", "ref_energy"])
 
-        cases = [KoptTestCase("C",  3, 3, 2, 2.926, -36.21728187346766),
-                 KoptTestCase("Be", 1, 3, 2, 2.032, -14.118626126201944),
-                 KoptTestCase("Ne", 1, 5, 1, 4.585, -128.0943438001784)]
+        cases = [KoptTestCase("C",  3, 3, 2, 2.92662341, -36.2172805132368),
+                 KoptTestCase("Be", 1, 3, 2, 2.03130984, -14.1186259727171),
+                 KoptTestCase("Ne", 1, 5, 1, 4.58573986, -128.094343776872)]
 
         for case in cases:
             with self.subTest(label=case.atom):
