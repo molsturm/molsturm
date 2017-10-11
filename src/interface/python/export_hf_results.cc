@@ -21,6 +21,7 @@
 #include <molsturm/FockOperator.hh>
 #include <molsturm/IopScf.hh>
 #include <molsturm/OverlapMatrix.hh>
+#include <stdlib.h>
 
 namespace molsturm {
 namespace iface {
@@ -428,7 +429,9 @@ ScfResults export_hf_results(const State& state,
     ret.hcore_ff.resize(0);
   }
 
-  if (true) {
+  // TODO This is a hack to avoid this costly step in case this is really needed.
+  char* skip_eri_export = getenv("MOLSTURM_SKIP_ERI_EXPORT");
+  if (skip_eri_export == nullptr) {
     export_eri(restricted, eri, soln.evectors(), ret.eri_ffff);
     assert_internal(ret.eri_ffff.size() == n_orbs * n_orbs * n_orbs * n_orbs);
   } else {
