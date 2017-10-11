@@ -151,6 +151,20 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
   static const std::string print_progress;
 
   // TODO introduce method parameter!
+  //      to make this more configurable
+  //      Idea: have a mapping
+  //         { {accuracy, method},
+  //           {accuracy2, method2},
+  //         }
+  //! Pulay error norm below which DIIS acceleration is switched on
+  real_type diis_startup_error_norm = 0.25;
+
+  /** Iteration count after which DIIS acceleration is switched on
+   *  (Regardless of the error norm */
+  size_t diis_startup_iter = 12;
+
+  //! Pulay error norm below which DIIS is again switched off
+  real_type diis_shutdown_error_norm = 5e-7;
 
   /** Update control parameters from Parameter map */
   void update_control_params(const krims::GenMap& map) {
@@ -165,6 +179,11 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
     if (map.at(IopScfKeys::print_iterations, false)) {
       verbosity |= ScfMsgType::IterationProcess;
     }
+
+    diis_startup_iter       = map.at("diis_startup_iter", diis_startup_iter);
+    diis_startup_error_norm = map.at("diis_startup_error_norm", diis_startup_error_norm);
+    diis_shutdown_error_norm =
+          map.at("diis_shutdown_error_norm", diis_shutdown_error_norm);
 
     // Copy the map to the internal storage such that we
     // can pass it on to the actual eigensolvers.
@@ -319,28 +338,20 @@ void IopScf<IntegralOperator, OverlapMatrix>::solve_state(state_type& state) con
               << "n_eprob_it" << std::endl;
   }
 
-  // TODO make this configurable
-  const real_type diis_startup_error_norm = 0.25;
-  const size_t diis_startup_iter          = 12;
-
   {  // truncated ODA
     solve_up_to<TruncODASolver>(state, diis_startup_error_norm, diis_startup_iter);
     if (base_type::convergence_reached(state)) return;
   }
 
-  // TODO make this configurable
-  //      Idea: have a mapping
-  //         { {accuracy, method},
-  //           {accuracy2, method2},
-  //         }
-  const real_type diis_limit_max_error_norm = 5e-7;
-
-  {  // DIIS
+  // TODO
+  // This if is a bit hackish to suppress the printout. Probably we want this to go.
+  if (state.last_error_norm > diis_shutdown_error_norm) {
+    // DIIS
     if (print_progress) {
       // TODO It would be nice to have a function to do this printing here
       std::cout << "                  ****    Turning on DIIS   ****" << std::endl;
     }
-    solve_up_to<DiisSolver>(state, diis_limit_max_error_norm);
+    solve_up_to<DiisSolver>(state, diis_shutdown_error_norm);
     if (base_type::convergence_reached(state)) return;
     if (print_progress) {
       std::cout << "                  ****  Switching off DIIS  ****" << std::endl;
