@@ -86,23 +86,55 @@ def extrapolate_from_previous(old_state, scf_params):
     return orben_f, orbcoeff_bf
 
 
-def best_of_n(scfparams, n_repeats=4):
+def best_of_n(scfparams, n_repeats=4, n_max_tries=None):
     """
     Find the best guess out of n_repeats random SCF calculations.
 
     Is intended to produce a good guess in case hcore and other
-    methods fails
+    methods fails.
+
+    n_repeats   Number of scf minima to compute before selecting the
+                lowest-energy one
+    n_max_tries   Number of tries to attempt. for getting an scf minimum.
+                  After this number the procedure fails.
+
+    If a run fails (e.g. because of max_iter is reached) then
+    it is discarded. After n_max_tries without n_repeats successful
+    SCFs, the most recent error is raised.
     """
 
     scfparams = scfparams.copy()
     scfparams.clear_guess()
     scfparams["guess/method"] = "random"
 
+    # Set to at least 100 iterations
+    scfparams.setdefault("scf/max_iter", 100)
+    scfparams["scf/max_iter"] = max(scfparams["scf/max_iter"], 100)
+
+    if n_max_tries is None:
+        n_max_tries = 2 * n_repeats
+
+    # Since the scf runs could fail (we are using a random guess after all)
+    # We actually run up to n_max_tries times and skip erroneous runs
+
     beststate = None
-    for i in range(n_repeats):
-        newstate = self_consistent_field(scfparams)
+    n_successful = 0
+    for itry in range(1, n_max_tries + 1):
+        try:
+            newstate = self_consistent_field(scfparams)
+            n_successful += 1
+        except RuntimeError as e:
+            if itry >= n_max_tries:
+                raise e
+            else:
+                continue
 
         if beststate is None or \
            newstate["energy_ground_state"] < beststate["energy_ground_state"]:
             beststate = newstate
+
+        if n_successful == n_repeats:
+            break
+
+    assert n_successful == n_repeats
     return extrapolate_from_previous(beststate, scfparams)
