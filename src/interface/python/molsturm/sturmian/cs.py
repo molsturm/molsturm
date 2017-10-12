@@ -41,11 +41,20 @@ def empirical_kopt(scfparams):
         raise ValueError("Can only work on atomic systems")
     Z = system.atom_numbers[0]
 
-    # TODO This is just something out of my little hat
-    #      I guess one could make some rationalisation here
-    #      using the scaling of Z_eff and E_hydrogenic vs Z
-    #      and such.
-    return float(np.sqrt(Z))
+    # TODO This is just something where we fitted some data to get this.
+    #      I guess one could make some rationalisation here using the scaling of
+    #      Z_eff and E_hydrogenic vs Z and such.
+    # Intervals and the equations a*x + b
+    intervals = [
+        {"start": 3, "end":  11, "estimate": lambda n: 0.425 * n + 0.285},
+        {"start": 11, "end":  19, "estimate": lambda n: 0.285 * n + 0.715},
+        # Just out of my head
+        {"start": 19, "end": 10000, "estimate": lambda n: 0.2 * n + 1.1},
+    ]
+
+    for interval in intervals:
+        if Z >= interval["start"]:
+            return float(interval["estimate"](Z))
 
 
 def estimate_kopt(state):
