@@ -21,7 +21,8 @@
 ##
 ## ---------------------------------------------------------------------
 
-import warnings
+from ._scf import self_consistent_field
+import numpy as np
 
 
 def extrapolate_from_previous(old_state, scf_params):
@@ -29,31 +30,111 @@ def extrapolate_from_previous(old_state, scf_params):
     Extrapolate the old SCF result state onto the new parameters to build
     a guess for a new scf procedure
     """
-    warnings.warn("External guess of guess from previous is not yet "
-                  "re-implemented properly.")
+    scf_params = scf_params.copy()
+    scf_params.clear_guess()
+    scf_params.normalise()
+    old_params = old_state.input_parameters
 
-    # TODO This is just to make it work ... we need much more checking here.
-    #      See the old version in scf_guess.old.py for ideas.
+    def check_agreement(key, message):
+        if old_params[key] != scf_params[key]:
+            raise ValueError(message + "(guess: " + str(old_params[key]) +
+                             ", scfparams: " + str(scf_params[key]))
 
-    scf_sizes = scf_params.scf_sizes
-    n_spin = scf_sizes.n_spin
-    n_fock = scf_sizes.n_fock
-    n_bas = scf_sizes.n_bas
+    check_agreement("scf/kind", "Cannot use restricted guess for unrestricted "
+                    "calculation or vice versa.")
+    check_agreement("discretisation/basis_type",
+                    "discretisation/basis_type do not agree")
 
-    if old_state["restricted"]:
-        if not n_spin == 1:
-            raise ValueError("Restricted guess for unrestricted computation")
+    old_orben_f = old_state["orben_f"]
+    old_orbcoeff_bf = old_state["orbcoeff_bf"]
+    try:
+        # Project the old SCF result onto the new basis:
+        P = old_params.basis.obtain_projection_to(scf_params.basis)
+        proj_orbcoeff_bf = np.dot(P, old_orbcoeff_bf)
+    except (ValueError, NotImplementedError) as e:
+        raise ValueError(str(e))
 
-        orben_f = old_state["orben_f"][:n_fock].reshape(n_spin, n_fock)
-        orbcoeff_bf = old_state["orbcoeff_bf"][:, :n_fock]
-        orbcoeff_bf = orbcoeff_bf.reshape(n_spin, n_bas, n_fock)
-    else:
-        if not n_spin == 2:
-            raise ValueError("Unrestricted guess for restricted computation")
+    # Check that sizes agree and build the actual guess:
+    old_sizes = old_params.scf_sizes
+    sizes = scf_params.scf_sizes
+    assert old_sizes.n_spin == sizes.n_spin
+    n_spin = sizes.n_spin
 
-        orben_f = old_state["orben_f"].reshape(n_spin, n_fock)
+    assert old_orben_f.shape == (2 * old_sizes.n_fock, )
+    assert proj_orbcoeff_bf.shape == (sizes.n_bas, 2 * old_sizes.n_fock)
 
-        orbcoeff_bf = old_state["orbcoeff_bf"].reshape(n_bas, n_spin, n_fock)
-        orbcoeff_bf = orbcoeff_bf.transpose(1, 0, 2)
+    # Note: This truncation scheme works for both restricted and unrestricted
+    #       cases due to the fact that the order is spin, bas, fock
+    #       In other words the fock index runs fastest.
+
+    # First reshape the old objects
+    old_orben_f = old_orben_f[:old_sizes.n_fock * n_spin]
+    proj_orbcoeff_bf = proj_orbcoeff_bf[:, :old_sizes.n_fock * n_spin]
+
+    old_orben_f = old_orben_f.reshape(n_spin, old_sizes.n_fock)
+    proj_orbcoeff_bf = proj_orbcoeff_bf.reshape(sizes.n_bas, n_spin, old_sizes.n_fock)
+    proj_orbcoeff_bf = proj_orbcoeff_bf.transpose(1, 0, 2)
+
+    # Then extend / truncate to the new expected shape
+    orben_f = np.zeros((n_spin, sizes.n_fock))
+    orbcoeff_bf = np.zeros((n_spin, sizes.n_bas, sizes.n_fock))
+
+    min_fock = min(sizes.n_fock, old_sizes.n_fock)
+    orben_f[:, :min_fock] = old_orben_f[:, :min_fock]
+    orbcoeff_bf[:, :, :min_fock] = proj_orbcoeff_bf[:, :, :min_fock]
 
     return orben_f, orbcoeff_bf
+
+
+def best_of_n(scfparams, n_repeats=4, n_max_tries=None):
+    """
+    Find the best guess out of n_repeats random SCF calculations.
+
+    Is intended to produce a good guess in case hcore and other
+    methods fails.
+
+    n_repeats   Number of scf minima to compute before selecting the
+                lowest-energy one
+    n_max_tries   Number of tries to attempt. for getting an scf minimum.
+                  After this number the procedure fails.
+
+    If a run fails (e.g. because of max_iter is reached) then
+    it is discarded. After n_max_tries without n_repeats successful
+    SCFs, the most recent error is raised.
+    """
+
+    scfparams = scfparams.copy()
+    scfparams.clear_guess()
+    scfparams["guess/method"] = "random"
+
+    # Set to at least 100 iterations
+    scfparams.setdefault("scf/max_iter", 100)
+    scfparams["scf/max_iter"] = max(scfparams["scf/max_iter"], 100)
+
+    if n_max_tries is None:
+        n_max_tries = 2 * n_repeats
+
+    # Since the scf runs could fail (we are using a random guess after all)
+    # We actually run up to n_max_tries times and skip erroneous runs
+
+    beststate = None
+    n_successful = 0
+    for itry in range(1, n_max_tries + 1):
+        try:
+            newstate = self_consistent_field(scfparams)
+            n_successful += 1
+        except RuntimeError as e:
+            if itry >= n_max_tries:
+                raise e
+            else:
+                continue
+
+        if beststate is None or \
+           newstate["energy_ground_state"] < beststate["energy_ground_state"]:
+            beststate = newstate
+
+        if n_successful == n_repeats:
+            break
+
+    assert n_successful == n_repeats
+    return extrapolate_from_previous(beststate, scfparams)

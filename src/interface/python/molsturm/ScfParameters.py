@@ -105,6 +105,9 @@ class ScfParameters(ParameterMap):
         """
         return ScfParameters.from_dict(self)
 
+    def copy(self):
+        return self.__copy__()
+
     @classmethod
     def from_args(cls, system, basis, conv_tol=None, max_iter=None, n_eigenpairs=None,
                   restricted=None, eigensolver=None, print_iterations=None):
@@ -451,6 +454,15 @@ class ScfParameters(ParameterMap):
         orbcoeff_bf = np.ascontiguousarray(orbcoeff_bf)
         self["guess/orben_f"] = ParamSpecial(orben_f, type="ignore")
         self["guess/orbcoeff_bf"] = ParamSpecial(orbcoeff_bf, type="ignore")
+
+    def clear_guess(self):
+        """
+        Clear any external guess which is currently set.
+        This is sometimes needed before setting a new external guess.
+        """
+        self.pop("guess/method", None)
+        self.pop("guess/orben_f", None)
+        self.pop("guess/orbcoeff_bf", None)
 
     @property
     def scf_sizes(self):

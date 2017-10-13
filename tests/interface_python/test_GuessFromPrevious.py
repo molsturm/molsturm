@@ -29,7 +29,7 @@ from HartreeFockTestCase import HartreeFockTestCase
 
 
 class TestFromPrevious(HartreeFockTestCase):
-    def __run_test(self, name):
+    def __run_test_same(self, name):
         case = testdata.test_cases_by_name(name)[0]
 
         inp = case["input_parameters"]
@@ -56,11 +56,54 @@ class TestFromPrevious(HartreeFockTestCase):
         self.assertLessEqual(hfres["n_iter"], 3)
         self.compare_hf_results_small(case, hfres)
 
+    def __run_test_sturmian_interpolate(self, name, n_max, l_max, m_max):
+        case = testdata.test_cases_by_name(name)[0]
+
+        inp = case["input_parameters"]
+        scfparams = molsturm.ScfParameters.from_dict(inp)
+
+        # This done to stabilise the outcome such that we don't
+        # get the correct minimum once and a wrong minimum at another time
+        scfparams["guess/method"] = "random"
+
+        try:
+            scfparams.normalise()
+        except (ValueError, KeyError, TypeError) as e:
+            raise unittest.SkipTest("Skipped subtest " + case["testing"]["name"] +
+                                    ", since construction of ScfParameters "
+                                    "failed: " + str(e))
+
+        smallparams = scfparams.copy()
+        origbasis = scfparams.basis
+
+        smallparams.basis = molsturm.Basis.construct(
+            "sturmian/atomic/" + origbasis.backend,
+            scfparams.system, n_max=n_max, l_max=l_max,
+            m_max=m_max, k_exp=origbasis.k_exp,
+        )
+        smallres = molsturm.self_consistent_field(smallparams)
+
+        res_no_guess = molsturm.self_consistent_field(scfparams)
+
+        guess = molsturm.scf_guess.extrapolate_from_previous(smallres, scfparams)
+        scfparams.set_guess_external(*guess)
+        res_guess = molsturm.self_consistent_field(scfparams)
+
+        self.assertAlmostEqual(res_no_guess["energy_ground_state"],
+                               res_guess["energy_ground_state"],
+                               tol=case["testing"]["numeric_tolerance"],
+                               prefix="Energy of ground state without and with guess: ")
+
+        self.assertLess(res_guess["n_iter"], res_no_guess["n_iter"],
+                        msg="Number of iterations with guess not smaller than without.")
+
     def test_restricted_be_cs32(self):
-        self.__run_test("be_cs32")
+        self.__run_test_same("be_cs32")
+        self.__run_test_sturmian_interpolate("be_cs32", n_max=3, l_max=1, m_max=1)
 
     def test_unrestricted_c_cs41(self):
-        self.__run_test("c_cs41")
+        self.__run_test_same("c_cs41")
+        self.__run_test_sturmian_interpolate("c_cs41", n_max=3, l_max=1, m_max=1)
 
     def test_unrestricted_c_sto3g(self):
-        self.__run_test("c_321g")
+        self.__run_test_same("c_321g")

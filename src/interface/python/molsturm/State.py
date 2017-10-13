@@ -21,7 +21,9 @@
 ##
 ## ---------------------------------------------------------------------
 
+from ._constants import INPUT_PARAMETER_KEY
 from .soarray import soarray
+from .ScfParameters import ScfParameters
 
 # TODO See also the ideas in StateNew.py
 
@@ -65,6 +67,10 @@ class TmpState(dict):
     @property
     def n_electrons(self):
         return (self.__getitem__("n_alpha"), self.__getitem__("n_beta"))
+
+    @property
+    def input_parameters(self):
+        return ScfParameters.from_dict(self[INPUT_PARAMETER_KEY])
 
     def make_soarray(self, inner):
         a = soarray(self.n_orbs, self.n_electrons, inner)

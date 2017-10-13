@@ -21,15 +21,33 @@
 ##
 ## ---------------------------------------------------------------------
 
-from gint import Basis, available_basis_types
-from ._scf import self_consistent_field
-from ._scf_hliface import hartree_fock
-from ._scf_hliface import compute_derived_hartree_fock_energies
-from ._scf_hliface import compute_exchange_ff, compute_coulomb_ff
-from .ScfParameters import ScfParameters
-from ._print import *
-from ._serialisation import dump_hdf5, load_hdf5, metadata_hdf5
-from ._serialisation import dump_yaml, load_yaml, metadata_yaml
-from ._iface import Version
-from ._constants import INPUT_PARAMETER_KEY
-from .MolecularSystem import MolecularSystem
+import unittest
+import numpy as np
+import yaml
+import molsturm
+
+
+class TestYamlUtils(unittest.TestCase):
+    def __test_yaml_array(self, array):
+        molsturm.yaml_utils.install_representers()
+        molsturm.yaml_utils.install_constructors()
+        s = yaml.safe_dump(array)
+        res = yaml.safe_load(s)
+
+        self.assertTrue(np.all(array == res), msg="Original array (" +
+                        str(array) + ") and represented array(" +
+                        str(res) + ") not equivalent.")
+
+    def test_yaml_conrep_1darray(self):
+        self.__test_yaml_array(np.array([1, 2, 3, 4]))
+
+    def test_yaml_conrep_2darray(self):
+        arr = [[1, 2], [3, 4], [5, 6]]
+        arr = np.array(arr)
+        self.__test_yaml_array(arr)
+
+    def test_yaml_conrep_3darray(self):
+        arr = [[[1, 2], [3, 4], [5, 6]],
+               [[7, 8], [9, 0], [1, 2]]]
+        arr = np.array(arr)
+        self.__test_yaml_array(arr)
