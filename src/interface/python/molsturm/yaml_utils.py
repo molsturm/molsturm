@@ -25,37 +25,39 @@ import numpy as np
 import yaml
 
 
-def ndarray_representer(dumper, data):
+def represent_ndarray(dumper, data):
     """YAML representer for numpy arrays"""
     return dumper.represent_sequence('!ndarray', data.tolist())
 
 
-def numpy_scalar_representer(dumper, data):
+def represent_numpy_scalar(dumper, data):
     """YAML representer for numpy scalar values.
     They are represented as their python equivalents.
     """
     return dumper.represent_data(np.asscalar(data))
 
 
-def ndarray_constructor(loader, node):
+def construct_ndarray(loader, node):
     """YAML constructor for numpy arrays"""
-    value = loader.construct_sequence(node)
+    print("construtor_node: ", node)
+    value = loader.construct_sequence(node, deep=True)
+    print("constructor sees: ", value)
     return np.array(value)
 
 
 def install_constructors():
     """Install all YAML constructors defined in this module"""
-    yaml.constructor.SafeConstructor.add_constructor("!ndarray", ndarray_constructor)
+    yaml.constructor.SafeConstructor.add_constructor("!ndarray", construct_ndarray)
 
 
 def install_representers():
     """Install all YAML representers defined in this module"""
-    yaml.representer.SafeRepresenter.add_representer(np.ndarray, ndarray_representer)
+    yaml.representer.SafeRepresenter.add_representer(np.ndarray, represent_ndarray)
 
     for np_type_category in ['complex', 'float', 'int']:
         for tpe in np.sctypes[np_type_category]:
             yaml.representer.SafeRepresenter.add_representer(tpe,
-                                                             numpy_scalar_representer)
+                                                             represent_numpy_scalar)
 
 
 def strip_special(dtree, convert_np_arrays=False, convert_np_scalars=True):
