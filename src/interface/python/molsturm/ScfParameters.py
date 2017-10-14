@@ -49,7 +49,7 @@ class ScfParameters(ParameterMap):
     """The keys which do not start with "n_" and
        which still need to be of type size_t
     """
-    __size_t_keys = ["scf/max_iter", "scf/diis_size"]
+    __size_t_keys = ["scf/max_iter", "scf/diis_size", "scf/diis_startup_iter"]
 
     """The keys which need a ParamSpecial wrapper"""
     __special_keys = {
