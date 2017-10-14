@@ -23,4 +23,4 @@
 
 from ._impl import available_methods
 from ._adcc import generate_adcc_adcman_input, run_adcc_adcman
-from ._impl import mp2, mp3, adc0, adc1, adc2s, adc2x, adc3, fci
+from ._impl import mp2, mp3, adc0, adc1, adc2, adc2x, adc3, fci
