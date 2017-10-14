@@ -30,9 +30,9 @@ for file in $PWD/../../adcc/build/src/adcc_iface/adcc_iface.py $PWD/../../adcc/s
 	fi
 done
 
-for file in $PWD/../../pyscf/__init__.py; do
+for file in $PWD/../../pyscf/pyscf/__init__.py; do
 	if [ -f "$file" ]; then
-		dir=$(readlink -f $(dirname $file))
+		dir=$(readlink -f $(dirname $file)/..)
 		export PYTHONPATH="$PYTHONPATH:$dir"
 	else
 		break

@@ -32,7 +32,7 @@ for atom, mult in [("Be", 1), ("C", 3), ("Ne", 1)]:
 
     scfparams = molsturm.ScfParameters()
     scfparams.system = molsturm.MolecularSystem(atom, multiplicity=mult)
-    scfparams.basis = molsturm.Basis.construct("sturmian/atomic/cs_reference_pc",
+    scfparams.basis = molsturm.construct_basis("sturmian/atomic/cs_reference_pc",
                                                scfparams.system, k_exp=dummy,
                                                n_max=n_max, l_max=l_max)
 
