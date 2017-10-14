@@ -25,9 +25,10 @@ from .. import scf_guess
 from .._scf import self_consistent_field
 import numpy as np
 import scipy.optimize
+from ..MolecularSystem import MolecularSystem
 
 
-def empirical_kopt(scfparams):
+def empirical_kopt(system):
     """
     Estimate the optimal value for k for Hartree-Fock
     based on an empirical formula and some known values.
@@ -35,8 +36,14 @@ def empirical_kopt(scfparams):
     The result will be a good estimate, but still very far off.
     To obtain a better result, feed the obtained value for
     k into find_kopt.
+
+    The input parameter may be a molsturm.MolecularSystem object
+    or a molsturm.ScfParameters object.
     """
-    system = scfparams.system
+    if not isinstance(system, MolecularSystem):
+        # Assume that we got an ScfParameters object
+        system = system.system
+
     if len(system.atom_numbers) != 1:
         raise ValueError("Can only work on atomic systems")
     Z = system.atom_numbers[0]
