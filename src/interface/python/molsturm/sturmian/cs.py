@@ -53,6 +53,8 @@ def empirical_kopt(system):
     #      Z_eff and E_hydrogenic vs Z and such.
     # Intervals and the equations a*x + b
     intervals = [
+        {"start": 1, "end":   2, "estimate": lambda n: 1.0},
+        {"start": 2, "end":   3, "estimate": lambda n: 1.972},
         {"start": 3, "end":  11, "estimate": lambda n: 0.425 * n + 0.285},
         {"start": 11, "end":  19, "estimate": lambda n: 0.285 * n + 0.715},
         # Just out of my head
@@ -60,7 +62,7 @@ def empirical_kopt(system):
     ]
 
     for interval in intervals:
-        if Z >= interval["start"]:
+        if interval["start"] <= Z and Z < interval["end"]:
             return float(interval["estimate"](Z))
 
 

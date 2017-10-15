@@ -27,13 +27,13 @@ import molsturm.sturmian
 l_max = 1
 n_max = 5
 
-for atom, mult in [("Be", 1), ("C", 3), ("Ne", 1)]:
-    dummy = 0.0
-
+for atom, mult in [("He", 1), ("Be", 1), ("C", 3), ("Ne", 1)]:
     scfparams = molsturm.ScfParameters()
     scfparams.system = molsturm.MolecularSystem(atom, multiplicity=mult)
+
+    k_guess = molsturm.sturmian.cs.empirical_kopt(scfparams.system)
     scfparams.basis = molsturm.construct_basis("sturmian/atomic/cs_reference_pc",
-                                               scfparams.system, k_exp=dummy,
+                                               scfparams.system, k_exp=k_guess,
                                                n_max=n_max, l_max=l_max)
 
     scfparams["scf/eigensolver/method"] = "lapack"
