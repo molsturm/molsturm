@@ -127,6 +127,39 @@ def __extract_dataset(dataset):
   }
   return attribute_map[tpe](dataset)
 
+def __emplace_key_value(kv, group, **kwargs):
+  """
+  Emplace a single key-value pair in the group.
+
+  What precisely happends depends on the type of the value
+  to emplace.
+  """
+
+  def __emplace_dict_inner(kv, group, typ, **kwargs):
+    subgroup = group.create_group(kv[0])
+    emplace_dict(kv[1], subgroup)
+
+  emplace_map = [
+    (np.ndarray,   __emplace_ndarray    ),
+    (type(None),   __emplace_none       ),
+    (list,         __emplace_listlike   ),
+    (tuple,        __emplace_listlike   ),
+    (dict,         __emplace_dict_inner ),
+  ]
+
+  for (typ, emplace) in emplace_map:
+    if isinstance(kv[1], typ):
+      try:
+        emplace(kv, group, typ, **kwargs)
+      except TypeError as e:
+        raise TypeError("Error with key '"+kv[0]+"': "+str(e))
+      return
+
+  # Fallback: Assume value is a simple scalar type
+  try:
+    __emplace_scalar( kv, group, typ, **kwargs)
+  except TypeError as e:
+    raise TypeError("Error with key '"+kv[0]+"': "+str(e))
 
 #
 # High-level routines
@@ -137,36 +170,8 @@ def emplace_dict(d, group, **kwargs):
   Emplace a python dictionary "d" into the HDF5 group "group"
   using the kwargs to create all neccessary datasets.
   """
-  def __emplace_dict_inner(kv, group, typ, **kwargs):
-    subgroup = group.create_group(kv[0])
-    emplace_dict(kv[1], subgroup)
-
-  emplace_map = [
-    (np.ndarray,   __emplace_ndarray    ),
-    (type(None),   __emplace_none       ),
-    (list,         __emplace_listlike   ),
-    (tuple,        __emplace_listlike   ),
-    (dict,         __emplace_dict_inner ), 
-  ]
-
   for kv in d.items():
-    done=False
-
-    for (typ, emplace) in emplace_map:
-      if isinstance(kv[1], typ):
-        try:
-          emplace(kv, group, typ, **kwargs)
-        except TypeError as e:
-          raise TypeError("Error with key '"+kv[0]+"': "+str(e))
-        done=True
-        break
-
-    if not done:
-      # Fallback: Assume value is a simple scalar type
-      try:
-        __emplace_scalar( kv, group, typ, **kwargs)
-      except TypeError as e:
-        raise TypeError("Error with key '"+kv[0]+"': "+str(e))
+    __emplace_key_value(kv, group, **kwargs)
 
 
 def extract_group(group):
