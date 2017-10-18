@@ -40,10 +40,19 @@ def extrapolate_from_previous(old_state, scf_params):
             raise ValueError(message + "(guess: " + str(old_params[key]) +
                              ", scfparams: " + str(scf_params[key]))
 
-    check_agreement("scf/kind", "Cannot use restricted guess for unrestricted "
-                    "calculation or vice versa.")
-    check_agreement("discretisation/basis_type",
-                    "discretisation/basis_type do not agree")
+    if old_params["scf/kind"] != scf_params["scf/kind"]:
+        raise ValueError("Cannot use restricted guess for unrestricted " +
+                         "calculation or vice versa." +
+                         "(guess scf/kind: " + str(old_params["scf/kind"]) +
+                         ", scfparams: " + str(scf_params["scf/kind"]))
+
+    if not isinstance(old_params.basis, type(scf_params.basis)):
+        raise ValueError("The type of the basis used in guess and scfparams " +
+                         "has to agree. Note that the precise backend may differ." +
+                         "guess discretisation/basis_type: " +
+                         str(old_params["discretisation/basis_type"]) +
+                         ", scfparams: " +
+                         str(scf_params["discretisation/basis_type"]))
 
     old_orben_f = old_state["orben_f"]
     old_orbcoeff_bf = old_state["orbcoeff_bf"]
