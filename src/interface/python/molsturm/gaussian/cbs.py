@@ -60,7 +60,11 @@ def fit_cbs_curve(orders, quantities):
 
     def functional(x, E, A, B):
         return shift + E + A * np.exp(-B * np.sqrt(x))
-    popt, pcov = curve_fit(functional, orders, quantities)
+
+    try:
+        popt, pcov = curve_fit(functional, orders, quantities)
+    except RuntimeError as e:
+        raise RuntimeError("CBS curve fit failed, more info: " + str(e))
 
     # Correct shift:
     popt[0] += shift
@@ -80,11 +84,22 @@ class CBSExtrapolationResult:
     quantities   The quantities used to fit the cbs value
     states       The states of all calculations done.
                  Roughly speaking states[0] corresponds to orders[0]
+    success   Has the fit been successful. If this is false
+              the values of A, B, cbs are not sensible and
+              extrapolation_function should not be used.
     """
 
-    def __init__(self, orders, quantities, popt, pcov, states):
-        self.cbs, self.A, self.B = popt
-        self.cov = pcov
+    def __init__(self, orders, quantities, popt, pcov, states, success):
+        if popt is not None and pcov is not None:
+            self.cbs, self.A, self.B = popt
+            self.cov = pcov
+            self.success = success
+        else:
+            self.cbs = None
+            self.A = None
+            self.B = None
+            self.cov = None
+            self.success = False
         self.orders = orders
         self.quantities = quantities
         self.states = states
@@ -94,6 +109,9 @@ class CBSExtrapolationResult:
         Evaluate the extrapolated function for the CBS limit at a particular
         order x
         """
+        if not self.success:
+            raise ValueError("CBSExtrapolationResult does not contain a "
+                             "successful cbsfit.")
         return self.cbs + self.A * np.exp(-self.B * np.sqrt(x))
 
 
@@ -111,6 +129,12 @@ def extrapolate_cbs_limit(scfparams, n_points=3, quantity="hfenergy"):
 
     quantity may either be a string describing the quantity to compute
     or a function to take a state and return the quantity to extrapolate.
+
+    If the extrapolation fails the function returns a CBSExtrapolationResult
+    where the success flag is set to False. One may then retrieve
+    the states of the performed calculations and the derived quantities
+    for the fit, but the values of the CBS limit and the extrapolation_function
+    are not reliable.
     """
     scfparams = scfparams.copy()
     origbasis = scfparams.basis
@@ -187,6 +211,10 @@ def extrapolate_cbs_limit(scfparams, n_points=3, quantity="hfenergy"):
         quantities.append(quantity(res))
     quantities = np.array(quantities)
 
-    popt, pcov = fit_cbs_curve(orders, quantities)
+    try:
+        popt, pcov = fit_cbs_curve(orders, quantities)
+    except RuntimeError as e:
+        return CBSExtrapolationResult(orders, quantities, None, None,
+                                      states, success=False)
 
-    return CBSExtrapolationResult(orders, quantities, popt, pcov, states)
+    return CBSExtrapolationResult(orders, quantities, popt, pcov, states, success=True)
