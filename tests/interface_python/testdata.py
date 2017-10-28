@@ -113,6 +113,31 @@ def test_cases():
     return __test_cases_cache
 
 
+class predicates:
+    @staticmethod
+    def is_expensive():
+        return lambda test: test["testing"]["expensive"]
+
+    @staticmethod
+    def is_not_expensive():
+        return lambda test: not test["testing"]["expensive"]
+
+    @staticmethod
+    def all():
+        return lambda test: True
+
+    @staticmethod
+    def by_name(nameRegex):
+        if isinstance(nameRegex, str):
+            nameRegex = re.compile(nameRegex)
+        return lambda test: nameRegex.match(test["testing"]["name"])
+
+    @staticmethod
+    def tests_method(method):
+        """Should a particular method be tested for this test case"""
+        return lambda test: method in test
+
+
 def test_cases_by_pred(pred):
     """Return those test cases matching a given predicate"""
     return [case for case in test_cases() if pred(case)]
@@ -120,6 +145,4 @@ def test_cases_by_pred(pred):
 
 def test_cases_by_name(nameRegex):
     """Return the test case which matches the given name"""
-    if isinstance(nameRegex, str):
-        nameRegex = re.compile(nameRegex)
-    return test_cases_by_pred(lambda x: nameRegex.match(x["testing"]["name"]))
+    return test_cases_by_pred(predicates.by_name(nameRegex))

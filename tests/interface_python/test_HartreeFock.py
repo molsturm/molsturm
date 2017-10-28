@@ -22,7 +22,9 @@
 ## ---------------------------------------------------------------------
 
 from HartreeFockTestCase import HartreeFockTestCase
+from testdata import predicates
 import molsturm
+import test_constants
 import testdata
 import unittest
 
@@ -31,10 +33,14 @@ class TestHartreeFock(HartreeFockTestCase):
     """This test should assure that molsturm results stay the same
        between code changes or algorithm updates
     """
-
     @classmethod
     def setUpClass(cls):
-        cls.cases = testdata.test_cases()
+        # Select predicate to filter test cases:
+        if test_constants.RUN_EXPENSIVE:
+            pred = predicates.all()
+        else:
+            pred = predicates.is_not_expensive()
+        cls.cases = testdata.test_cases_by_pred(pred)
 
     def test_hf(self):
         for case in self.cases:

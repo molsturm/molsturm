@@ -21,10 +21,12 @@
 ##
 ## ---------------------------------------------------------------------
 
+from testdata import predicates
 import molsturm
 import numpy as np
 import os
 import tempfile
+import test_constants
 import testdata
 import unittest
 
@@ -32,7 +34,12 @@ import unittest
 class TestSerialisation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.cases = testdata.test_cases()
+        # Select predicate to filter test cases:
+        if test_constants.RUN_EXPENSIVE:
+            pred = predicates.all()
+        else:
+            pred = predicates.is_not_expensive()
+        cls.cases = testdata.test_cases_by_pred(pred)
 
     def assert_equal(self, d1, d2):
         self.assertListEqual([d1.keys()], [d2.keys()])

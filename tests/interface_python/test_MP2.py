@@ -23,9 +23,13 @@
 
 from molsturm import INPUT_PARAMETER_KEY
 from MP2TestCase import MP2TestCase
+from testdata import predicates
 import molsturm.posthf
 import testdata
 import unittest
+
+# TODO Note that this class is very similar to test_FCI and could
+#      perhaps be unified with it
 
 
 @unittest.skipUnless("mp2" in molsturm.posthf.available_methods,
@@ -37,17 +41,12 @@ class TestMP2(MP2TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.cases = testdata.test_cases()
+        cls.cases = testdata.test_cases_by_pred(predicates.tests_method("mp2"))
 
     def test_mp2(self):
         for case in self.cases:
             hf = case["hf"]
-
-            try:
-                mp2params = case["mp2"][INPUT_PARAMETER_KEY]
-            except KeyError:
-                # No mp2 test data available for this case
-                continue
+            mp2params = case["mp2"][INPUT_PARAMETER_KEY]
 
             mp2 = molsturm.posthf.mp2(hf, **mp2params)
             self.compare_mp2_results(case, mp2)

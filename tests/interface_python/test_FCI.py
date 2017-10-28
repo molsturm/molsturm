@@ -23,9 +23,13 @@
 
 from FciTestCase import FciTestCase
 from molsturm import INPUT_PARAMETER_KEY
+from testdata import predicates
 import molsturm.posthf
 import testdata
 import unittest
+
+# TODO Note that this class is very similar to test_MP2 and could
+#      perhaps be unified with it
 
 
 @unittest.skipUnless("fci" in molsturm.posthf.available_methods,
@@ -37,17 +41,12 @@ class TestFCI(FciTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.cases = testdata.test_cases()
+        cls.cases = testdata.test_cases_by_pred(predicates.tests_method("fci"))
 
     def test_fci(self):
         for case in self.cases:
             hf = case["hf"]
-
-            try:
-                fciparams = case["fci"][INPUT_PARAMETER_KEY]
-            except KeyError:
-                # No fci test data available for this case
-                continue
+            fciparams = case["fci"][INPUT_PARAMETER_KEY]
 
             fci = molsturm.posthf.fci(hf, **fciparams)
             self.compare_fci_results(case, fci)
