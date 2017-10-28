@@ -26,6 +26,7 @@ from .._scf import self_consistent_field
 import numpy as np
 import scipy.optimize
 from ..MolecularSystem import MolecularSystem
+import warnings
 
 
 def empirical_kopt(system):
@@ -58,8 +59,12 @@ def empirical_kopt(system):
         {"start": 3, "end":  11, "estimate": lambda n: 0.425 * n + 0.285},
         {"start": 11, "end":  19, "estimate": lambda n: 0.285 * n + 0.715},
         # Just out of my head
-        {"start": 19, "end": 10000, "estimate": lambda n: 0.2 * n + 1.1},
+        {"start": 19, "end": 10000, "estimate": lambda n: 0.21 * n + 2.1},
     ]
+    if Z > 19:
+        warnings.warn("empirical_kopt works on fitted data for the elements 1 to 19. "
+                      "The values for elements 20 (Calcium) and higher are entirely "
+                      "made up.")
 
     for interval in intervals:
         if interval["start"] <= Z and Z < interval["end"]:
