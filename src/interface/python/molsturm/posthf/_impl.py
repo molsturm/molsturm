@@ -29,7 +29,7 @@ from .._mp2 import mp2 as run_mp2
 def __build_available_methods():
   ret=[ "mp2" ]
   if adcc_found:
-    ret += [ "mp3", "adc0", "adc1", "adc2s", "adc2x", "adc3" ]
+    ret += [ "mp3", "adc0", "adc1", "adc2", "adc2x", "adc3" ]
   if pyscf_found:
     ret += [ "fci" ]
   return ret
@@ -95,7 +95,7 @@ def adc1(hfres, **params):
   __assert_available("adc1")
   return __forward_to_adcc(hfres, "adc1", **params)
 
-def adc2s(hfres, **params):
+def adc2(hfres, **params):
   """
   Take hf results and extra parameters as an input
   and run an Algebraic Diagrammatic Construction
@@ -103,7 +103,7 @@ def adc2s(hfres, **params):
 
   Return the resulting dictionary of computed data.
   """
-  __assert_available("adc2s")
+  __assert_available("adc2")
   return __forward_to_adcc(hfres, "adc2s", **params)
 
 def adc2x(hfres, **params):

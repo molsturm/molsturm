@@ -21,13 +21,12 @@
 ## ---------------------------------------------------------------------
 ## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
-import gint
 import molsturm
 import molsturm.posthf
 
 sys = molsturm.MolecularSystem(["beryllium"], [[0, 0, 0]])
-bas = gint.sturmian.atomic.Basis(sys, k_exp=2.1, n_max=11, l_max=0,
-                                 backend="cs_reference_pc")
+bas = molsturm.construct_basis("sturmian/atomic", sys, k_exp=2.1, n_max=11, l_max=0,
+                               backend="cs_reference_pc")
 res = molsturm.hartree_fock(sys, bas, conv_tol=1e-10, print_iterations=True)
 
 molsturm.print_convergence_summary(res)

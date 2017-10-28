@@ -22,11 +22,10 @@
 ## ---------------------------------------------------------------------
 
 import molsturm
-import gint
 
 
 system = molsturm.MolecularSystem(atoms=[4], coords=[[0, 0, 0]])
-basis = gint.gaussian.Basis(system, basis_set_name="def2-svp")
+basis = molsturm.construct_basis("gaussian", system, basis_set_name="def2-svp")
 
 
 def run(system, basis, extra={}):

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,28 +20,25 @@
 ## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
 ##
 ## ---------------------------------------------------------------------
-## vi: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
 import molsturm
 
-params = {
-  "atoms":         "C",
-  "multiplicity":  3,
-  "basis_type":    "sturmian/atomic/cs_reference_pc",
-  "k_exp":         3.3,
-  #
-  "eigensolver":   "lapack",
-  "guess_esolver": "lapack",
-}
+def main():
+    params = molsturm.ScfParameters()
+    params.system = molsturm.MolecularSystem("C", multiplicity=3)
+    params.basis = molsturm.construct_basis("sturmian/atomic/cs_reference_pc",
+                                            params.system, k_exp=3.3, n_max=4,
+                                            l_max=3)
+    params["scf/eigensolver/method"] = "lapack"
+    params["scf/print_iterations"] = True
+    params["guess/eigensolver/method"] = "lapack"
 
-def run(**extra):
-  params.update(extra)
-  res = molsturm.hartree_fock(**params)
-  molsturm.print_convergence_summary(res)
-  molsturm.print_energies(res)
-  molsturm.print_mo_occupation(res)
-  molsturm.print_quote(res)
-  return res
+    res = molsturm.self_consistent_field(params)
+    molsturm.print_convergence_summary(res)
+    molsturm.print_energies(res)
+    molsturm.print_mo_occupation(res)
+    molsturm.print_quote(res)
+    return res
 
 if __name__ == "__main__":
-  run(n_max=4,l_max=1)
+  main()

@@ -39,9 +39,7 @@ def represent_numpy_scalar(dumper, data):
 
 def construct_ndarray(loader, node):
     """YAML constructor for numpy arrays"""
-    print("construtor_node: ", node)
     value = loader.construct_sequence(node, deep=True)
-    print("constructor sees: ", value)
     return np.array(value)
 
 

@@ -21,7 +21,7 @@
 ##
 ## ---------------------------------------------------------------------
 
-from gint import Basis, available_basis_types
+from gint import construct_basis, available_basis_types
 from ._scf import self_consistent_field
 from ._scf_hliface import hartree_fock
 from ._scf_hliface import compute_derived_hartree_fock_energies

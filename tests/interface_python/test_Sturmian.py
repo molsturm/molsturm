@@ -40,7 +40,7 @@ class TestSturmian(NumCompTestCase):
                                     ", since basis type not available: " +
                                     basis_type)
 
-        scfparams.basis = molsturm.Basis.construct(basis_type,
+        scfparams.basis = molsturm.construct_basis(basis_type,
                                                    scfparams.system,
                                                    k_exp=0.0,  # dummy
                                                    n_max=case.n_max,

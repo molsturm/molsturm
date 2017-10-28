@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
 ## ---------------------------------------------------------------------
 ##
 ## Copyright (C) 2017 by the molsturm authors
@@ -19,31 +21,4 @@
 ##
 ## ---------------------------------------------------------------------
 
-echo "Searching for third-party packages (adcc and pyscf)"
-
-for file in $PWD/../../adcc/build/src/adcc_iface/adcc_iface.py $PWD/../../adcc/src/adcc_iface/adcc_iface.i; do
-	if [ -f "$file" ]; then
-		dir=$(readlink -f $(dirname $file))
-		export PYTHONPATH="$PYTHONPATH:$dir"
-	else
-		break
-	fi
-done
-
-for file in $PWD/../../pyscf/pyscf/__init__.py; do
-	if [ -f "$file" ]; then
-		dir=$(readlink -f $(dirname $file)/..)
-		export PYTHONPATH="$PYTHONPATH:$dir"
-	else
-		break
-	fi
-done
-
-export PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH"
-
-python3 <<- EOF
-from molsturm.posthf import available_methods
-print("Available post-HF methods:")
-for m in available_methods:
-  print("  ",m)
-EOF
+from .cbs import extrapolate_cbs_limit, fit_cbs_curve

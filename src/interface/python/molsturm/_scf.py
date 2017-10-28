@@ -46,8 +46,6 @@ def self_consistent_field(params):
     if isinstance(params, ScfParameters):
         # Make a shallow copy before we modify the parameters
         params = params.copy()
-    elif isinstance(params, dict):
-        return self_consistent_field(ScfParameters.from_dict(params))
     else:
         raise TypeError("params needs to be an ScfParameters object.")
 
@@ -85,10 +83,6 @@ def self_consistent_field(params):
     #      on the input side. Rework it.
     #
     assert res.n_bas == scf_sizes.n_bas
-    #
-    # TODO Better return a dict-like class instead of a dict. That way
-    #      we can use the class more easily and distinguish between results
-    #      at different levels better.
     res_keys = [k for k in dir(iface.ScfResults) if k[0] != "_"]
     shape_lookup = {"f": res.n_orbs_alpha + res.n_orbs_beta,
                     "b": res.n_bas}

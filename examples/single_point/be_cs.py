@@ -22,11 +22,10 @@
 ## ---------------------------------------------------------------------
 
 import molsturm
-import gint
 
 
 system = molsturm.MolecularSystem(atoms=[4], coords=[[0, 0, 0]])
-basis = gint.sturmian.atomic.Basis(system, k_exp=2.3, n_max=4, l_max=1)
+basis = molsturm.construct_basis("sturmian/atomic", system, k_exp=2.3, n_max=4, l_max=1)
 
 
 def run_matrix_free(system, basis, extra={}):

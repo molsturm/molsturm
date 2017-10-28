@@ -59,14 +59,14 @@ def hartree_fock(system, basis=None, basis_type=None,
     influence the bahaviour of an SCF, see the function self_consistent_field.
     This function "hartree_fock" is essentially a wrapper around
     self_consistent_field, which performs roughly the steps:
-        basis = molsturm.Basis.construct(system, **kwargs)
+        basis = molsturm.construct_basis(system, **kwargs)
         params = ScfParameters.from_args(system, basis, conv_tol, max_iter, ...)
         self_consistent_field(params)
     """
     if basis is None:
         if basis_type is None:
             raise ValueError("Either the basis or the basis_type needs to be given.")
-        basis = gint.Basis.construct(basis_type, system, **kwargs)
+        basis = gint.construct_basis(basis_type, system, **kwargs)
 
     # Construct guess from the HF arguments
     params = ScfParameters.from_args(system, basis, conv_tol, max_iter, n_eigenpairs,

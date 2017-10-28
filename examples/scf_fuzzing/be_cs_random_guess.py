@@ -21,7 +21,6 @@
 ##
 ## ---------------------------------------------------------------------
 
-import gint
 import molsturm
 import multiprocessing
 import numpy as np
@@ -33,8 +32,9 @@ n_points = 100
 error = 1e-7
 
 system = molsturm.MolecularSystem("Be")
-basis = gint.sturmian.atomic.Basis(system, k_exp=1.3, n_max=3, l_max=2,
-                                   backend="cs_static14")
+basis = molsturm.construct_basis("sturmian/atomic",
+                                 system, k_exp=1.3, n_max=3, l_max=2,
+                                 backend="cs_static14")
 
 # We want the data gathering to be parallel ...
 try:

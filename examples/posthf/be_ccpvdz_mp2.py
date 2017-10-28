@@ -25,7 +25,7 @@ import molsturm
 import molsturm.posthf
 
 sys = molsturm.MolecularSystem([4], [[0, 0, 0]])
-res = molsturm.hartree_fock(sys, basis_type="gaussian/libint", basis_set_name="cc-pvdz",
+res = molsturm.hartree_fock(sys, basis_type="gaussian", basis_set_name="cc-pvdz",
                             print_iterations=True, conv_tol=1e-10)
 molsturm.print_convergence_summary(res)
 molsturm.print_energies(res)

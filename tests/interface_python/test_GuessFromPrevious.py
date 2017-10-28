@@ -76,10 +76,9 @@ class TestFromPrevious(HartreeFockTestCase):
         smallparams = scfparams.copy()
         origbasis = scfparams.basis
 
-        smallparams.basis = molsturm.Basis.construct(
-            "sturmian/atomic/" + origbasis.backend,
-            scfparams.system, n_max=n_max, l_max=l_max,
-            m_max=m_max, k_exp=origbasis.k_exp,
+        smallparams.basis = molsturm.construct_basis(
+            "sturmian/atomic", scfparams.system, n_max=n_max, l_max=l_max,
+            m_max=m_max, k_exp=origbasis.k_exp, backend=origbasis.backend
         )
         smallres = molsturm.self_consistent_field(smallparams)
 

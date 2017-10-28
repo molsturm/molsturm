@@ -25,9 +25,11 @@ from .. import scf_guess
 from .._scf import self_consistent_field
 import numpy as np
 import scipy.optimize
+from ..MolecularSystem import MolecularSystem
+import warnings
 
 
-def empirical_kopt(scfparams):
+def empirical_kopt(system):
     """
     Estimate the optimal value for k for Hartree-Fock
     based on an empirical formula and some known values.
@@ -35,8 +37,14 @@ def empirical_kopt(scfparams):
     The result will be a good estimate, but still very far off.
     To obtain a better result, feed the obtained value for
     k into find_kopt.
+
+    The input parameter may be a molsturm.MolecularSystem object
+    or a molsturm.ScfParameters object.
     """
-    system = scfparams.system
+    if not isinstance(system, MolecularSystem):
+        # Assume that we got an ScfParameters object
+        system = system.system
+
     if len(system.atom_numbers) != 1:
         raise ValueError("Can only work on atomic systems")
     Z = system.atom_numbers[0]
@@ -46,14 +54,20 @@ def empirical_kopt(scfparams):
     #      Z_eff and E_hydrogenic vs Z and such.
     # Intervals and the equations a*x + b
     intervals = [
+        {"start": 1, "end":   2, "estimate": lambda n: 1.0},
+        {"start": 2, "end":   3, "estimate": lambda n: 1.972},
         {"start": 3, "end":  11, "estimate": lambda n: 0.425 * n + 0.285},
         {"start": 11, "end":  19, "estimate": lambda n: 0.285 * n + 0.715},
         # Just out of my head
-        {"start": 19, "end": 10000, "estimate": lambda n: 0.2 * n + 1.1},
+        {"start": 19, "end": 10000, "estimate": lambda n: 0.21 * n + 2.1},
     ]
+    if Z > 19:
+        warnings.warn("empirical_kopt works on fitted data for the elements 1 to 19. "
+                      "The values for elements 20 (Calcium) and higher are entirely "
+                      "made up.")
 
     for interval in intervals:
-        if Z >= interval["start"]:
+        if interval["start"] <= Z and Z < interval["end"]:
             return float(interval["estimate"](Z))
 
 

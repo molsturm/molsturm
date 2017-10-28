@@ -23,3 +23,4 @@
 
 
 PRINT_TIMINGS = False           # Print timings?
+RUN_EXPENSIVE = False           # Run expensive tasks?

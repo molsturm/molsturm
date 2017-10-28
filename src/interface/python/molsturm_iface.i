@@ -39,6 +39,7 @@
     PyErr_SetString(PyExc_NotImplementedError, e.what());
     return NULL;
   } catch (const molsturm::iface::ExcInvalidParameters& e) {
+    // TODO Better use a ValueError ??
     PyErr_SetString(PyExc_RuntimeError, e.extra().c_str());
     return NULL;
   } catch (const krims::ExceptionBase& e) {
