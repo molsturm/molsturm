@@ -39,7 +39,7 @@ for file in $PWD/../../pyscf/pyscf/__init__.py; do
 	fi
 done
 
-export PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH"
+export PYTHONPATH=":$PYTHONPATH"
 
 python3 <<- EOF
 from molsturm.posthf import available_methods
