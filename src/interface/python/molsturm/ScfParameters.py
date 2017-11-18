@@ -343,7 +343,7 @@ class ScfParameters(ParameterMap):
             if "max_error_norm" in scf:
                 warnings.warn("Overriding scf/nlm_basis in ScfParameters, "
                               "since scf/conv_tol is given.")
-            scf["max_error_norm"] = scf["conv_tol"]
+            scf["max_error_norm"] = float(scf["conv_tol"])
             del scf["conv_tol"]
         scf.setdefault("max_error_norm", 5e-7)
         scf.setdefault("max_1e_energy_change", float(scf["max_error_norm"] * 100.))
