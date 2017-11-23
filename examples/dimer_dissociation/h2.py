@@ -25,10 +25,16 @@ import dissociation
 from matplotlib import pyplot as plt
 
 z, f = dissociation.compute_curve("h", "def2-sv(p)", n_points=35,
-                                  restricted=True)
+                                  restricted=True, method="hf")
 plt.plot(z, f, label="restricted")
 z, f = dissociation.compute_curve("h", "def2-sv(p)", n_points=35,
-                                  restricted=False)
+                                  restricted=False, method="hf")
 plt.plot(z, f, label="unrestricted")
+z, f = dissociation.compute_curve("h", "def2-sv(p)", n_points=35,
+                                  restricted=True, method="mp2")
+plt.plot(z, f, label="MP2 restricted")
+z, f = dissociation.compute_curve("h", "def2-sv(p)", n_points=35,
+                                  restricted=False, method="mp2")
+plt.plot(z, f, label="MP2 unrestricted")
 plt.legend()
 plt.show()
