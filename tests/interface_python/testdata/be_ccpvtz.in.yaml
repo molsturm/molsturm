@@ -1,0 +1,22 @@
+# Info for the data generator script
+include:
+  - dump_hdf5
+
+# Info for the test execution
+testing:
+  max_n_iter:        8
+  expensive:         True
+  numeric_tolerance: 1.e-7
+
+# Input:
+input_parameters:
+  system:
+    atoms:          [ be ]
+    coords:         [ [0,0,0] ]
+    n_alpha:        2
+    n_beta:         2
+  discretisation:
+    basis_type:     "gaussian/libint"
+    basis_set_name: cc-pvtz
+  scf:
+    conv_tol:       1.e-8

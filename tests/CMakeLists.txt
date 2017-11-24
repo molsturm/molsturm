@@ -52,6 +52,7 @@ ENDFOREACH()
 set(Python_ADDITIONAL_VERSIONS 3)
 find_package(PythonInterp REQUIRED)
 
+
 # The pythonpath we need to use for the python tests
 set(PYTHONPATH
 "${molsturm_SOURCE_DIR}/src/interface/python:\
@@ -73,3 +74,6 @@ set_tests_properties(molsturm_interface_python_tests
 	ENVIRONMENT "PYTHONPATH=${PYTHONPATH}"
 	TIMEOUT 600 # This one is quite a lot and hence takes longer
 )
+
+# Download the required test data
+include(DownloadTestData.cmake)
