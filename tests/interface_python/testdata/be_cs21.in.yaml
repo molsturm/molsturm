@@ -1,8 +1,9 @@
 # Info for the data generator script
-include:
-  - dump_hdf5
-  - posthf_mp2
-  - posthf_fci
+generator:
+  include:
+    - dump_hdf5
+    - posthf_mp2
+    - posthf_fci
 
 # Info for the test execution
 testing:

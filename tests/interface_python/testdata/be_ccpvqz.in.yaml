@@ -1,23 +1,24 @@
 # Info for the data generator script
 generator:
+  store_on_webserver: True
   include:
     - dump_hdf5
-    - posthf_mp2
 
 # Info for the test execution
 testing:
   max_n_iter:        8
-  expensive:         False
-  numeric_tolerance: 5.e-6
+  expensive:         True
+  numeric_tolerance: 1.e-7
 
 # Input:
 input_parameters:
   system:
-    atoms:          [ C ]
+    atoms:          [ be ]
     coords:         [ [0,0,0] ]
-    multiplicity:   3
+    n_alpha:        2
+    n_beta:         2
   discretisation:
     basis_type:     "gaussian/libint"
-    basis_set_name: "3-21g"
+    basis_set_name: cc-pvqz
   scf:
-    conv_tol:     1.e-7
+    conv_tol:       1.e-8

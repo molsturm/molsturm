@@ -1,7 +1,8 @@
 # Info for the data generator script
-include:
-  - dump_yaml
-  - posthf_mp2
+generator:
+  include:
+    - dump_yaml
+    - posthf_mp2
 
 # Info for the test execution
 testing:

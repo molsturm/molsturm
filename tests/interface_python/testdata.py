@@ -26,44 +26,46 @@ import molsturm.yaml_utils
 import os
 import re
 import yaml
+import directories
 
 
-def dir_of_this_script():
-    return os.path.dirname(os.path.abspath(__file__))
-
-
-"""Directory with the reference cases"""
-REFERENCE_DIR = os.path.join(dir_of_this_script(), "refdata")
-
-
-"""Directory with the test cases"""
-TESTDATA_DIR = os.path.join(dir_of_this_script(), "testdata")
-
-
-def __parse_test_case(infile):
+def __parse_test_case(subdir, infile):
+    """
+    subdir:  The subdirectory in which the infile was found
+             (either "testdata" or "refdata")
+    infile:  The input filename (path relative to the directory above)
+    """
     # The possible posthf cases:
     posthf_cases = ["mp2", "fci"]
 
-    # Testcase directory is composed of the files
+    # A test case is split up over these files:
     #   case.in.yaml  -> molsturm hartree_fock input and test metadata
     #   case.hf.yaml  -> hartree fock reference result
+    #   case.hf.hdf5  -> hartree fock reference result
     #   case.mp2.yaml -> mp2 reference result
     #   case.fci.yaml -> fci reference result
-    # So this next variable gives the part excluding
-    # the varying extension:
-    basepath = infile[:-len(".in.yaml")]
-    ret = {"testing": {"name": os.path.basename(basepath)}, }
+    # Since some of these files might get rather large,
+    # they might not exist inside the actual repository,
+    # but in fact reside on a webserver from which they are downloaded
+    # into the binary directory by CMake.
+    # In either case the part first part of the file name gives
+    # the name of the test case:
+    name = infile[:-len(".in.yaml")]
 
-    # Load "hf" subtree from hf file
-    if os.path.exists(basepath + ".hf.yaml"):
-        ret["hf"] = molsturm.load_yaml(basepath + ".hf.yaml")
-    elif os.path.exists(basepath + ".hf.hdf5"):
-        ret["hf"] = molsturm.load_hdf5(basepath + ".hf.hdf5")
+    basepath = os.path.join(subdir, name)
+    ret = {"testing": {"name": name}, }
+
+    # Find and load "hf" subtree:
+    if directories.exists(basepath + ".hf.yaml"):
+        ret["hf"] = molsturm.load_yaml(directories.find(basepath + ".hf.yaml"))
+    elif directories.exists(basepath + ".hf.hdf5"):
+        ret["hf"] = molsturm.load_hdf5(directories.find(basepath + ".hf.hdf5"))
     else:
         raise ValueError("No hf results found for " + infile)
 
     # Load "input_parameters" and "testing" subtree from in file
-    with open(basepath + ".in.yaml", "r") as f:
+    infile_full = directories.find(basepath + ".in.yaml")
+    with open(infile_full, "r") as f:
         params = yaml.safe_load(f)
     ret["input_parameters"] = params["input_parameters"]
 
@@ -75,8 +77,8 @@ def __parse_test_case(infile):
     molsturm.yaml_utils.install_constructors()
     for sub in posthf_cases:
         yamlfile = basepath + "." + sub + ".yaml"
-        if os.path.isfile(yamlfile):
-            with open(yamlfile) as f:
+        if directories.exists(yamlfile):
+            with open(directories.find(yamlfile)) as f:
                 ret[sub] = yaml.safe_load(f)
 
     return ret
@@ -92,10 +94,10 @@ def reference_cases():
 
     """Return the list of test cases against reference data"""
     if __reference_cases_cache is None:
+        testnames = [os.path.basename(f)
+                     for f in directories.iglob(os.path.join("refdata", "*.in.yaml"))]
         __reference_cases_cache = [
-            __parse_test_case(os.path.join(REFERENCE_DIR, fname))
-            for fname in os.listdir(REFERENCE_DIR)
-            if fname.endswith(".in.yaml")
+            __parse_test_case("refdata", name) for name in sorted(set(testnames))
         ]
     return __reference_cases_cache
 
@@ -105,10 +107,10 @@ def test_cases():
     global __test_cases_cache
 
     if __test_cases_cache is None:
+        testnames = [os.path.basename(f)
+                     for f in directories.iglob(os.path.join("testdata", "*.in.yaml"))]
         __test_cases_cache = [
-            __parse_test_case(os.path.join(TESTDATA_DIR, fname))
-            for fname in os.listdir(TESTDATA_DIR)
-            if fname.endswith(".in.yaml")
+            __parse_test_case("testdata", name) for name in sorted(set(testnames))
         ]
     return __test_cases_cache
 

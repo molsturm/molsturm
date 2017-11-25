@@ -22,27 +22,37 @@
 ## ---------------------------------------------------------------------
 
 import molsturm
+import molsturm.posthf
 import numpy as np
 
 
 def compute_curve(atom, basis_set="sto-3g", conv_tol=1e-6, zrange=(0.5, 8.0), n_points=25,
-                  restricted=False, verbose=False):
+                  restricted=False, verbose=False, method="hf"):
+    if method not in ["hf", "mp2"]:
+        raise ValueError("Only implemented for hf and mp2")
+
     z = np.linspace(zrange[0], zrange[1], n_points)
     f = np.empty_like(z)
     previous_hf = None
 
-    for i in range(len(z) - 1, -1, -1):
+    idcs = np.argsort(z)[::-1]
+    for i in idcs:
         sys = molsturm.MolecularSystem(atoms=[atom, atom],
                                        coords=[(0, 0, 0), (0, 0, z[i])])
 
-        guess = previous_hf if previous_hf is not None else "hcore"
+        guess = previous_hf if previous_hf is not None else "random"
         try:
             hf = molsturm.hartree_fock(sys, basis_type="gaussian", conv_tol=conv_tol,
                                        basis_set_name=basis_set, guess=guess,
                                        restricted=restricted, print_iterations=verbose,
                                        max_iter=100)
+
+            if previous_hf is None:
+                previous_hf = hf
+            if method == "mp2":
+                hf = molsturm.posthf.mp2(hf)
+
             f[i] = hf["energy_ground_state"]
-            previous_hf = hf
         except RuntimeError as e:
             print("Caught error for z=", z[i])
             print(str(e))

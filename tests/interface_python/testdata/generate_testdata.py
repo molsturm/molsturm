@@ -30,6 +30,7 @@ import yaml
 
 
 SKIPPED_SINCE_DONE = "Skipped since already done."
+HASH_EXT = "sha256"  # The extension to check for if check_for_hash
 
 
 def build_input_params():
@@ -66,74 +67,85 @@ def run_scf_calculation(name, scfparams):
         calculation_scf_cache[name] = molsturm.self_consistent_field(scfparams)
     return calculation_scf_cache[name]
 
-# --------------------------------------------------------------------
-
-
-def job_dump_yaml(name, scfparams, dump_params):
-    """Run a full calculation and dump the result as a yaml file"""
-    output = name + ".hf.yaml"
-    if not os.path.exists(output):
-        res = run_scf_calculation(name, scfparams)
-
-        # Remove keys which are given by the parameters
-        for key in dump_params.get("remove_keys", []):
-            if key in res:
-                del res[key]
-
-        molsturm.dump_yaml(res, output)
-    else:
-        print_status("dump_yaml", message=SKIPPED_SINCE_DONE)
-
-
-def job_dump_hdf5(name, scfparams, dump_params):
-    """Run a full calculation and dump the result as a yaml file"""
-    output = name + ".hf.hdf5"
-    if not os.path.exists(output):
-        res = run_scf_calculation(name, scfparams)
-
-        # Remove keys which are given by the parameters
-        for key in dump_params.get("remove_keys", []):
-            if key in res:
-                del res[key]
-
-        molsturm.dump_hdf5(res, output)
-    else:
-        print_status("dump_hdf5", message=SKIPPED_SINCE_DONE)
-
-
-def job_posthf_mp2(name, scfparams, mp_params):
-    output = name + ".mp2.yaml"
-    if not os.path.exists(output):
-        hfres = run_scf_calculation(name, scfparams)
-        print_status("posthf_mp2", "Running MP2")
-        mp2 = molsturm.posthf.mp2(hfres, **mp_params)
-
-        molsturm.yaml_utils.install_representers()
-        with open(output, "w") as f:
-            yaml.safe_dump(mp2, f)
-    else:
-        print_status("posthf_mp2", message=SKIPPED_SINCE_DONE)
-
-
-def job_posthf_fci(name, scfparams, fci_params):
-    output = name + ".fci.yaml"
-    if not os.path.exists(output):
-        hfres = run_scf_calculation(name, scfparams)
-        print_status("posthf_fci", "Running Full-CI")
-        fci = molsturm.posthf.fci(hfres, **fci_params)
-
-        molsturm.yaml_utils.install_representers()
-        with open(output, "w") as f:
-            yaml.safe_dump(fci, f)
-    else:
-        print_status("posthf_fci", message=SKIPPED_SINCE_DONE)
 
 # --------------------------------------------------------------------
 
 
-def work_on_case(name, scfparams, jobs):
+def job_dump_yaml(name, output, scfparams, dump_params):
+    """Run a full calculation and dump the result as a yaml file"""
+    res = run_scf_calculation(name, scfparams)
+
+    # Remove keys which are given by the parameters
+    for key in dump_params.get("remove_keys", []):
+        if key in res:
+            del res[key]
+    molsturm.dump_yaml(res, output)
+
+
+def job_dump_hdf5(name, output, scfparams, dump_params):
+    """Run a full calculation and dump the result as a yaml file"""
+    res = run_scf_calculation(name, scfparams)
+
+    # Remove keys which are given by the parameters
+    for key in dump_params.get("remove_keys", []):
+        if key in res:
+            del res[key]
+    molsturm.dump_hdf5(res, output)
+
+
+def job_posthf_mp2(name, output, scfparams, mp_params):
+    hfres = run_scf_calculation(name, scfparams)
+    print_status("posthf_mp2", "Running MP2")
+    mp2 = molsturm.posthf.mp2(hfres, **mp_params)
+
+    molsturm.yaml_utils.install_representers()
+    with open(output, "w") as f:
+        yaml.safe_dump(mp2, f)
+
+
+def job_posthf_fci(name, output, scfparams, fci_params):
+    hfres = run_scf_calculation(name, scfparams)
+    print_status("posthf_fci", "Running Full-CI")
+    fci = molsturm.posthf.fci(hfres, **fci_params)
+
+    molsturm.yaml_utils.install_representers()
+    with open(output, "w") as f:
+        yaml.safe_dump(fci, f)
+
+
+job_dump_yaml.extension = "hf.yaml"
+job_dump_hdf5.extension = "hf.hdf5"
+job_posthf_mp2.extension = "mp2.yaml"
+job_posthf_fci.extension = "fci.yaml"
+
+# --------------------------------------------------------------------
+
+
+def run_job(name, jobfunction, scfparams, jobparams, check_for_hash):
+    """
+    Common stuff to do before and after a payload run for each job
+    """
+    output = name + "." + jobfunction.extension
+    checkfile = output if not check_for_hash else output + "." + HASH_EXT
+
+    if not os.path.exists(checkfile):
+        jobfunction(name, output, scfparams, jobparams)
+
+        # Create an empty checkfile if not yet done:
+        if not os.path.exists(checkfile):
+            open(checkfile, "w").close()
+    else:
+        # Name of the jobfunction with the "job_" prefix
+        # removed is the jobname
+        jobname = jobfunction.__name__[4:]
+        print_status(jobname, message=SKIPPED_SINCE_DONE)
+
+
+def work_on_case(name, scfparams, generator_params):
     print_file_start(name)
-    for job in jobs:
+    store_on_server = generator_params.get("store_on_webserver", False)
+
+    for job in generator_params["include"]:
         if isinstance(job, str):
             jobname = job
             jobparams = {}
@@ -143,11 +155,18 @@ def work_on_case(name, scfparams, jobs):
             raise SystemExit("Invalid entry in include list of type '" + type(job) +
                              "' found.")
 
+        # Try to find the jobfunction and then execute it
         try:
-            globals()["job_" + jobname](name, scfparams, jobparams)
+            jobfunction = globals()["job_" + jobname]
         except KeyError:
             raise SystemExit("Unknown job name '" + jobname + "' in input file '" +
                              name + ".in.yaml'")
+
+        # Run the job, use the file with the hash extension to see whether
+        # running the payload jobfunction is needed if we will store
+        # the file on the server (because in that case the actual file
+        # will sit somewhere else in the filesystem)
+        run_job(name, jobfunction, scfparams, jobparams, check_for_hash=store_on_server)
 
 
 def main():
@@ -158,11 +177,8 @@ def main():
         scfparams = molsturm.ScfParameters.from_dict(inputs[name]["input_parameters"])
         scfparams.normalise()
 
-        # The include list of jobs which should be performed
-        # on this input:
-        include = inputs[name]["include"]
-
-        work_on_case(name, scfparams, include)
+        # Work on the case and pass the generator arguments:
+        work_on_case(name, scfparams, inputs[name]["generator"])
 
 
 if __name__ == "__main__":
