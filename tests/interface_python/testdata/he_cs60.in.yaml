@@ -1,9 +1,10 @@
 # Info for the data generator script
-include:
-  - dump_yaml
-  - posthf_mp2
-  - posthf_fci:
-      n_roots: 4
+generator:
+  include:
+    - dump_yaml
+    - posthf_mp2
+    - posthf_fci:
+        n_roots: 4
 
 # Info for the test execution
 testing:

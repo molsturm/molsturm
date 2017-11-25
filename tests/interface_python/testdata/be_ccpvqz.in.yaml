@@ -1,6 +1,8 @@
 # Info for the data generator script
-include:
-  - dump_hdf5
+generator:
+  store_on_webserver: True
+  include:
+    - dump_hdf5
 
 # Info for the test execution
 testing:
