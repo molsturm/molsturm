@@ -28,8 +28,36 @@ from ._scf_hliface import compute_derived_hartree_fock_energies
 from ._scf_hliface import compute_exchange_ff, compute_coulomb_ff
 from .ScfParameters import ScfParameters
 from ._print import *
-from ._serialisation import dump_hdf5, load_hdf5, metadata_hdf5
-from ._serialisation import dump_yaml, load_yaml, metadata_yaml
+from ._serialisation import dump_state, load_state, load_metadata
 from ._iface import Version
 from ._constants import INPUT_PARAMETER_KEY
 from .MolecularSystem import MolecularSystem
+import warnings
+
+
+def load_hdf5(*args, **kwargs):
+    warnings.warn("Use load_state function instead. "
+                  "This function will be removed after the next release.",
+                  DeprecationWarning)
+    return load_state(*args, type="hdf5", **kwargs)
+
+
+def load_yaml(*args, **kwargs):
+    warnings.warn("Use load_state function instead. "
+                  "This function will be removed after the next release.",
+                  DeprecationWarning)
+    return load_state(*args, type="yaml", **kwargs)
+
+
+def dump_hdf5(*args, **kwargs):
+    warnings.warn("Use dump_state function instead. "
+                  "This function will be removed after the next release.",
+                  DeprecationWarning)
+    return dump_state(*args, type="hdf5", **kwargs)
+
+
+def dump_yaml(*args, **kwargs):
+    warnings.warn("Use dump_state function instead. "
+                  "This function will be removed after the next release.",
+                  DeprecationWarning)
+    return dump_state(*args, type="yaml", **kwargs)

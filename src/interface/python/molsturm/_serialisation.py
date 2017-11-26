@@ -30,6 +30,7 @@ from ._iface import Version
 from . import _hdf5 as hdf5
 from io import IOBase
 import numpy as np
+import os
 import yaml
 
 
@@ -47,7 +48,7 @@ def metadata_common():
 #
 # Yaml
 #
-def dump_yaml(hfres, stream):
+def _dump_yaml(hfres, stream):
     """Take a HartreeFock result and dump the data
        in yaml format.
 
@@ -65,7 +66,7 @@ def dump_yaml(hfres, stream):
     """
     if isinstance(stream, str):
         with open(stream, "w") as f:
-            return dump_yaml(hfres, f)
+            return _dump_yaml(hfres, f)
     elif not isinstance(stream, IOBase):
         raise TypeError("stream parameter needs to be a string or a stream object")
 
@@ -83,7 +84,7 @@ def dump_yaml(hfres, stream):
     yaml.safe_dump(res, stream)
 
 
-def load_yaml(stream):
+def _load_yaml(stream, meta_check=True):
     """Read an input file or stream in the molsturm yaml format
        and return the parsed hfres dictionary.
 
@@ -100,35 +101,36 @@ def load_yaml(stream):
 
     if isinstance(stream, str):
         with open(stream, "r") as f:
-            return load_yaml(f)
+            return _load_yaml(f)
     elif not isinstance(stream, IOBase):
         raise TypeError("stream parameter needs to be a string or a stream object")
 
     res = yaml.load(stream)
 
     # Check metadata:
-    try:
-        meta_type = res["meta"]["format_type"]
-        meta_version = res["meta"]["format_version"]
-    except KeyError as e:
-        raise ValueError("Yaml stream metadata seems to be missing or corrupted. "
-                         "The key " + str(e.args[0]) + " is missing.")
+    if meta_check:
+        try:
+            meta_type = res["meta"]["format_type"]
+            meta_version = res["meta"]["format_version"]
+        except KeyError as e:
+            raise ValueError("Yaml stream metadata seems to be missing or corrupted. "
+                             "The key " + str(e.args[0]) + " is missing.")
 
-    if meta_type != "yaml":
-        raise ValueError("Yaml stream format is not 'yaml', but '" +
-                         str(meta_type) + "'.")
+        if meta_type != "yaml":
+            raise ValueError("Yaml stream format is not 'yaml', but '" +
+                             str(meta_type) + "'.")
 
-    if StrictVersion(meta_version) < StrictVersion(parser_min_version):
-        raise ValueError("Parser not compatible to versions below " +
-                         parser_min_version + ". Encountered version " +
-                         meta_version + ".")
-    elif StrictVersion(meta_version) > StrictVersion(parser_max_version):
-        raise ValueError("Parser not compatible to versions beyond " +
-                         parser_max_version + ". Encountered version " +
-                         meta_version + ".")
+        if StrictVersion(meta_version) < StrictVersion(parser_min_version):
+            raise ValueError("Parser not compatible to versions below " +
+                             parser_min_version + ". Encountered version " +
+                             meta_version + ".")
+        elif StrictVersion(meta_version) > StrictVersion(parser_max_version):
+            raise ValueError("Parser not compatible to versions beyond " +
+                             parser_max_version + ". Encountered version " +
+                             meta_version + ".")
 
     # Remove metadata block
-    del res["meta"]
+    res.pop("meta", None)
 
     # Convert plain list of lists to numpy arrays
     for k in HFRES_ARRAY_KEYS:
@@ -137,13 +139,13 @@ def load_yaml(stream):
     return State(res)
 
 
-def metadata_yaml(stream):
+def _metadata_yaml(stream):
     """Extract meta data block of a molsturm yaml file and return as a dictionary
        Returns None no meta data block found
     """
     if isinstance(stream, str):
         with open(stream, "r") as f:
-            return metadata_yaml(f)
+            return _metadata_yaml(f)
     elif not isinstance(stream, IOBase):
         raise TypeError("stream parameter needs to be a string or a stream object")
 
@@ -157,7 +159,7 @@ def metadata_yaml(stream):
 #
 # HDF5
 #
-def dump_hdf5(hfres, path):
+def _dump_hdf5(hfres, path):
     """Take a HartreeFock result and dump the data in hdf5 format.
        Most of the data will be plain text, but the large numpy
        arrays are stored in binary form.
@@ -187,7 +189,7 @@ def dump_hdf5(hfres, path):
             h5f.attrs[attr] = meta[attr]
 
 
-def load_hdf5(path, meta_check=True):
+def _load_hdf5(path, meta_check=True):
     """Read an input file or stream in the molsturm hdf5 format
        and return the parsed hfres dictionary.
 
@@ -230,9 +232,88 @@ def load_hdf5(path, meta_check=True):
         return State(hdf5.extract_group(h5f))
 
 
-def metadata_hdf5(path):
+def _metadata_hdf5(path):
     """Extract meta data block of an hdf5 file and return as a dictionary
        Returns None no meta data block found
     """
     with h5py.File(path, "r") as h5f:
         return {at: h5f.attrs[at] for at in h5f.attrs}
+
+
+#
+# Common interface
+#
+__dump_funcs = {
+    "hdf5": _dump_hdf5,
+    "h5": _dump_hdf5,
+    "hdf": _dump_hdf5,
+    "yaml": _dump_yaml,
+    "yml": _dump_yaml,
+}
+
+__load_funcs = {
+    "hdf5": _load_hdf5,
+    "h5": _load_hdf5,
+    "hdf": _load_hdf5,
+    "yaml": _load_yaml,
+    "yml": _load_yaml,
+}
+
+__metadata_funcs = {
+    "hdf5": _metadata_hdf5,
+    "h5": _metadata_hdf5,
+    "hdf": _metadata_hdf5,
+    "yaml": _metadata_yaml,
+    "yml": _metadata_yaml,
+}
+
+
+def dump_state(state, path, type="auto"):
+    """
+    state:   State object resulting from an SCF calculation
+    path:    Path to dump the state
+    type:    Type to use for dumping. If "auto" it will be determined
+             from the file extension.
+    """
+    _, ext = os.path.splitext(path)
+    ext = ext[1:]  # remove leading .
+
+    if ext not in __dump_funcs:
+        raise ValueError("Unrecognised dump file extension: " + ext + ".")
+    else:
+        return __dump_funcs[ext](state, path)
+
+
+def load_state(path, type="auto", meta_check=True):
+    """
+    path:         Path to the file from which to load the state
+    type:         Type to use for loading. If "auto" it will be determined
+                  from the file extension.
+    meta_check:   If False skips the check of the metadata
+
+    Note that ``dump_state(state, file); state = load_state(file)``
+    is an identity.
+
+    Returns the loaded state object
+    """
+    _, ext = os.path.splitext(path)
+    ext = ext[1:]  # remove leading .
+
+    if ext not in __load_funcs:
+        raise ValueError("Unrecognised dump file extension: " + ext + ".")
+    else:
+        return __load_funcs[ext](path, meta_check=meta_check)
+
+
+def load_metadata(path, type="auto"):
+    """Extract meta data block of a file produced with `dump_state` and
+       return as a dictionary.
+       Returns None no meta data block found
+    """
+    _, ext = os.path.splitext(path)
+    ext = ext[1:]  # remove leading .
+
+    if ext not in __load_funcs:
+        raise ValueError("Unrecognised dump file extension: " + ext + ".")
+    else:
+        return __metadata_funcs[ext](path)
