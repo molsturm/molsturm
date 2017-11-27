@@ -48,4 +48,4 @@ for atom, mult in [("He", 1), ("Be", 1), ("C", 3), ("Ne", 1)]:
 
     out = atom + "_" + str(n_max) + "_" + str(l_max) + "_kopt.hdf5"
     print("Dumping kopt solution for " + atom + " at " + out)
-    molsturm.dump_hdf5(best, out)
+    molsturm.dump_state(best, out)
