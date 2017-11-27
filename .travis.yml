@@ -53,7 +53,7 @@ addons:
   apt:
     sources: &def_sources
       - ubuntu-toolchain-r-test     # libstdc++-4.9-dev (gcc 4.8's libstdc++ is buggy)
-      - llvm-toolchain-trusty-4.0   # clang-4.0
+      - llvm-toolchain-trusty-5.0   # clang-5.0
     packages: &def_packages
       - python3-pip
       - ninja-build
@@ -88,15 +88,16 @@ matrix:
       compiler: clang
       env: CC_COMP="clang" CXX_COMP="clang++"
     #
-    # Clang 4.0 (has c++14) with libc++-1
+    # Clang 5.0 (has c++17) with libc++-1
+    #    Note that c++17 is disabled due to cmake < 3.8 where c++17 is not yet ready
     - addons:
         apt:
           sources: *def_sources
           packages:
             - *def_packages
-            - &clang_newest [ clang-4.0, libc++-dev, llvm-4.0, clang-tidy-4.0 ]
+            - &clang_newest [ clang-5.0, libc++-dev, llvm-5.0, clang-tidy-5.0 ]
       compiler: clang
-      env: CC_COMP="clang-4.0" CXX_COMP="clang++-4.0"
+      env: CC_COMP="clang-5.0" CXX_COMP="clang++-5.0"
     #
     # gcc-5 with disabled c++11
     - addons:
@@ -110,7 +111,8 @@ matrix:
       compiler: gcc
       env: CC_COMP="gcc-5" CXX_COMP="g++-5"
     #
-    # gcc-7 (with tests and c++14)
+    # gcc-7 (with tests and c++17)
+    #    Note that c++17 is disabled due to cmake < 3.8 where c++17 is not yet ready
     - addons:
         apt:
           sources: *def_sources
@@ -120,7 +122,7 @@ matrix:
       compiler: gcc
       env: CC_COMP="gcc-7" CXX_COMP="g++-7"
     #
-    # Clang-tidy 4.0
+    # Clang-tidy 5.0
     - addons:
         apt:
           sources: *def_sources
@@ -131,9 +133,9 @@ matrix:
         - export BUILD_TARGET="clang-tidy-molsturm"
         - export TESTS=0
       compiler: clang
-      env: CC_COMP="clang-4.0" CXX_COMP="clang++-4.0" BUILD_TARGET="clang-tidy-molsturm"
+      env: CC_COMP="clang-5.0" CXX_COMP="clang++-5.0" BUILD_TARGET="clang-tidy-molsturm"
   allow_failures:
-    - env: CC_COMP="clang-4.0" CXX_COMP="clang++-4.0" BUILD_TARGET="clang-tidy-molsturm"
+    - env: CC_COMP="clang-5.0" CXX_COMP="clang++-5.0" BUILD_TARGET="clang-tidy-molsturm"
 
 script:
   - cmake --version
