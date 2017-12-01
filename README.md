@@ -105,8 +105,8 @@ For example
 - `-DGINT_ENABLE_LIBCINT=ON`: Enable Gaussian integrals via the
   [``libcint``](https://github.com/sunqm/libcint) library.
 - `-DGINT_ENABLE_STURMINT=ON`: Enable the Coulomb-Sturmian basis functions
-  via `sturmint` (This library is not yet publicly available,
-  but will be released soon)
+  via [`sturmint`](https://molsturm.org/sturmint)
+  (This library is not yet publicly available, but will be released soon.)
 
 
 ## Using `molsturm` from `python`
