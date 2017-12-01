@@ -25,7 +25,7 @@
 import gint.element
 from gint import split_basis_type
 from .ParameterMap import ParameterMap
-from .MolecularSystem import MolecularSystem
+from .System import System
 import gint.gaussian
 import gint.sturmian.atomic
 from ._iface_conversion import ParamSpecial
@@ -129,9 +129,9 @@ class ScfParameters(ParameterMap):
         """
 
         if isinstance(system, str):
-            system = MolecularSystem(system)
-        elif not isinstance(system, MolecularSystem):
-            raise TypeError("The first argument needs to be a MolecularSystem object or "
+            system = System(system)
+        elif not isinstance(system, System):
+            raise TypeError("The first argument needs to be a System object or "
                             "a string of exactly one atom.")
 
         # Build a parameter tree from the commandline arguments
@@ -193,7 +193,7 @@ class ScfParameters(ParameterMap):
 
         system = self["system"]
 
-        # TODO This could be made much simpler if the MolecularSystem
+        # TODO This could be made much simpler if the System
         #      class had a from_params function which constructed
         #      (and checked) the class from such a subtree.
 
@@ -214,31 +214,25 @@ class ScfParameters(ParameterMap):
         self.__normalise_numpy_array("system/coords", (n_atom, 3), dtype=float)
         self.__normalise_numpy_array("system/atom_numbers", (n_atom,), dtype=int)
 
-        if "multiplicity" in system:
-            if "n_alpha" in system or "n_beta" in system:
-                warnings.warn("Overriding system/n_alpha and system/n_beta in "
-                              "ScfParameters, since system/multiplicity is present.")
+        if "multiplicity" in system or "charge" in system or \
+           ("n_alpha" not in system and "n_beta" not in system):
+            sysobj = System(atoms=system["atom_numbers"].value,
+                            coords=system["coords"].value)
+
             try:
-                sysobj = MolecularSystem(
-                    atoms=system["atom_numbers"].value,
-                    coords=system["coords"].value,
-                    multiplicity=system.get("multiplicity", None),
-                    charge=system.get("charge", None)
-                )
-            except (ValueError, TypeError) as e:
+                sysobj.adjust_electrons(charge=system.pop("charge", None),
+                                        multiplicity=system.pop("multiplicity", None))
+            except ValueError as e:
                 raise ValueError("system/multiplicity or system/charge erroneous: " +
                                  str(e))
 
+            if "n_alpha" in system or "n_beta" in system:
+                warnings.warn("Overriding system/n_alpha and system/n_beta in "
+                              "ScfParameters, since system/multiplicity or "
+                              "system/charge is present.")
+
             system["n_alpha"] = np.uint64(sysobj.n_alpha)
             system["n_beta"] = np.uint64(sysobj.n_beta)
-
-            for k in ["charge", "multiplicity"]:
-                if k in system:
-                    del system[k]
-
-        if "charge" in system:
-            raise ValueError("If system/charge is present, system/multiplicity "
-                             "needs to be present as well.")
 
         if "n_alpha" not in system or "n_beta" not in system:
             raise KeyError("system/n_alpha and system/n_beta or alternatively "
@@ -491,7 +485,7 @@ class ScfParameters(ParameterMap):
         object represented by the internal parameters.
         """
         self.__normalise_system()
-        return MolecularSystem(
+        return System(
             atoms=self["system/atom_numbers"].value,
             coords=self["system/coords"].value,
             electrons=(self["system/n_alpha"], self["system/n_beta"])

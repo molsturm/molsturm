@@ -30,9 +30,10 @@ import unittest
 
 class TestSturmian(NumCompTestCase):
     def __run_find_kopt(self, case):
+        system = molsturm.System(case.atom)
+        system.multiplicity = case.multiplicity
         scfparams = molsturm.ScfParameters()
-        scfparams.system = molsturm.MolecularSystem(case.atom,
-                                                    multiplicity=case.multiplicity)
+        scfparams.system = system
 
         basis_type = "sturmian/atomic/cs_reference_pc"
         if basis_type not in molsturm.available_basis_types:

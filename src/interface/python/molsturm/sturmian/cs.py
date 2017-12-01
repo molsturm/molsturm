@@ -25,7 +25,7 @@ from .. import scf_guess
 from .._scf import self_consistent_field
 import numpy as np
 import scipy.optimize
-from ..MolecularSystem import MolecularSystem
+from ..System import System
 import warnings
 
 
@@ -38,10 +38,10 @@ def empirical_kopt(system):
     To obtain a better result, feed the obtained value for
     k into find_kopt.
 
-    The input parameter may be a molsturm.MolecularSystem object
+    The input parameter may be a molsturm.System object
     or a molsturm.ScfParameters object.
     """
-    if not isinstance(system, MolecularSystem):
+    if not isinstance(system, System):
         # Assume that we got an ScfParameters object
         system = system.system
 

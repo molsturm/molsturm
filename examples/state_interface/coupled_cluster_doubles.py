@@ -116,11 +116,11 @@ def ccd(state):
 
 
 if __name__ == "__main__":
-    sys = molsturm.MolecularSystem(
+    sys = molsturm.System.by_charge_multiplicity(
         atoms=["O", "O"],
         coords=[(0, 0, 0), (0, 0, 2.8535)],
-        multiplicity=3
     )
+    sys.multiplicity = 3
     state = molsturm.hartree_fock(sys, basis_type="gaussian",
                                   basis_set_name="6-31g", conv_tol=5e-7)
 

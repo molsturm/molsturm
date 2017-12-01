@@ -31,8 +31,12 @@ from ._print import *
 from ._serialisation import dump_state, load_state, load_metadata
 from ._iface import Version
 from ._constants import INPUT_PARAMETER_KEY
-from .MolecularSystem import MolecularSystem
+from .System import System
 import warnings
+
+
+# TODO deprecate this object
+MolecularSystem = System
 
 
 def load_hdf5(*args, **kwargs):

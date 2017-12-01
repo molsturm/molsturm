@@ -24,7 +24,7 @@
 import molsturm
 import molsturm.posthf
 
-sys = molsturm.MolecularSystem(["beryllium"], [[0, 0, 0]])
+sys = molsturm.System(["beryllium"], [[0, 0, 0]])
 bas = molsturm.construct_basis("sturmian/atomic", sys, k_exp=2.1, n_max=11, l_max=0,
                                backend="cs_reference_pc")
 res = molsturm.hartree_fock(sys, bas, conv_tol=1e-10, print_iterations=True)
