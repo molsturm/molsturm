@@ -31,32 +31,35 @@ def ccd_residual(t2, fock, eri):
     Compute the CCD residual tensor from the t2 amplitudes,
     the fock matrix and the repulsion integrals.
     """
-    ret = np.einsum("abij->iajb", eri.block("vvoo")) \
-        + np.einsum("ae,iejb->iajb", fock.block("vv"), t2) \
-        - np.einsum("be,ieja->iajb", fock.block("vv"), t2) \
-        - np.einsum("mi,majb->iajb", fock.block("oo"), t2) \
+    oooo = eri.block("oooo")
+    vvvv = eri.block("vvvv")
+    oovv = eri.block("oovv")
+    ovvo = eri.block("ovvo")
+    res = (
+        + np.einsum("abij->iajb", eri.block("vvoo"))
+        + np.einsum("ae,iejb->iajb", fock.block("vv"), t2)
+        - np.einsum("be,ieja->iajb", fock.block("vv"), t2)
+        - np.einsum("mi,majb->iajb", fock.block("oo"), t2)
         + np.einsum("mj,maib->iajb", fock.block("oo"), t2)
 
-    ret += \
-        + 0.5 * np.einsum("mnij,manb->iajb", eri.block("oooo"), t2) \
-        + 0.5 * np.einsum("abef,iejf->iajb", eri.block("vvvv"), t2) \
-        + np.einsum("mbej,iame->iajb", eri.block("ovvo"), t2) \
-        - np.einsum("mbei,jame->iajb", eri.block("ovvo"), t2) \
-        - np.einsum("maej,ibme->iajb", eri.block("ovvo"), t2) \
-        + np.einsum("maei,jbme->iajb", eri.block("ovvo"), t2)
+        + 0.5 * np.einsum("mnij,manb->iajb", oooo, t2)
+        + 0.5 * np.einsum("abef,iejf->iajb", vvvv, t2)
+        + np.einsum("mbej,iame->iajb", ovvo, t2)
+        - np.einsum("mbei,jame->iajb", ovvo, t2)
+        - np.einsum("maej,ibme->iajb", ovvo, t2)
+        + np.einsum("maei,jbme->iajb", ovvo, t2)
 
-    oovv = eri.block("oovv")
-    ret += \
-        - 0.5 * np.einsum("mnef,manf,iejb->iajb", oovv, t2, t2) \
-        + 0.5 * np.einsum("mnef,mbnf,ieja->iajb", oovv, t2, t2) \
-        - 0.5 * np.einsum("mnef,ienf,majb->iajb", oovv, t2, t2) \
-        + 0.5 * np.einsum("mnef,jenf,maib->iajb", oovv, t2, t2) \
-        + 0.25 * np.einsum("mnef,manb,iejf->iajb", oovv, t2, t2) \
-        + 0.5 * np.einsum("mnef,iame,jbnf->iajb", oovv, t2, t2) \
-        - 0.5 * np.einsum("mnef,jame,ibnf->iajb", oovv, t2, t2) \
-        - 0.5 * np.einsum("mnef,ibme,janf->iajb", oovv, t2, t2) \
+        - 0.5 * np.einsum("mnef,manf,iejb->iajb", oovv, t2, t2)
+        + 0.5 * np.einsum("mnef,mbnf,ieja->iajb", oovv, t2, t2)
+        - 0.5 * np.einsum("mnef,ienf,majb->iajb", oovv, t2, t2)
+        + 0.5 * np.einsum("mnef,jenf,maib->iajb", oovv, t2, t2)
+        + 0.25 * np.einsum("mnef,manb,iejf->iajb", oovv, t2, t2)
+        + 0.5 * np.einsum("mnef,iame,jbnf->iajb", oovv, t2, t2)
+        - 0.5 * np.einsum("mnef,jame,ibnf->iajb", oovv, t2, t2)
+        - 0.5 * np.einsum("mnef,ibme,janf->iajb", oovv, t2, t2)
         + 0.5 * np.einsum("mnef,jbme,ianf->iajb", oovv, t2, t2)
-    return ret
+    )
+    return res
 
 
 def ccd_approx_jacobian(t2, fock, eri):
