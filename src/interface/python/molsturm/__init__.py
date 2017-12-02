@@ -32,36 +32,43 @@ from ._serialisation import dump_state, load_state, load_metadata
 from ._iface import Version
 from ._constants import INPUT_PARAMETER_KEY
 from .System import System
-import warnings
 
 
-# TODO deprecate this object
-MolecularSystem = System
+# Mappings to previous names and deprecation
+def MolecularSystem(*args, **kwargs):
+    from warnings import warn
+    warn("MolecularSystem is deprecated. Use System instead. "
+         "This alias will be removed after the next release.")
+    return System(*args, **kwargs)
 
 
 def load_hdf5(*args, **kwargs):
-    warnings.warn("Use load_state function instead. "
-                  "This function will be removed after the next release.",
-                  DeprecationWarning)
+    from warnings import warn
+    warn("Use load_state function instead. "
+         "This function will be removed after the next release.",
+         DeprecationWarning)
     return load_state(*args, type="hdf5", **kwargs)
 
 
 def load_yaml(*args, **kwargs):
-    warnings.warn("Use load_state function instead. "
-                  "This function will be removed after the next release.",
-                  DeprecationWarning)
+    from warnings import warn
+    warn("Use load_state function instead. "
+         "This function will be removed after the next release.",
+         DeprecationWarning)
     return load_state(*args, type="yaml", **kwargs)
 
 
 def dump_hdf5(*args, **kwargs):
-    warnings.warn("Use dump_state function instead. "
-                  "This function will be removed after the next release.",
-                  DeprecationWarning)
+    from warnings import warn
+    warn("Use dump_state function instead. "
+         "This function will be removed after the next release.",
+         DeprecationWarning)
     return dump_state(*args, type="hdf5", **kwargs)
 
 
 def dump_yaml(*args, **kwargs):
-    warnings.warn("Use dump_state function instead. "
-                  "This function will be removed after the next release.",
-                  DeprecationWarning)
+    from warnings import warn
+    warn("Use dump_state function instead. "
+         "This function will be removed after the next release.",
+         DeprecationWarning)
     return dump_state(*args, type="yaml", **kwargs)
