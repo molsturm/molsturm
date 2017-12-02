@@ -24,8 +24,11 @@
 import molsturm
 
 def main():
+    carbon = molsturm.System("c")
+    carbon.multiplicity = 3
+
     params = molsturm.ScfParameters()
-    params.system = molsturm.MolecularSystem("C", multiplicity=3)
+    params.system = carbon
     params.basis = molsturm.construct_basis("sturmian/atomic/cs_reference_pc",
                                             params.system, k_exp=3.3, n_max=4,
                                             l_max=3)

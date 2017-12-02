@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+## vi: tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+## ---------------------------------------------------------------------
+##
+## Copyright (C) 2017 by the molsturm authors
+##
+## This file is part of molsturm.
+##
+## molsturm is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published
+## by the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## molsturm is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with molsturm. If not, see <http://www.gnu.org/licenses/>.
+##
+## ---------------------------------------------------------------------
+
 import molsturm
 import molsturm.posthf
 import numpy as np
@@ -9,32 +31,35 @@ def ccd_residual(t2, fock, eri):
     Compute the CCD residual tensor from the t2 amplitudes,
     the fock matrix and the repulsion integrals.
     """
-    ret = np.einsum("abij->iajb", eri.block("vvoo")) \
-        + np.einsum("ae,iejb->iajb", fock.block("vv"), t2) \
-        - np.einsum("be,ieja->iajb", fock.block("vv"), t2) \
-        - np.einsum("mi,majb->iajb", fock.block("oo"), t2) \
+    oooo = eri.block("oooo")
+    vvvv = eri.block("vvvv")
+    oovv = eri.block("oovv")
+    ovvo = eri.block("ovvo")
+    res = (
+        + np.einsum("abij->iajb", eri.block("vvoo"))
+        + np.einsum("ae,iejb->iajb", fock.block("vv"), t2)
+        - np.einsum("be,ieja->iajb", fock.block("vv"), t2)
+        - np.einsum("mi,majb->iajb", fock.block("oo"), t2)
         + np.einsum("mj,maib->iajb", fock.block("oo"), t2)
 
-    ret += \
-        + 0.5 * np.einsum("mnij,manb->iajb", eri.block("oooo"), t2) \
-        + 0.5 * np.einsum("abef,iejf->iajb", eri.block("vvvv"), t2) \
-        + np.einsum("mbej,iame->iajb", eri.block("ovvo"), t2) \
-        - np.einsum("mbei,jame->iajb", eri.block("ovvo"), t2) \
-        - np.einsum("maej,ibme->iajb", eri.block("ovvo"), t2) \
-        + np.einsum("maei,jbme->iajb", eri.block("ovvo"), t2)
+        + 0.5 * np.einsum("mnij,manb->iajb", oooo, t2)
+        + 0.5 * np.einsum("abef,iejf->iajb", vvvv, t2)
+        + np.einsum("mbej,iame->iajb", ovvo, t2)
+        - np.einsum("mbei,jame->iajb", ovvo, t2)
+        - np.einsum("maej,ibme->iajb", ovvo, t2)
+        + np.einsum("maei,jbme->iajb", ovvo, t2)
 
-    oovv = eri.block("oovv")
-    ret += \
-        - 0.5 * np.einsum("mnef,manf,iejb->iajb", oovv, t2, t2) \
-        + 0.5 * np.einsum("mnef,mbnf,ieja->iajb", oovv, t2, t2) \
-        - 0.5 * np.einsum("mnef,ienf,majb->iajb", oovv, t2, t2) \
-        + 0.5 * np.einsum("mnef,jenf,maib->iajb", oovv, t2, t2) \
-        + 0.25 * np.einsum("mnef,manb,iejf->iajb", oovv, t2, t2) \
-        + 0.5 * np.einsum("mnef,iame,jbnf->iajb", oovv, t2, t2) \
-        - 0.5 * np.einsum("mnef,jame,ibnf->iajb", oovv, t2, t2) \
-        - 0.5 * np.einsum("mnef,ibme,janf->iajb", oovv, t2, t2) \
+        - 0.5 * np.einsum("mnef,manf,iejb->iajb", oovv, t2, t2)
+        + 0.5 * np.einsum("mnef,mbnf,ieja->iajb", oovv, t2, t2)
+        - 0.5 * np.einsum("mnef,ienf,majb->iajb", oovv, t2, t2)
+        + 0.5 * np.einsum("mnef,jenf,maib->iajb", oovv, t2, t2)
+        + 0.25 * np.einsum("mnef,manb,iejf->iajb", oovv, t2, t2)
+        + 0.5 * np.einsum("mnef,iame,jbnf->iajb", oovv, t2, t2)
+        - 0.5 * np.einsum("mnef,jame,ibnf->iajb", oovv, t2, t2)
+        - 0.5 * np.einsum("mnef,ibme,janf->iajb", oovv, t2, t2)
         + 0.5 * np.einsum("mnef,jbme,ianf->iajb", oovv, t2, t2)
-    return ret
+    )
+    return res
 
 
 def ccd_approx_jacobian(t2, fock, eri):
@@ -91,11 +116,11 @@ def ccd(state):
 
 
 if __name__ == "__main__":
-    sys = molsturm.MolecularSystem(
+    sys = molsturm.System.by_charge_multiplicity(
         atoms=["O", "O"],
         coords=[(0, 0, 0), (0, 0, 2.8535)],
-        multiplicity=3
     )
+    sys.multiplicity = 3
     state = molsturm.hartree_fock(sys, basis_type="gaussian",
                                   basis_set_name="6-31g", conv_tol=5e-7)
 

@@ -28,8 +28,11 @@ l_max = 1
 n_max = 5
 
 for atom, mult in [("He", 1), ("Be", 1), ("C", 3), ("Ne", 1)]:
+    system = molsturm.System(atom)
+    system.multiplicity = mult
+
     scfparams = molsturm.ScfParameters()
-    scfparams.system = molsturm.MolecularSystem(atom, multiplicity=mult)
+    scfparams.system = system
 
     k_guess = molsturm.sturmian.cs.empirical_kopt(scfparams.system)
     scfparams.basis = molsturm.construct_basis("sturmian/atomic/cs_reference_pc",
@@ -48,4 +51,4 @@ for atom, mult in [("He", 1), ("Be", 1), ("C", 3), ("Ne", 1)]:
 
     out = atom + "_" + str(n_max) + "_" + str(l_max) + "_kopt.hdf5"
     print("Dumping kopt solution for " + atom + " at " + out)
-    molsturm.dump_hdf5(best, out)
+    molsturm.dump_state(best, out)

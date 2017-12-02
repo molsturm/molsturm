@@ -79,7 +79,7 @@ def job_dump_yaml(name, output, scfparams, dump_params):
     for key in dump_params.get("remove_keys", []):
         if key in res:
             del res[key]
-    molsturm.dump_yaml(res, output)
+    molsturm.dump_state(res, output, type="yaml")
 
 
 def job_dump_hdf5(name, output, scfparams, dump_params):
@@ -90,7 +90,7 @@ def job_dump_hdf5(name, output, scfparams, dump_params):
     for key in dump_params.get("remove_keys", []):
         if key in res:
             del res[key]
-    molsturm.dump_hdf5(res, output)
+    molsturm.dump_state(res, output, type="hdf5")
 
 
 def job_posthf_mp2(name, output, scfparams, mp_params):

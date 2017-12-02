@@ -56,11 +56,12 @@ def __parse_test_case(subdir, infile):
     ret = {"testing": {"name": name}, }
 
     # Find and load "hf" subtree:
-    if directories.exists(basepath + ".hf.yaml"):
-        ret["hf"] = molsturm.load_yaml(directories.find(basepath + ".hf.yaml"))
-    elif directories.exists(basepath + ".hf.hdf5"):
-        ret["hf"] = molsturm.load_hdf5(directories.find(basepath + ".hf.hdf5"))
-    else:
+    for ext in ["yaml", "hdf5"]:
+        filename = basepath + ".hf." + ext
+        if directories.exists(filename):
+            ret["hf"] = molsturm.load_state(directories.find(filename))
+            break
+    if "hf" not in ret:
         raise ValueError("No hf results found for " + infile)
 
     # Load "input_parameters" and "testing" subtree from in file

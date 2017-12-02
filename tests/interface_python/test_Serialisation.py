@@ -63,8 +63,8 @@ class TestSerialisation(unittest.TestCase):
                 hfres = case["hf"]
 
                 tmp = tempfile.mktemp(suffix=".yaml")
-                molsturm.dump_yaml(hfres, tmp)
-                back = molsturm.load_yaml(tmp)
+                molsturm.dump_state(hfres, tmp, type="yaml")
+                back = molsturm.load_state(tmp)
                 os.remove(tmp)
 
                 self.assert_equal(hfres, back)
@@ -75,8 +75,8 @@ class TestSerialisation(unittest.TestCase):
                 hfres = case["hf"]
 
                 tmp = tempfile.mktemp(suffix=".hdf5")
-                molsturm.dump_hdf5(hfres, tmp)
-                back = molsturm.load_hdf5(tmp)
+                molsturm.dump_state(hfres, tmp, type="hdf5")
+                back = molsturm.load_state(tmp)
                 os.remove(tmp)
 
                 self.assert_equal(hfres, back)

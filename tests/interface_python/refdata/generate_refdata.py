@@ -228,7 +228,7 @@ def job_orca_hf(name, params):
         #      This would require extracting a couple of more keys from
         #      the ORCA output.
         f.write("# Data from ORCA calculation " + os.path.relpath(orca_in_file) + "\n")
-        molsturm.dump_yaml(reference, f)
+        molsturm.dump_state(reference, f, type="yaml")
 
 
 def job_orca_mp2(name, params):
