@@ -24,7 +24,7 @@
 import molsturm
 
 def main():
-    carbon = molsturm.System.("c")
+    carbon = molsturm.System("c")
     carbon.multiplicity = 3
 
     params = molsturm.ScfParameters()
