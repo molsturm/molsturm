@@ -19,7 +19,6 @@ For *building* `molsturm` the following things are required:
 - ``cmake`` >= 3.0.0
 - A compiler supporting ``C++11``: ``clang`` starting from `clang-3.5` and `gcc` starting
   from `gcc-5` should work.
-  `gcc-4.8` support is intended, but not quite there yet.
 - [``swig``](http://swig.org/) >= 2.0.11
 - [``python``](https://www.python.org/) >= 3.4, including the development headers
 - The [regular build process](#building-molsturm) mentioned below
