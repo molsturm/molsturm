@@ -347,6 +347,9 @@ class ScfParameters(ParameterMap):
         scf.setdefault("diis_size", np.uint64(4))
         scf.setdefault("max_iter", np.uint64(25))
         scf.setdefault("print_iterations", False)
+        scf.setdefault("diis_startup_iter", np.uint64(12))
+        scf.setdefault("diis_startup_error_norm", 0.25)
+        scf.setdefault("diis_shutdown_error_norm", 5e-7)
 
         # Scf kind
         if "restricted" in scf:
