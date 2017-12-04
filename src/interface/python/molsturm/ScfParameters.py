@@ -446,6 +446,9 @@ class ScfParameters(ParameterMap):
         i.e. as blocks for the individual spin components. For restricted
         we expect n_spin == 1 and for unrestricted n_spin == 2
         """
+        # Clear guess parameters first:
+        del self["guess"]
+
         self["guess/method"] = "external"
         orben_f = np.ascontiguousarray(orben_f)
         orbcoeff_bf = np.ascontiguousarray(orbcoeff_bf)
@@ -454,12 +457,19 @@ class ScfParameters(ParameterMap):
 
     def clear_guess(self):
         """
-        Clear any external guess which is currently set.
-        This is sometimes needed before setting a new external guess.
+        Clear any guess parameters, which are currently set.
+
+        This is deprecated. Plainly use
+
+        >>> del params["guess"]
+
+        instead.
         """
-        self.pop("guess/method", None)
-        self.pop("guess/orben_f", None)
-        self.pop("guess/orbcoeff_bf", None)
+        from warnings import warn
+        warn("Simply use 'del params[\"guess\"]' instead of this function. "
+             "This function will be removed after the next release.",
+             DeprecationWarning)
+        del self["guess"]
 
     @property
     def scf_sizes(self):

@@ -110,7 +110,7 @@ class ParameterMap(dict):
         ret = namefct(rest, *args, **kwargs)
 
         if isinstance(subdict, ParameterMap) and len(subdict) == 0:
-            super().__delitem__(key)
+            super().__delitem__(first)
         return ret
 
     def __getitem__(self, key):
