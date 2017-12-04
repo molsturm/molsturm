@@ -410,6 +410,8 @@ class ScfParameters(ParameterMap):
             self.__normalise_numpy_array("guess/orben_f", (n_spin, n_fock), dtype=float)
             self.__normalise_numpy_array("guess/orbcoeff_bf", (n_spin, n_bas, n_fock),
                                          dtype=float)
+        elif guess["method"] == "hcore":
+            guess.setdefault("nuclear_attraction_factor", 1.0)
 
     def normalise(self):
         """
