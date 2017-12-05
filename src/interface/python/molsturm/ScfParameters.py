@@ -449,7 +449,7 @@ class ScfParameters(ParameterMap):
         we expect n_spin == 1 and for unrestricted n_spin == 2
         """
         # Clear guess parameters first:
-        del self["guess"]
+        self.pop("guess", None)
 
         self["guess/method"] = "external"
         orben_f = np.ascontiguousarray(orben_f)
@@ -471,7 +471,7 @@ class ScfParameters(ParameterMap):
         warn("Simply use 'del params[\"guess\"]' instead of this function. "
              "This function will be removed after the next release.",
              DeprecationWarning)
-        del self["guess"]
+        self.pop("guess", None)
 
     @property
     def scf_sizes(self):
