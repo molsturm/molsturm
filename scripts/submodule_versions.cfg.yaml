@@ -1,0 +1,43 @@
+# The defaults used for all repos, unless otherwise
+# specified.
+defaults:
+  # Path to the repo relative to molsturm top dir
+  # {name} is replaced by the name of the repository
+  path: "modules/{name}"
+  pinfiles:
+    # Path to file pinning dependent versions,
+    # relative to the repository top directory (i.e. the path above)
+    - cmake/setup_dependencies.cmake
+  # Path to file pinning version of repo,
+  # relative to the repository top directory (i.e. the path above)
+  versionfile: CMakeLists.txt
+
+repos:
+  krims:
+    depends_on: []
+  lazyten:
+    depends_on:
+      - krims
+  sturmint:
+    path: modules/gint/external/sturmint
+    depends_on:
+      - krims
+  gint:
+    pinfiles:
+      - cmake/setup_dependencies.cmake
+      - cmake/setup_optional.cmake
+    depends_on:
+      - krims
+      - sturmint
+      - lazyten
+  gscf:
+    depends_on:
+      - krims
+      - lazyten
+  molsturm:
+    path: .
+    depends_on:
+      - krims
+      - lazyten
+      - gint
+      - gscf
