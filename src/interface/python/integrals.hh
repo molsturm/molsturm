@@ -22,7 +22,10 @@
 
 #ifdef SWIG
 // clang-format off
-%apply (double* INPLACE_ARRAY2, int DIM1, int DIM2) {(double* out_bb, int n_bas1, int n_bas_2)};
+%apply (double* INPLACE_ARRAY2, int DIM1, int DIM2)
+	{(double* out_bb, int n_bas1, int n_bas2)};
+%apply (double* INPLACE_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4)
+	{(double* out_bbbb, int n_bas1, int n_bas2, int n_bas3, int n_bas4)};
 // clang-format on
 #endif  // SWIG
 namespace molsturm {
@@ -37,6 +40,9 @@ void kinetic_bb(const ScfParameters& params, double* out_bb, int n_bas1, int n_b
 /** Get the nuclear attraction matrix in basis functions */
 void nuclear_attraction_bb(const ScfParameters& params, double* out_bb, int n_bas1,
                            int n_bas2);
+
+void electron_repulsion_bbbb(const ScfParameters& params, double* out_bbbb, int n_bas1,
+                             int n_bas2, int n_bas3, int n_bas4);
 
 }  // namespace iface
 }  // namespace molsturm

@@ -346,10 +346,13 @@ class ScfParameters(ParameterMap):
         # Iteration control parameters:
         scf.setdefault("diis_size", np.uint64(4))
         scf.setdefault("max_iter", np.uint64(25))
-        scf.setdefault("print_iterations", False)
         scf.setdefault("diis_startup_iter", np.uint64(12))
         scf.setdefault("diis_startup_error_norm", 0.25)
         scf.setdefault("diis_shutdown_error_norm", 5e-7)
+
+        # I have no clue why, but sometimes the type information is lost here.
+        scf.setdefault("print_iterations", False)
+        scf["print_iterations"] = bool(scf["print_iterations"])
 
         # Scf kind
         if "restricted" in scf:
