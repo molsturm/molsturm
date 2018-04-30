@@ -76,7 +76,7 @@ addons:
 
 matrix:
   include:
-    # Clang 5.0 with disabled c++14 support with libstdc++-4.9
+    # System clang with disabled c++14 support with libstdc++-4.9
     - addons:
         apt:
           sources: *def_sources
@@ -146,7 +146,8 @@ script:
            -DLIBINT_LIBRARY=$HOME/cache_libint/lib/libint2.a"
         GEN_OPTS="-GNinja"
     ;else
-        LIBINT_OPTS="-DGINT_LIBINT_MAX_AM=3 -DDEP_BUILD_libint_NJOBS=2"
+        LIBINT_OPTS="-DGINT_LIBINT_MAX_AM=3 -DDEP_BUILD_libint_NJOBS=2
+           -DGINT_LIBINT_MAX_MULTIPOLE=2"
     ;fi
   #
   # Configure and build.
