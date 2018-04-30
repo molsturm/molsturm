@@ -88,31 +88,29 @@ matrix:
       compiler: clang
       env: CC_COMP="clang" CXX_COMP="clang++"
     #
-    # Clang 5.0 (has c++17) with libc++-1
-    #    Note that c++17 is disabled due to cmake < 3.8 where c++17 is not yet ready
+    # Clang 5.0 with libc++-1 and disabled c++17 support
     - addons:
         apt:
           sources: *def_sources
           packages:
             - *def_packages
             - &clang_newest [ clang-5.0, libc++-dev, llvm-5.0, clang-tidy-5.0 ]
+      install:
+        - export EXTRA_OPTS="-DDRB_MAXIMUM_CXX_STANDARD=14"
       compiler: clang
       env: CC_COMP="clang-5.0" CXX_COMP="clang++-5.0"
     #
-    # gcc-5 with disabled c++11
+    # gcc-5
     - addons:
         apt:
           sources: *def_sources
           packages:
             - *def_packages
             - g++-5
-      install:
-        - export EXTRA_OPTS="-DDRB_MAXIMUM_CXX_STANDARD=11"
       compiler: gcc
       env: CC_COMP="gcc-5" CXX_COMP="g++-5"
     #
     # gcc-7 (with tests and c++17)
-    #    Note that c++17 is disabled due to cmake < 3.8 where c++17 is not yet ready
     - addons:
         apt:
           sources: *def_sources
@@ -163,7 +161,7 @@ script:
            -DGINT_ENABLE_LIBCINT=ON
            -DGINT_ENABLE_LIBINT=ON ${LIBINT_OPTS}
            ${EXTRA_OPTS} ${GEN_OPTS} ..
-  - cmake --build  . --target ${BUILD_TARGET:-all} -- -j ${CORES}
+  - travis_wait 20 cmake --build  . --target ${BUILD_TARGET:-all} -- -j ${CORES}
   - if [ "${TESTS}" != "0" ]; then
         ctest -j ${CORES} --output-on-failure -R "${TESTS_REGEX}"
     ;else true; fi
