@@ -23,6 +23,11 @@
 
 namespace molsturm {
 
+// TODO Better design:
+//      - Every Fock matrix term does not only know how to apply itself, but also
+//        how to compute its energy. A default implementation for this would be
+//        tr(C^T Term C)
+
 template <typename StoredMatrix>
 struct IntegralTermContainer {
   typedef StoredMatrix stored_matrix_type;

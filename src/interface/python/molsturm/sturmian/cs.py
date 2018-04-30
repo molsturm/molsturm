@@ -49,6 +49,11 @@ def empirical_kopt(system):
         raise ValueError("Can only work on atomic systems")
     Z = system.atom_numbers[0]
 
+    # TODO Generally speaking these values are optimal for *large* basis sets
+    #      but not that optimal for smaller basis sets.
+    #      Maybe we should change this, because in larger basis sets
+    #      the error is smaller anyways
+
     # TODO This is just something where we fitted some data to get this.
     #      I guess one could make some rationalisation here using the scaling of
     #      Z_eff and E_hydrogenic vs Z and such.

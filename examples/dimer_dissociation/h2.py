@@ -23,6 +23,7 @@
 
 import dissociation
 from matplotlib import pyplot as plt
+import molsturm.posthf
 
 z, f = dissociation.compute_curve("h", "def2-sv(p)", n_points=35,
                                   restricted=True, method="hf")
@@ -36,5 +37,11 @@ plt.plot(z, f, label="MP2 restricted")
 z, f = dissociation.compute_curve("h", "def2-sv(p)", n_points=35,
                                   restricted=False, method="mp2")
 plt.plot(z, f, label="MP2 unrestricted")
+
+if "fci" in molsturm.posthf.available_methods:
+    z, f = dissociation.compute_curve("h", "def2-sv(p)", n_points=35,
+                                      restricted=False, method="fci")
+    plt.plot(z, f, label="FCI")
+
 plt.legend()
 plt.show()
