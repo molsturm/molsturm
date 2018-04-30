@@ -76,7 +76,7 @@ addons:
 
 matrix:
   include:
-    # Clang 3.5 with disabled c++14 support with libstdc++-4.9
+    # Clang 5.0 with disabled c++14 support with libstdc++-4.9
     - addons:
         apt:
           sources: *def_sources
@@ -161,7 +161,7 @@ script:
            -DGINT_ENABLE_LIBCINT=ON
            -DGINT_ENABLE_LIBINT=ON ${LIBINT_OPTS}
            ${EXTRA_OPTS} ${GEN_OPTS} ..
-  - travis_wait 20 cmake --build  . --target ${BUILD_TARGET:-all} -- -j ${CORES}
+  - travis_wait 30 cmake --build  . --target ${BUILD_TARGET:-all} -- -j ${CORES}
   - if [ "${TESTS}" != "0" ]; then
         ctest -j ${CORES} --output-on-failure -R "${TESTS_REGEX}"
     ;else true; fi
