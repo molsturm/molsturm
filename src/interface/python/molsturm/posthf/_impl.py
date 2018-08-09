@@ -141,11 +141,3 @@ def fci(hfres, **kwargs):
   """
   __assert_available("fci")
   return run_fci_pyscf(hfres, **kwargs)
-
-def cis(hfres, **kwargs):
-    """
-    Take the hf restuls and extra parameters and run a
-    Configuration Interaction Singles calculation.
-    """
-    # ADC1 == CIS
-    return adc1(hfres, **kwargs)

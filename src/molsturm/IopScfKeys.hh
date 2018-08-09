@@ -23,6 +23,16 @@
 namespace molsturm {
 
 struct IopScfKeys : public gscf::ScfBaseKeys {
+  /** Pulay error norm below which DIIS acceleration is switched on */
+  static const std::string diis_startup_error_norm;
+
+  /** Iteration count after which DIIS acceleration is switched on
+   *  (Regardless of the error norm */
+  static const std::string diis_startup_iter;
+
+  /** Pulay error norm below which DIIS is again switched off */
+  static const std::string diis_shutdown_error_norm;
+
   /** Maximal total energy change between two cycles for convergence
    * (Type: real_type) */
   static const std::string max_tot_energy_change;
@@ -31,15 +41,15 @@ struct IopScfKeys : public gscf::ScfBaseKeys {
    * (Type: real_type) */
   static const std::string max_1e_energy_change;
 
-  /** Verbosity for the scf solver
-   * (Type: ScfMsgType) */
-  static const std::string verbosity;
-
   /** Print the progress during the solve
    *  (Type: bool)
    *
    *  Will add ScfMsgType::IterationProcess to the verbosity parameter.
    */
   static const std::string print_iterations;
+
+  /** Verbosity for the scf solver
+   * (Type: ScfMsgType) */
+  static const std::string verbosity;
 };
 }  // namespace molsturm

@@ -24,6 +24,7 @@ set(SRC
 	ScfParameters.cc
 	ScfSolutionView.cc
 	self_consistent_field.cc
+	integrals.cc
 )
 
 # Download the numpy.i module we require from github

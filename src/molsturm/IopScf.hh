@@ -180,10 +180,11 @@ class IopScf final : public gscf::ScfBase<IopScfState<IntegralOperator, OverlapM
       verbosity |= ScfMsgType::IterationProcess;
     }
 
-    diis_startup_iter       = map.at("diis_startup_iter", diis_startup_iter);
-    diis_startup_error_norm = map.at("diis_startup_error_norm", diis_startup_error_norm);
+    diis_startup_iter = map.at(IopScfKeys::diis_startup_iter, diis_startup_iter);
+    diis_startup_error_norm =
+          map.at(IopScfKeys::diis_startup_error_norm, diis_startup_error_norm);
     diis_shutdown_error_norm =
-          map.at("diis_shutdown_error_norm", diis_shutdown_error_norm);
+          map.at(IopScfKeys::diis_shutdown_error_norm, diis_shutdown_error_norm);
 
     // Copy the map to the internal storage such that we
     // can pass it on to the actual eigensolvers.

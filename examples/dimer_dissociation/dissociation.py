@@ -28,7 +28,7 @@ import numpy as np
 
 def compute_curve(atom, basis_set="sto-3g", conv_tol=1e-6, zrange=(0.5, 8.0), n_points=25,
                   restricted=False, verbose=False, method="hf"):
-    if method not in ["hf", "mp2"]:
+    if method not in ["hf", "mp2", "fci"]:
         raise ValueError("Only implemented for hf and mp2")
 
     z = np.linspace(zrange[0], zrange[1], n_points)
@@ -49,10 +49,16 @@ def compute_curve(atom, basis_set="sto-3g", conv_tol=1e-6, zrange=(0.5, 8.0), n_
 
             if previous_hf is None:
                 previous_hf = hf
-            if method == "mp2":
-                hf = molsturm.posthf.mp2(hf)
 
-            f[i] = hf["energy_ground_state"]
+            if method == "hf":
+                f[i] = hf["energy_ground_state"]
+            elif method == "mp2":
+                mp2 = molsturm.posthf.mp2(hf)
+                f[i] = mp2["energy_ground_state"]
+            elif method == "fci":
+                fci = molsturm.posthf.fci(hf, n_roots=1)
+                f[i] = fci["states"][0]["energy"]
+
         except RuntimeError as e:
             print("Caught error for z=", z[i])
             print(str(e))

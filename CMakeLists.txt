@@ -41,7 +41,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries instead of static ones" ON)
 ##########################################################################
 # Project setup
 
-project(molsturm VERSION 0.0.2)
+project(molsturm VERSION 0.0.3)
 message("\n# Configuring ${PROJECT_NAME}\n#")
 
 # Global include directories for this project:

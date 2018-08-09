@@ -31,7 +31,7 @@ def extrapolate_from_previous(old_state, scf_params):
     a guess for a new scf procedure
     """
     scf_params = scf_params.copy()
-    scf_params.clear_guess()
+    scf_params.pop("guess", None)  # Clear guess subtree
     scf_params.normalise()
     old_params = old_state.input_parameters
 
@@ -113,7 +113,7 @@ def best_of_n(scfparams, n_repeats=4, n_max_tries=None):
     """
 
     scfparams = scfparams.copy()
-    scfparams.clear_guess()
+    scfparams.pop("guess", None)  # Clear guess subtree
     scfparams["guess/method"] = "random"
 
     # Set to at least 100 iterations

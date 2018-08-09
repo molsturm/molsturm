@@ -116,7 +116,7 @@ def ccd(state):
 
 
 if __name__ == "__main__":
-    sys = molsturm.System.by_charge_multiplicity(
+    sys = molsturm.System(
         atoms=["O", "O"],
         coords=[(0, 0, 0), (0, 0, 2.8535)],
     )

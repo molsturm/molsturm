@@ -346,7 +346,13 @@ class ScfParameters(ParameterMap):
         # Iteration control parameters:
         scf.setdefault("diis_size", np.uint64(4))
         scf.setdefault("max_iter", np.uint64(25))
+        scf.setdefault("diis_startup_iter", np.uint64(12))
+        scf.setdefault("diis_startup_error_norm", 0.25)
+        scf.setdefault("diis_shutdown_error_norm", 5e-7)
+
+        # I have no clue why, but sometimes the type information is lost here.
         scf.setdefault("print_iterations", False)
+        scf["print_iterations"] = bool(scf["print_iterations"])
 
         # Scf kind
         if "restricted" in scf:
@@ -407,6 +413,8 @@ class ScfParameters(ParameterMap):
             self.__normalise_numpy_array("guess/orben_f", (n_spin, n_fock), dtype=float)
             self.__normalise_numpy_array("guess/orbcoeff_bf", (n_spin, n_bas, n_fock),
                                          dtype=float)
+        elif guess["method"] == "hcore":
+            guess.setdefault("nuclear_attraction_factor", 1.0)
 
     def normalise(self):
         """
@@ -443,6 +451,9 @@ class ScfParameters(ParameterMap):
         i.e. as blocks for the individual spin components. For restricted
         we expect n_spin == 1 and for unrestricted n_spin == 2
         """
+        # Clear guess parameters first:
+        self.pop("guess", None)
+
         self["guess/method"] = "external"
         orben_f = np.ascontiguousarray(orben_f)
         orbcoeff_bf = np.ascontiguousarray(orbcoeff_bf)
@@ -451,12 +462,19 @@ class ScfParameters(ParameterMap):
 
     def clear_guess(self):
         """
-        Clear any external guess which is currently set.
-        This is sometimes needed before setting a new external guess.
+        Clear any guess parameters, which are currently set.
+
+        This is deprecated. Plainly use
+
+        >>> del params["guess"]
+
+        instead.
         """
-        self.pop("guess/method", None)
-        self.pop("guess/orben_f", None)
-        self.pop("guess/orbcoeff_bf", None)
+        from warnings import warn
+        warn("Simply use 'del params[\"guess\"]' instead of this function. "
+             "This function will be removed after the next release.",
+             DeprecationWarning)
+        self.pop("guess", None)
 
     @property
     def scf_sizes(self):

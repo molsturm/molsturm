@@ -25,6 +25,7 @@
 #include "interface/python/ScfResults.hh"
 #include "interface/python/ScfSolutionView.hh"
 #include "interface/python/ScfParameters.hh"
+#include "interface/python/integrals.hh"
 #include <molsturm/Version.hh>
 
 // Run the %init block (to setup numpy)
@@ -67,5 +68,6 @@ import_array();
 %include "ScfSolutionView.hh"
 %include "self_consistent_field.hh"
 %include "../../molsturm/Version.hh"
+%include "integrals.hh"
 
 // vi: syntax=c
