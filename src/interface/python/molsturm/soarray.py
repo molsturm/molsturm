@@ -40,14 +40,16 @@ class soarray(np.ndarray):
                                           order=order)
 
         if isinstance(n_orbs, int):
-            obj.n_orbs = (n_orbs // 2, n_orbs - n_orbs // 2)
+            n_orbs_beta = n_orbs // 2
+            obj.n_orbs = (n_orbs - n_orbs_beta, n_orbs_beta)
         elif isinstance(n_orbs, tuple):
             obj.n_orbs = n_orbs
         else:
             raise TypeError("n_orbs needs to be a tuple or an int.")
 
         if isinstance(n_electrons, int):
-            obj.n_electrons = (n_electrons // 2, n_electrons - n_electrons // 2)
+            n_beta = n_electrons // 2
+            obj.n_electrons = (n_electrons - n_beta, n_beta)
         elif isinstance(n_electrons, tuple):
             obj.n_electrons = n_electrons
         else:
