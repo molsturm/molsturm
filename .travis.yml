@@ -88,13 +88,16 @@ matrix:
       compiler: clang
       env: CC_COMP="clang" CXX_COMP="clang++"
     #
-    # Clang 5.0 with libc++-1 and disabled c++17 support
+    # TODO Here we used to test with libc++1 by installing libc++-dev,
+    #      but this does not go well with libint any more
+    # Clang 5.0 with disabled c++17 support
     - addons:
         apt:
           sources: *def_sources
           packages:
             - *def_packages
-            - &clang_newest [ clang-5.0, libc++-dev, llvm-5.0, clang-tidy-5.0 ]
+            - &clang_newest [ clang-5.0, llvm-5.0, clang-tidy-5.0 ]
+            - libstdc++-5-dev
       install:
         - export EXTRA_OPTS="-DDRB_MAXIMUM_CXX_STANDARD=14"
       compiler: clang
