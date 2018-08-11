@@ -85,9 +85,7 @@ def __emplace_scalar(keyval, group, typ, **kwargs):
   if dtype is None:
     raise TypeError("Encountered unknown data type '" + str(type(keyval[1])) + "'")
 
-  # Make a np array with one element and insert
-  dset = group.create_dataset(keyval[0], data=np.array([keyval[1]], dtype=dtype),
-                              dtype=dtype, **kwargs)
+  dset = group.create_dataset(keyval[0], data=keyval[1], dtype=dtype, **kwargs)
   dset.attrs["type"] = "scalar"
 
 
@@ -98,7 +96,11 @@ def __extract_scalar(dataset):
       dtype = t[0]
       break
 
-  ret = dataset[0]
+  if dataset.shape == ():  # i.e. HDF5 scalar
+    ret = dataset.value
+  else:
+    ret = dataset[0]
+
   if dtype is not None:
     ret = dtype(ret)
 
